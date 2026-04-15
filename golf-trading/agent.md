@@ -13,7 +13,7 @@ matchup markets. Tiny convex sleeve for outrights. Never compromise the bankroll
 
 ## Current phase
 
-**Phase 1 — Ingestion + Normalization complete.** Next: Phase 2 (Pricing + Risk).
+**Phase 2 — Pricing + Risk complete.** Next: Phase 3 (Paper Trading).
 
 ## What was built in Phase 1
 
