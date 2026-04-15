@@ -13,17 +13,27 @@ matchup markets. Tiny convex sleeve for outrights. Never compromise the bankroll
 
 ## Current phase
 
-**Phase 0 — Foundation complete.** Next: Phase 1 (Data Ingestion).
+**Phase 1 — Ingestion + Normalization complete.** Next: Phase 2 (Pricing + Risk).
 
-## What to build next (Phase 1)
+## What was built in Phase 1
 
-1. `src/ingestion/datagolf.py` — DataGolf API client
-2. `src/ingestion/sportsbooks.py` — DraftKings + FanDuel odds ingestion
-3. `src/normalization/odds.py` — American ↔ decimal ↔ implied prob
-4. `src/normalization/vig.py` — Multiplicative and power vig removal
-5. `src/normalization/players.py` — Player name/ID resolution
+1. `src/normalization/odds.py` — American ↔ decimal ↔ implied prob (pure math, fully tested)
+2. `src/normalization/vig.py` — Multiplicative and power vig removal (20+ tests)
+3. `src/normalization/players.py` — Player name/ID resolution (exact, alias, fuzzy with difflib)
+4. `src/ingestion/datagolf.py` — DataGolf API client (httpx, 3-retry backoff, snapshot persistence)
+5. `src/ingestion/sportsbooks.py` — DK/FD parsers + persist stub; live fetch = NotImplementedError (needs odds API or scraper)
 
-See `docs/skills/` for full skill specs per module.
+## What to build next (Phase 2)
+
+1. `src/pricing/matchups.py` — P(A beats B) from DataGolf's individual finish distributions
+2. `src/pricing/top_n.py` — Make-cut and top-N fair prices directly from DG probabilities
+3. `src/pricing/outrights.py` — Outright win fair prices from DG win probabilities
+4. `src/risk/edge.py` — Edge detection: fair_prob − book_no_vig_prob; filter by min_edge thresholds
+5. `src/risk/sizing.py` — Fractional Kelly sizing (0.25x) + max_bet_fraction cap
+6. `src/risk/exposure.py` — Golfer / tournament / book concentration limits
+7. `src/risk/drawdown.py` — 4-level drawdown brake logic
+
+See `docs/adr/` and build plan for full specs.
 
 ## Conventions
 
