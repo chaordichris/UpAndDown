@@ -151,6 +151,172 @@ class DataGolfClient:
         )
 
     # ------------------------------------------------------------------
+    # Live betting-tools endpoints (odds from 8-12 sportsbooks + DG model)
+    # ------------------------------------------------------------------
+
+    def fetch_live_matchups(
+        self,
+        tour: str = "pga",
+        market: str = "tournament_matchups",
+        odds_format: str = "american",
+    ) -> FetchResult:
+        """Fetch live matchup and 3-ball odds from up to 8 sportsbooks
+        alongside DataGolf's model prediction.
+
+        Endpoint: /betting-tools/matchups
+
+        Args:
+            tour: "pga" | "euro" | "opp" | "alt"
+            market: "tournament_matchups" | "round_matchups" | "3_balls"
+            odds_format: "american" | "decimal" | "percent"
+
+        Response shape (assumed from API docs — verify against live data):
+            {
+              "event_name": str,
+              "tour": str,
+              "market": str,
+              "last_updated": str,   # "YYYY-MM-DD HH:MM:SS"
+              "match_list": [
+                {
+                  "p1_player_name": str,
+                  "p2_player_name": str,
+                  "p1_datagolf_id": str,
+                  "p2_datagolf_id": str,
+                  "<book_id>": {"p1_odds": int, "p2_odds": int},
+                  ...
+                  "datagolf_baseline": {"p1_odds": int, "p2_odds": int}
+                }
+              ]
+            }
+        """
+        return self._fetch_and_store(
+            endpoint="/betting-tools/matchups",
+            params={"tour": tour, "market": market, "odds_format": odds_format},
+            source="datagolf",
+            endpoint_label=f"live_matchups_{market}",
+        )
+
+    def fetch_live_outrights(
+        self,
+        tour: str = "pga",
+        market: str = "win",
+        odds_format: str = "american",
+    ) -> FetchResult:
+        """Fetch live outright odds (win, top-5, top-10, top-20, make-cut)
+        from up to 11 sportsbooks alongside DataGolf's model prediction.
+
+        Endpoint: /betting-tools/outrights
+
+        Args:
+            tour: "pga" | "euro" | "opp" | "alt"
+            market: "win" | "top_5" | "top_10" | "top_20" | "make_cut" | "miss_cut"
+            odds_format: "american" | "decimal" | "percent"
+
+        Response shape (assumed from API docs — verify against live data):
+            {
+              "event_name": str,
+              "tour": str,
+              "market": str,
+              "last_updated": str,
+              "player_list": [
+                {
+                  "player_name": str,
+                  "datagolf_id": str,
+                  "<book_id>": int | float,   # American odds for this player
+                  ...
+                  "datagolf_baseline_history_fit": int | float
+                }
+              ]
+            }
+        """
+        return self._fetch_and_store(
+            endpoint="/betting-tools/outrights",
+            params={"tour": tour, "market": market, "odds_format": odds_format},
+            source="datagolf",
+            endpoint_label=f"live_outrights_{market}",
+        )
+
+    # ------------------------------------------------------------------
+    # Historical odds endpoints (opening + closing lines with outcomes)
+    # ------------------------------------------------------------------
+
+    def fetch_historical_event_list(self, tour: str = "pga") -> FetchResult:
+        """Fetch the list of events for which historical odds are available.
+
+        Endpoint: /historical-odds/event-list
+        """
+        return self._fetch_and_store(
+            endpoint="/historical-odds/event-list",
+            params={"tour": tour},
+            source="datagolf",
+            endpoint_label="historical_event_list",
+        )
+
+    def fetch_historical_outrights(
+        self,
+        tour: str = "pga",
+        event_id: str | None = None,
+        year: int | None = None,
+        market: str = "win",
+        book: str = "draftkings",
+        odds_format: str = "american",
+    ) -> FetchResult:
+        """Fetch historical opening + closing lines with bet outcomes.
+
+        Endpoint: /historical-odds/outrights
+
+        Args:
+            tour: Tour identifier.
+            event_id: DataGolf event ID (use fetch_historical_event_list to find).
+            year: Season year (2019–present). Defaults to current year if None.
+            market: "win" | "top_5" | "top_10" | "top_20" | "make_cut"
+            book: Sportsbook ID (e.g., "draftkings", "fanduel", "pinnacle").
+            odds_format: "american" | "decimal" | "percent"
+        """
+        params: dict[str, str] = {"tour": tour, "market": market, "book": book, "odds_format": odds_format}
+        if event_id is not None:
+            params["event_id"] = event_id
+        if year is not None:
+            params["year"] = str(year)
+        return self._fetch_and_store(
+            endpoint="/historical-odds/outrights",
+            params=params,
+            source="datagolf",
+            endpoint_label=f"historical_outrights_{market}_{book}",
+        )
+
+    def fetch_historical_matchups(
+        self,
+        tour: str = "pga",
+        event_id: str | None = None,
+        year: int | None = None,
+        book: str = "draftkings",
+        odds_format: str = "american",
+    ) -> FetchResult:
+        """Fetch historical matchup opening + closing lines with outcomes.
+
+        Endpoint: /historical-odds/matchups
+
+        Args:
+            tour: Tour identifier.
+            event_id: DataGolf event ID.
+            year: Season year (2019–present).
+            book: Sportsbook ID.
+            odds_format: "american" | "decimal" | "percent"
+        """
+        params: dict[str, str] = {"tour": tour, "book": book, "odds_format": odds_format}
+        if event_id is not None:
+            params["event_id"] = event_id
+        if year is not None:
+            params["year"] = str(year)
+        return self._fetch_and_store(
+            endpoint="/historical-odds/matchups",
+            params=params,
+            source="datagolf",
+            endpoint_label=f"historical_matchups_{book}",
+        )
+
+    # ------------------------------------------------------------------
     # Internal fetch + store
     # ------------------------------------------------------------------
 

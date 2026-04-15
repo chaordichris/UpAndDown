@@ -21,7 +21,7 @@ matchup markets. Tiny convex sleeve for outrights. Never compromise the bankroll
 2. `src/normalization/vig.py` — Multiplicative and power vig removal (20+ tests)
 3. `src/normalization/players.py` — Player name/ID resolution (exact, alias, fuzzy with difflib)
 4. `src/ingestion/datagolf.py` — DataGolf API client (httpx, 3-retry backoff, snapshot persistence)
-5. `src/ingestion/sportsbooks.py` — DK/FD parsers + persist stub; live fetch = NotImplementedError (needs odds API or scraper)
+5. `src/ingestion/sportsbooks.py` — Parsers for DataGolf betting-tools format (matchups + outrights); no separate book fetchers needed
 
 ## What to build next (Phase 2)
 

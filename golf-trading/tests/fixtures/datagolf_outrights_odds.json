@@ -1,0 +1,38 @@
+{
+  "event_name": "The Players Championship",
+  "tour": "pga",
+  "market": "win",
+  "last_updated": "2024-03-11 14:00:00",
+  "player_list": [
+    {
+      "player_name": "Scottie Scheffler",
+      "datagolf_id": "scottie_scheffler",
+      "draftkings": 650,
+      "fanduel": 600,
+      "pinnacle": 700,
+      "datagolf_baseline_history_fit": 750
+    },
+    {
+      "player_name": "Rory McIlroy",
+      "datagolf_id": "rory_mcilroy",
+      "draftkings": 1100,
+      "fanduel": 1000,
+      "pinnacle": 1150,
+      "datagolf_baseline_history_fit": 1200
+    },
+    {
+      "player_name": "Jon Rahm",
+      "datagolf_id": "jon_rahm",
+      "draftkings": 1200,
+      "fanduel": 1100,
+      "datagolf_baseline_history_fit": 1300
+    },
+    {
+      "player_name": "Xander Schauffele",
+      "datagolf_id": "xander_schauffele",
+      "fanduel": 1800,
+      "pinnacle": 1750,
+      "datagolf_baseline_history_fit": 1900
+    }
+  ]
+}

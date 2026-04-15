@@ -10,6 +10,8 @@ Covers:
   - Non-retryable 4xx (e.g., 401) raises immediately.
   - Timeout: retried up to max attempts then raises RuntimeError.
   - API key is included in every request.
+  - Betting-tools endpoints: live matchups, live outrights.
+  - Historical odds endpoints: outrights, matchups, event list.
 """
 
 from __future__ import annotations
@@ -197,6 +199,101 @@ def test_event_id_omitted_when_none(db_session):
 
     called_params = mock_get.call_args.kwargs.get("params", {})
     assert "event_id" not in called_params
+
+
+# ---------------------------------------------------------------------------
+# Betting-tools endpoints
+# ---------------------------------------------------------------------------
+
+def test_fetch_live_matchups_endpoint_label(db_session) -> None:
+    """fetch_live_matchups stores the correct endpoint label."""
+    payload = {"event_name": "The Players", "market": "tournament_matchups", "match_list": []}
+    with patch("httpx.get", return_value=_mock_response(200, payload)):
+        result = client_with_db(db_session).fetch_live_matchups(market="tournament_matchups")
+    assert result.snapshot.endpoint == "live_matchups_tournament_matchups"
+
+
+def test_fetch_live_matchups_params(db_session) -> None:
+    """fetch_live_matchups sends tour, market, odds_format to the API."""
+    payload = {"event_name": "test", "market": "3_balls", "match_list": []}
+    with patch("httpx.get", return_value=_mock_response(200, payload)) as mock_get:
+        client_with_db(db_session).fetch_live_matchups(tour="pga", market="3_balls", odds_format="american")
+    params = mock_get.call_args.kwargs.get("params", {})
+    assert params["tour"] == "pga"
+    assert params["market"] == "3_balls"
+    assert params["odds_format"] == "american"
+
+
+def test_fetch_live_outrights_endpoint_label(db_session) -> None:
+    """fetch_live_outrights stores the correct endpoint label."""
+    payload = {"event_name": "The Players", "market": "win", "player_list": []}
+    with patch("httpx.get", return_value=_mock_response(200, payload)):
+        result = client_with_db(db_session).fetch_live_outrights(market="win")
+    assert result.snapshot.endpoint == "live_outrights_win"
+
+
+def test_fetch_live_outrights_params(db_session) -> None:
+    """fetch_live_outrights sends tour, market, odds_format."""
+    payload = {"event_name": "test", "market": "top_10", "player_list": []}
+    with patch("httpx.get", return_value=_mock_response(200, payload)) as mock_get:
+        client_with_db(db_session).fetch_live_outrights(tour="pga", market="top_10", odds_format="american")
+    params = mock_get.call_args.kwargs.get("params", {})
+    assert params["market"] == "top_10"
+    assert params["tour"] == "pga"
+
+
+# ---------------------------------------------------------------------------
+# Historical odds endpoints
+# ---------------------------------------------------------------------------
+
+def test_fetch_historical_event_list_endpoint(db_session) -> None:
+    payload = [{"event_name": "The Masters", "event_id": "r2024014", "year": 2024}]
+    with patch("httpx.get", return_value=_mock_response(200, payload)):
+        result = client_with_db(db_session).fetch_historical_event_list(tour="pga")
+    assert result.snapshot.endpoint == "historical_event_list"
+
+
+def test_fetch_historical_outrights_params(db_session) -> None:
+    payload = {"event_name": "test", "players": []}
+    with patch("httpx.get", return_value=_mock_response(200, payload)) as mock_get:
+        client_with_db(db_session).fetch_historical_outrights(
+            tour="pga", event_id="r2024014", year=2024,
+            market="win", book="draftkings",
+        )
+    params = mock_get.call_args.kwargs.get("params", {})
+    assert params["market"] == "win"
+    assert params["book"] == "draftkings"
+    assert params["event_id"] == "r2024014"
+    assert params["year"] == "2024"
+
+
+def test_fetch_historical_outrights_no_event_id(db_session) -> None:
+    """event_id and year are omitted when not provided."""
+    payload = {"event_name": "test", "players": []}
+    with patch("httpx.get", return_value=_mock_response(200, payload)) as mock_get:
+        client_with_db(db_session).fetch_historical_outrights(book="fanduel")
+    params = mock_get.call_args.kwargs.get("params", {})
+    assert "event_id" not in params
+    assert "year" not in params
+
+
+def test_fetch_historical_matchups_params(db_session) -> None:
+    payload = {"event_name": "test", "matchups": []}
+    with patch("httpx.get", return_value=_mock_response(200, payload)) as mock_get:
+        client_with_db(db_session).fetch_historical_matchups(
+            tour="pga", event_id="r2024014", year=2024, book="pinnacle",
+        )
+    params = mock_get.call_args.kwargs.get("params", {})
+    assert params["book"] == "pinnacle"
+    assert params["event_id"] == "r2024014"
+    assert params["year"] == "2024"
+
+
+def test_fetch_historical_matchups_endpoint_label(db_session) -> None:
+    payload = {"event_name": "test", "matchups": []}
+    with patch("httpx.get", return_value=_mock_response(200, payload)):
+        result = client_with_db(db_session).fetch_historical_matchups(book="draftkings")
+    assert result.snapshot.endpoint == "historical_matchups_draftkings"
 
 
 # ---------------------------------------------------------------------------

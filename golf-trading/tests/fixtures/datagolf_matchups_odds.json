@@ -1,0 +1,35 @@
+{
+  "event_name": "The Players Championship",
+  "tour": "pga",
+  "market": "tournament_matchups",
+  "last_updated": "2024-03-11 14:00:00",
+  "match_list": [
+    {
+      "p1_player_name": "Scottie Scheffler",
+      "p2_player_name": "Rory McIlroy",
+      "p1_datagolf_id": "scottie_scheffler",
+      "p2_datagolf_id": "rory_mcilroy",
+      "draftkings": {"p1_odds": -145, "p2_odds": 120},
+      "fanduel": {"p1_odds": -150, "p2_odds": 125},
+      "pinnacle": {"p1_odds": -155, "p2_odds": 128},
+      "datagolf_baseline": {"p1_odds": -160, "p2_odds": 130}
+    },
+    {
+      "p1_player_name": "Jon Rahm",
+      "p2_player_name": "Xander Schauffele",
+      "p1_datagolf_id": "jon_rahm",
+      "p2_datagolf_id": "xander_schauffele",
+      "draftkings": {"p1_odds": -110, "p2_odds": -110},
+      "fanduel": {"p1_odds": -112, "p2_odds": -108},
+      "datagolf_baseline": {"p1_odds": -118, "p2_odds": -102}
+    },
+    {
+      "p1_player_name": "Collin Morikawa",
+      "p2_player_name": "Tony Finau",
+      "p1_datagolf_id": "collin_morikawa",
+      "p2_datagolf_id": "tony_finau",
+      "pinnacle": {"p1_odds": -130, "p2_odds": 110},
+      "datagolf_baseline": {"p1_odds": -135, "p2_odds": 113}
+    }
+  ]
+}
