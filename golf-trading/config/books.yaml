@@ -1,0 +1,72 @@
+# UpAndDown — Sportsbook Configuration
+# Each book has its own settlement rules, supported markets, and metadata.
+
+books:
+  draftkings:
+    display_name: DraftKings
+    book_id: dk
+    active: true
+    markets:
+      - matchup_2ball
+      - matchup_3ball
+      - make_cut
+      - top_10
+      - top_20
+      - outright_win
+    settlement_rules:
+      # If a player WDs before tee time, matchup is voided
+      matchup_wd_before_tee: void
+      # If a player WDs after starting, opponent wins matchup
+      matchup_wd_after_start: opponent_wins
+      # Dead-heat rule for top-N markets: standard proportional reduction
+      top_n_dead_heat: proportional
+      # Make-cut: player must complete required rounds or bet is void
+      make_cut_incomplete_round: void
+      # Tie handling in 2-ball and 3-ball matchups
+      matchup_tie: push
+
+  fanduel:
+    display_name: FanDuel
+    book_id: fd
+    active: true
+    markets:
+      - matchup_2ball
+      - matchup_3ball
+      - make_cut
+      - top_10
+      - top_20
+      - outright_win
+    settlement_rules:
+      matchup_wd_before_tee: void
+      matchup_wd_after_start: opponent_wins
+      top_n_dead_heat: proportional
+      make_cut_incomplete_round: void
+      # FanDuel typically offers "no tie" matchup variants
+      matchup_tie: push
+
+# Market type definitions
+market_types:
+  matchup_2ball:
+    display_name: "2-Ball Matchup"
+    n_players: 2
+    sleeve: core
+  matchup_3ball:
+    display_name: "3-Ball Matchup"
+    n_players: 3
+    sleeve: core
+  make_cut:
+    display_name: "Make/Miss Cut"
+    n_players: 1
+    sleeve: core
+  top_10:
+    display_name: "Top 10 Finish"
+    n_players: 1
+    sleeve: core
+  top_20:
+    display_name: "Top 20 Finish"
+    n_players: 1
+    sleeve: core
+  outright_win:
+    display_name: "Outright Winner"
+    n_players: 1
+    sleeve: convex

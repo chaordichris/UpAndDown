@@ -1,0 +1,57 @@
+# UpAndDown — System Configuration
+# All non-secret parameters live here.
+# Secrets (API keys, DB passwords) go in .env.
+
+pipeline:
+  # How often to poll DataGolf during a tournament week (hours)
+  datagolf_poll_interval_hours: 6
+  # How often to poll sportsbook odds during a tournament week (hours)
+  odds_poll_interval_hours: 2
+  # Maximum age of odds before they are considered stale (hours)
+  odds_staleness_threshold_hours: 3
+
+bankroll:
+  # Fraction of total capital kept in reserve — never deployed
+  reserve_fraction: 0.50
+  # Fraction of total capital in the active core sleeve
+  active_core_fraction: 0.40
+  # Fraction of total capital in the convex (outright) sleeve
+  convex_fraction: 0.10
+
+sizing:
+  # Kelly multiplier for core bets (0.25 = quarter Kelly)
+  kelly_fraction: 0.25
+  # Fixed unit for convex bets as fraction of convex sleeve
+  convex_unit_fraction: 0.005
+  # Minimum bet size in dollars
+  min_bet_dollars: 5.0
+  # Hard ceiling: max single bet as fraction of total capital
+  max_bet_fraction: 0.02
+
+exposure:
+  # Max total exposure to a single golfer as fraction of active core
+  max_golfer_fraction: 0.03
+  # Max total exposure to a single tournament as fraction of total capital
+  max_tournament_fraction: 0.05
+  # Max total at any single book as fraction of active capital
+  max_book_fraction: 0.60
+
+edge:
+  # Minimum edge (as decimal, e.g. 0.03 = 3%) to consider a core bet
+  min_edge_core: 0.03
+  # Minimum edge to consider a convex (outright) bet
+  min_edge_convex: 0.08
+
+drawdown:
+  # Drawdown levels as fraction of peak active-core bankroll
+  alert_threshold: 0.10
+  reduce_threshold: 0.15   # halve unit sizes
+  severe_threshold: 0.20   # quarter unit sizes
+  paper_only_threshold: 0.25  # no real bets
+  halt_threshold: 0.35     # full system halt
+
+vig_removal:
+  # Method for two-way markets: "multiplicative" or "power"
+  two_way_method: multiplicative
+  # Method for multi-way markets (outrights, top-N)
+  multi_way_method: power

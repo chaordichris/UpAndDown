@@ -1,0 +1,35 @@
+# Secrets
+.env
+**/.env
+
+# Golf-trading data (raw API responses and DB are not versioned)
+golf-trading/data/raw/
+golf-trading/data/db/
+golf-trading/data/reports/
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.egg-info/
+dist/
+build/
+.eggs/
+
+# Testing
+.coverage
+.pytest_cache/
+htmlcov/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Eval artifacts (scratch outputs, not source)
+karpathy-coding-review.html

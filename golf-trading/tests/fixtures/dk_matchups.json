@@ -1,0 +1,30 @@
+{
+  "source": "draftkings",
+  "event": "The Players Championship",
+  "market_type": "matchup_2ball",
+  "captured_at": "2024-03-11T14:30:00Z",
+  "matchups": [
+    {
+      "matchup_id": "dk_tpc_2024_001",
+      "player_1": {
+        "name": "Scottie Scheffler",
+        "american_odds": -145
+      },
+      "player_2": {
+        "name": "Rory McIlroy",
+        "american_odds": +120
+      }
+    },
+    {
+      "matchup_id": "dk_tpc_2024_002",
+      "player_1": {
+        "name": "Jon Rahm",
+        "american_odds": -110
+      },
+      "player_2": {
+        "name": "Xander Schauffele",
+        "american_odds": -110
+      }
+    }
+  ]
+}

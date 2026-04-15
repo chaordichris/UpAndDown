@@ -1,0 +1,51 @@
+{
+  "event_name": "The Players Championship",
+  "year": 2024,
+  "last_updated": "2024-03-11T12:00:00Z",
+  "players": [
+    {
+      "player_id": "scottie_scheffler",
+      "player_name": "Scottie Scheffler",
+      "country": "USA",
+      "skill_estimate": 2.85,
+      "win_probability": 0.142,
+      "top_5_probability": 0.372,
+      "top_10_probability": 0.521,
+      "top_20_probability": 0.682,
+      "make_cut_probability": 0.841
+    },
+    {
+      "player_id": "rory_mcilroy",
+      "player_name": "Rory McIlroy",
+      "country": "NIR",
+      "skill_estimate": 2.41,
+      "win_probability": 0.089,
+      "top_5_probability": 0.261,
+      "top_10_probability": 0.398,
+      "top_20_probability": 0.572,
+      "make_cut_probability": 0.798
+    },
+    {
+      "player_id": "jon_rahm",
+      "player_name": "Jon Rahm",
+      "country": "ESP",
+      "skill_estimate": 2.38,
+      "win_probability": 0.082,
+      "top_5_probability": 0.245,
+      "top_10_probability": 0.381,
+      "top_20_probability": 0.558,
+      "make_cut_probability": 0.782
+    },
+    {
+      "player_id": "xander_schauffele",
+      "player_name": "Xander Schauffele",
+      "country": "USA",
+      "skill_estimate": 2.12,
+      "win_probability": 0.063,
+      "top_5_probability": 0.198,
+      "top_10_probability": 0.321,
+      "top_20_probability": 0.487,
+      "make_cut_probability": 0.751
+    }
+  ]
+}
