@@ -1,30 +1,37 @@
-.PHONY: install test lint fmt check backtest report init-db clean
+.PHONY: install test test-cov lint fmt check backtest report init-db clean
+
+PYTHON ?= python3
+PIP := $(PYTHON) -m pip
+PYTEST := $(PYTHON) -m pytest
+RUFF := $(PYTHON) -m ruff
 
 install:
-	pip install -e ".[dev]"
+	$(PIP) install -e ".[dev]"
 
 test:
-	pytest tests/ -v --tb=short
+	$(PYTEST) tests/ -v --tb=short
 
 test-cov:
-	pytest tests/ --cov=src --cov-report=term-missing
+	$(PYTEST) tests/ --cov=src --cov-report=term-missing
 
 lint:
-	ruff check src/ tests/
+	$(RUFF) check src/ tests/
 
 fmt:
-	ruff format src/ tests/
+	$(RUFF) format src/ tests/
 
 check: lint test
 
 init-db:
-	python scripts/init_db.py
+	$(PYTHON) scripts/init_db.py
 
 backtest:
-	python scripts/backtest.py
+	@echo "Backtesting is not implemented yet. See docs/agent-execution-plan.md (WS-7)." >&2
+	@exit 1
 
 report:
-	python scripts/report.py
+	@echo "Reporting is not implemented yet. See docs/agent-execution-plan.md (WS-8)." >&2
+	@exit 1
 
 clean:
 	find . -type d -name "__pycache__" -exec rm -rf {} + 2>/dev/null || true
