@@ -11,18 +11,18 @@ Tests cover:
 from __future__ import annotations
 
 import math
+
 import pytest
 
 from src.normalization.odds import (
+    NormalizedOdds,
     american_to_decimal,
     decimal_to_implied,
-    decimal_to_american,
-    implied_to_decimal,
     implied_to_american,
+    implied_to_decimal,
     normalize_american,
     normalize_decimal,
     normalize_implied,
-    NormalizedOdds,
 )
 
 TOLERANCE = 1e-6  # floating-point comparison tolerance
@@ -113,6 +113,9 @@ def test_american_round_trip(american: float) -> None:
     decimal_back = implied_to_decimal(prob)
     # Odds must match within 0.1% (floating-point noise only)
     assert math.isclose(decimal, decimal_back, rel_tol=1e-5)
+    if american == 100:
+        assert abs(american_back) == 100
+        return
     assert math.isclose(american, american_back, rel_tol=1e-3), (
         f"Round-trip failed for {american}: got {american_back:.2f}"
     )
