@@ -1,0 +1,59 @@
+{
+  "scenario": "risk_edge_sizing_matchup_core",
+  "code_version": "phase3-risk-replay-v1",
+  "as_of": "2026-04-30T14:00:00+00:00",
+  "fair_prices": [
+    {
+      "market_type": "matchup_2ball",
+      "datagolf_id": "dg_scottie_scheffler",
+      "opponent_id": "dg_rory_mcilroy",
+      "fair_prob": 0.55,
+      "method": "harville"
+    },
+    {
+      "market_type": "matchup_2ball",
+      "datagolf_id": "dg_rory_mcilroy",
+      "opponent_id": "dg_scottie_scheffler",
+      "fair_prob": 0.45,
+      "method": "harville"
+    }
+  ],
+  "book": {
+    "book_id": "draftkings",
+    "odds": [
+      -110,
+      -110
+    ]
+  },
+  "edge_config": {
+    "min_edge_core": 0.03,
+    "min_edge_convex": 0.08,
+    "vig_method": "multiplicative"
+  },
+  "bankroll": {
+    "active_bankroll": 10000.0,
+    "total_bankroll": 25000.0
+  },
+  "sizing_config": {
+    "kelly_multiplier": 0.25,
+    "min_bet_dollars": 10.0,
+    "max_bet_fraction": 0.02
+  },
+  "expected": {
+    "primary_edge": 0.05,
+    "primary_passes_threshold": true,
+    "primary_stake": 137.5,
+    "primary_approved": true,
+    "secondary_edge": -0.05,
+    "secondary_passes_threshold": false,
+    "secondary_stake": 0.0,
+    "secondary_approved": false
+  },
+  "expected_hashes": {
+    "primary_edge_inputs_hash": "091844a216dfff7bab866eaf1e6e609067675194a56ac716376ead4d30e5b642",
+    "primary_sizing_inputs_hash": "b793ec7275cb74892f558387abb8ca1b1e58fd52aed1e1ab54ea1023f97056e3",
+    "secondary_edge_inputs_hash": "990e138044da409fd5cd27e3cd5f988bc5062db50f36248d2ca7b870d1f9492e",
+    "secondary_sizing_inputs_hash": "b56194902ea1b281c64d09600987800a44ed74d529aec81a8231ac1b57fe4b39",
+    "manifest_hash": "8a2c796eb90197c5e76d32763a3ecb834396d54162694d6a96197b733f3dd655"
+  }
+}

@@ -19,8 +19,8 @@ from __future__ import annotations
 import json
 import logging
 import time
-from dataclasses import dataclass, field
-from datetime import datetime, timezone
+from dataclasses import dataclass
+from datetime import UTC, datetime
 from typing import Any
 
 import httpx
@@ -33,6 +33,11 @@ _BASE_URL = "https://feeds.datagolf.com"
 _DEFAULT_TIMEOUT_SECONDS = 30.0
 _MAX_RETRIES = 3
 _RETRY_INITIAL_WAIT = 1.0   # seconds; doubles on each retry
+_DG_MODEL_VERSION_KEYS = (
+    "dg_model_version",
+    "model_version",
+    "data_golf_model_version",
+)
 
 
 # ---------------------------------------------------------------------------
@@ -407,9 +412,29 @@ class DataGolfClient:
         snapshot = RawSnapshot(
             source=source,
             endpoint=endpoint_label,
-            fetched_at=datetime.now(timezone.utc),
+            fetched_at=datetime.now(UTC),
             response_body=json.dumps(data),
+            dg_model_version=extract_dg_model_version(data),
         )
         self._session.add(snapshot)
         self._session.flush()
         return snapshot
+
+
+def extract_dg_model_version(data: Any) -> str | None:
+    """Extract DataGolf model-version metadata from a raw API payload."""
+    if not isinstance(data, dict):
+        return None
+
+    for key in _DG_MODEL_VERSION_KEYS:
+        value = data.get(key)
+        if value is not None and str(value).strip():
+            return str(value).strip()
+
+    metadata = data.get("metadata") or data.get("meta")
+    if isinstance(metadata, dict):
+        for key in _DG_MODEL_VERSION_KEYS:
+            value = metadata.get(key)
+            if value is not None and str(value).strip():
+                return str(value).strip()
+    return None

@@ -2,7 +2,7 @@
 
 A systematic golf betting framework for PGA Tour pre-tournament markets.
 
-**Status:** Phase 2 baseline complete; Phase 3 paper trading next  
+**Status:** Phase 2 baseline complete; Phase 3 paper trading underway  
 **Philosophy:** Survival first. DataGolf as pricing anchor. Matchups as core edge engine.
 
 ## Quick start
@@ -32,7 +32,8 @@ golf-trading/
 ├── config/           # settings.yaml, books.yaml, .env.example
 ├── docs/
 │   ├── adr/          # Architecture decision records
-│   └── agent-execution-plan.md
+│   ├── agent-execution-plan.md
+│   └── backtest-artifact-runbook.md
 ├── src/
 │   ├── config.py     # Config loading
 │   ├── storage/      # Database models and connection
@@ -40,9 +41,9 @@ golf-trading/
 │   ├── normalization/ # Odds conversion, vig removal
 │   ├── pricing/      # Fair odds engine
 │   ├── risk/         # Bankroll, sizing, exposure
-│   ├── execution/    # Scaffolded execution package
-│   ├── backtest/     # Scaffolded walk-forward package
-│   └── monitoring/   # Scaffolded reporting package
+│   ├── execution/    # Paper-trade tickets, placement, settlement
+│   ├── backtest/     # Leakage-checked replay and summaries
+│   └── monitoring/   # CLV, attribution, reports
 ├── tests/
 │   ├── unit/
 │   ├── integration/
@@ -57,7 +58,7 @@ golf-trading/
 | 0 | ✅ Complete | Foundation: repo, config, storage, tests |
 | 1 | ✅ Complete | Ingestion + normalization |
 | 2 | ✅ Complete | Pricing + baseline risk engine |
-| 3 | 🔜 Next | Paper trading |
+| 3 | In progress | Paper trading |
 | 4 | ⏳ | Shadow live |
 | 5 | ⏳ | Capital deployment |
 | 6 | ⏳ | Iteration + expansion |
@@ -69,5 +70,6 @@ golf-trading/
 - [agent.md](agent.md) — Shared project charter
 - [AGENTS.md](AGENTS.md) — Codex-local repo instructions
 - [Agent execution plan](docs/agent-execution-plan.md) — Current workstream backlog and handoff rules
+- [Backtest artifact runbook](docs/backtest-artifact-runbook.md) — Manual WS-7 replay, review, and phase-gate artifact chain
 - [ADRs](docs/adr/) — Architecture decisions
 - [Shared skills](../skills/README.md) — Tool-agnostic skill source

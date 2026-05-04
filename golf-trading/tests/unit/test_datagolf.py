@@ -17,13 +17,12 @@ Covers:
 from __future__ import annotations
 
 import json
-from unittest.mock import MagicMock, call, patch, PropertyMock
+from unittest.mock import MagicMock, patch
 
 import httpx
 import pytest
 
-from src.ingestion.datagolf import DataGolfClient, _MAX_RETRIES
-
+from src.ingestion.datagolf import _MAX_RETRIES, DataGolfClient, extract_dg_model_version
 
 # ---------------------------------------------------------------------------
 # Helpers
@@ -53,6 +52,7 @@ def _mock_response(status_code: int, body: dict) -> MagicMock:
 SAMPLE_FORECAST = {
     "event_name": "The Players Championship",
     "year": 2024,
+    "dg_model_version": "dg-2024-03-01",
     "players": [
         {"player_id": "scottie_scheffler", "win_probability": 0.142},
     ],
@@ -74,6 +74,7 @@ def test_fetch_pretournament_stores_snapshot(db_session):
     assert result.snapshot.source == "datagolf"
     assert result.snapshot.endpoint == "pretournament_predictions"
     assert result.snapshot.response_body == json.dumps(SAMPLE_FORECAST)
+    assert result.snapshot.dg_model_version == "dg-2024-03-01"
 
 
 def test_fetch_player_list_stores_snapshot(db_session):
@@ -86,6 +87,18 @@ def test_fetch_player_list_stores_snapshot(db_session):
 
     assert result.snapshot.endpoint == "player_list"
     assert result.data == player_list
+    assert result.snapshot.dg_model_version is None
+
+
+def test_extract_dg_model_version_from_metadata() -> None:
+    assert (
+        extract_dg_model_version({"metadata": {"model_version": " dg-2026-04-01 "}})
+        == "dg-2026-04-01"
+    )
+
+
+def test_extract_dg_model_version_returns_none_when_absent() -> None:
+    assert extract_dg_model_version({"players": []}) is None
 
 
 def test_api_key_included_in_request(db_session):

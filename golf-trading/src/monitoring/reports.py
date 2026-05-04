@@ -1,0 +1,338 @@
+"""Small reporting helpers for Phase 3 paper trading."""
+
+from __future__ import annotations
+
+import csv
+from dataclasses import dataclass
+from io import StringIO
+
+from sqlalchemy.orm import Session
+
+from src.execution.settlement import SettlementLog
+from src.execution.tickets import BetTicketDraft
+from src.monitoring.clv import CLVResult
+from src.storage.models import (
+    BetAttribution,
+    BetCandidate,
+    BetOutcome,
+    BetTicket,
+    CLVSnapshot,
+    PlacedBet,
+    Player,
+    Tournament,
+)
+
+
+@dataclass(frozen=True)
+class PaperTradeReport:
+    """Aggregate paper-trading metrics for a batch of settled tickets."""
+
+    ticket_count: int
+    approved_count: int
+    settled_count: int
+    total_staked: float
+    total_profit_loss: float
+    roi: float
+    average_edge: float
+    average_clv_raw: float | None
+    positive_clv_rate: float | None
+
+
+@dataclass(frozen=True)
+class StoredPaperTradeReport:
+    """Aggregate paper-trading metrics from persisted DB rows."""
+
+    ticket_count: int
+    approved_count: int
+    open_ticket_count: int
+    placed_count: int
+    settled_count: int
+    pending_settlement_count: int
+    clv_count: int
+    missing_clv_count: int
+    total_staked: float
+    open_approved_stake: float
+    total_profit_loss: float
+    strategy_profit_loss: float
+    promo_profit_loss: float
+    roi: float
+    strategy_roi: float
+    average_edge: float | None
+    average_clv_raw: float | None
+    positive_clv_rate: float | None
+    attribution_count: int
+    model_alpha: float
+    execution_drift: float
+    sizing_alpha: float
+    variance: float
+
+
+def build_paper_trade_report(
+    tickets: list[BetTicketDraft],
+    settlements: list[SettlementLog],
+    clv_results: list[CLVResult] | None = None,
+) -> PaperTradeReport:
+    """Summarize tickets, settlement P&L, and optional CLV."""
+    approved = [ticket for ticket in tickets if ticket.approved]
+    total_staked = sum(s.stake for s in settlements)
+    total_profit_loss = sum(s.profit_loss for s in settlements)
+    clvs = clv_results or []
+
+    return PaperTradeReport(
+        ticket_count=len(tickets),
+        approved_count=len(approved),
+        settled_count=len(settlements),
+        total_staked=round(total_staked, 2),
+        total_profit_loss=round(total_profit_loss, 2),
+        roi=0.0 if total_staked == 0 else total_profit_loss / total_staked,
+        average_edge=0.0 if not tickets else sum(t.edge for t in tickets) / len(tickets),
+        average_clv_raw=None if not clvs else sum(c.clv_raw for c in clvs) / len(clvs),
+        positive_clv_rate=None if not clvs else sum(c.clv_raw > 0 for c in clvs) / len(clvs),
+    )
+
+
+def build_stored_paper_trade_report(session: Session) -> StoredPaperTradeReport:
+    """Summarize the persisted paper-trading database state."""
+    tickets = session.query(BetTicket).all()
+    placed_bets = session.query(PlacedBet).all()
+    outcomes = session.query(BetOutcome).all()
+    clvs = session.query(CLVSnapshot).all()
+    attributions = session.query(BetAttribution).all()
+
+    placed_ticket_ids = {bet.ticket_id for bet in placed_bets}
+    settled_bet_ids = {outcome.bet_id for outcome in outcomes}
+    clv_bet_ids = {clv.bet_id for clv in clvs}
+    candidate_ids = [ticket.candidate_id for ticket in tickets]
+    candidates = (
+        session.query(BetCandidate).filter(BetCandidate.candidate_id.in_(candidate_ids)).all()
+        if candidate_ids
+        else []
+    )
+
+    approved_tickets = [ticket for ticket in tickets if ticket.approved]
+    open_tickets = [ticket for ticket in tickets if ticket.ticket_id not in placed_ticket_ids]
+    total_staked = sum(bet.actual_stake for bet in placed_bets)
+    total_profit_loss = sum(outcome.profit_loss for outcome in outcomes)
+    strategy_profit_loss = sum(outcome.profit_loss_raw for outcome in outcomes)
+    promo_profit_loss = total_profit_loss - strategy_profit_loss
+    clv_values = [clv.clv_raw for clv in clvs if clv.clv_raw is not None]
+    edge_values = [candidate.edge_pct for candidate in candidates]
+
+    return StoredPaperTradeReport(
+        ticket_count=len(tickets),
+        approved_count=len(approved_tickets),
+        open_ticket_count=len(open_tickets),
+        placed_count=len(placed_bets),
+        settled_count=len(outcomes),
+        pending_settlement_count=sum(bet.bet_id not in settled_bet_ids for bet in placed_bets),
+        clv_count=len(clvs),
+        missing_clv_count=sum(bet.bet_id not in clv_bet_ids for bet in placed_bets),
+        total_staked=round(total_staked, 2),
+        open_approved_stake=round(sum(ticket.proposed_stake for ticket in open_tickets if ticket.approved), 2),
+        total_profit_loss=round(total_profit_loss, 2),
+        strategy_profit_loss=round(strategy_profit_loss, 2),
+        promo_profit_loss=round(promo_profit_loss, 2),
+        roi=0.0 if total_staked == 0 else total_profit_loss / total_staked,
+        strategy_roi=0.0 if total_staked == 0 else strategy_profit_loss / total_staked,
+        average_edge=None if not edge_values else sum(edge_values) / len(edge_values),
+        average_clv_raw=None if not clv_values else sum(clv_values) / len(clv_values),
+        positive_clv_rate=None if not clv_values else sum(value > 0 for value in clv_values) / len(clv_values),
+        attribution_count=len(attributions),
+        model_alpha=round(sum(row.model_alpha for row in attributions), 2),
+        execution_drift=round(sum(row.execution_drift for row in attributions), 2),
+        sizing_alpha=round(sum(row.sizing_alpha for row in attributions), 2),
+        variance=round(sum(row.variance for row in attributions), 2),
+    )
+
+
+def render_stored_report(report: StoredPaperTradeReport) -> str:
+    """Render persisted paper-trading metrics for terminal output."""
+    return "\n".join(
+        [
+            "Paper Trade Report",
+            f"Tickets: {report.ticket_count} total, {report.approved_count} approved, {report.open_ticket_count} open",
+            (
+                f"Bets: {report.placed_count} placed, {report.settled_count} settled, "
+                f"{report.pending_settlement_count} pending settlement"
+            ),
+            f"CLV: {report.clv_count} recorded, {report.missing_clv_count} missing",
+            f"Staked: ${report.total_staked:.2f}",
+            f"Open approved stake: ${report.open_approved_stake:.2f}",
+            f"Strategy P&L: ${report.strategy_profit_loss:.2f}",
+            f"Promo P&L: ${report.promo_profit_loss:.2f}",
+            f"Realized P&L: ${report.total_profit_loss:.2f}",
+            f"Strategy ROI: {report.strategy_roi:.2%}",
+            f"Realized ROI: {report.roi:.2%}",
+            f"Average edge: {_format_optional_pct(report.average_edge)}",
+            f"Average raw CLV: {_format_optional_pct(report.average_clv_raw)}",
+            f"Positive CLV rate: {_format_optional_pct(report.positive_clv_rate)}",
+            f"Attribution rows: {report.attribution_count}",
+            f"Model alpha: ${report.model_alpha:.2f}",
+            f"Execution drift: ${report.execution_drift:.2f}",
+            f"Sizing alpha: ${report.sizing_alpha:.2f}",
+            f"Variance: ${report.variance:.2f}",
+        ]
+    )
+
+
+def _format_optional_pct(value: float | None) -> str:
+    return "n/a" if value is None else f"{value:.2%}"
+
+
+def render_ticket_detail(session: Session, ticket_id: int) -> str:
+    """Render one persisted ticket as a manual bet slip."""
+    ticket = _require(session, BetTicket, ticket_id, "ticket")
+    candidate = _require(session, BetCandidate, ticket.candidate_id, "candidate")
+    tournament = session.get(Tournament, candidate.tournament_id)
+    primary = session.get(Player, candidate.player_id_1)
+    opponent = session.get(Player, candidate.player_id_2) if candidate.player_id_2 else None
+    placed = session.query(PlacedBet).filter_by(ticket_id=ticket.ticket_id).one_or_none()
+
+    status = "placed" if placed is not None else "open"
+    approved = "approved" if ticket.approved else "rejected"
+    opponent_text = f" vs {_player_name(opponent)}" if opponent else ""
+
+    lines = [
+        f"Ticket {ticket.ticket_id} [{approved}, {status}]",
+        f"Tournament: {_tournament_name(tournament)}",
+        f"Market: {candidate.market_type} - {_player_name(primary)}{opponent_text}",
+        f"Book: {candidate.book}",
+        f"Side: {candidate.side} {ticket.proposed_american_odds:+d}",
+        f"Stake: ${ticket.proposed_stake:.2f}",
+        f"Fair probability: {candidate.fair_prob:.3f}",
+        f"Book no-vig probability: {candidate.book_prob:.3f}",
+        f"Edge: {candidate.edge_pct:.2%}",
+        f"Sleeve: {ticket.sleeve}",
+        f"Sizing: {ticket.sizing_method}",
+    ]
+    if ticket.kelly_fraction_used is not None:
+        lines.append(f"Kelly fraction: {ticket.kelly_fraction_used:.4f}")
+    if ticket.rejection_reason:
+        lines.append(f"Rejection reason: {ticket.rejection_reason}")
+    if placed:
+        lines.append(f"Placed bet id: {placed.bet_id}")
+    return "\n".join(lines)
+
+
+def export_tickets_csv(
+    session: Session,
+    *,
+    unplaced_only: bool = False,
+    approved_only: bool = False,
+) -> str:
+    """Export persisted tickets as CSV for manual execution."""
+    placed_ticket_ids = {row.ticket_id for row in session.query(PlacedBet.ticket_id).all()}
+    tickets = session.query(BetTicket).order_by(BetTicket.ticket_id).all()
+
+    output = StringIO()
+    writer = csv.DictWriter(
+        output,
+        fieldnames=[
+            "ticket_id",
+            "candidate_id",
+            "status",
+            "approved",
+            "tournament",
+            "market_type",
+            "book",
+            "side",
+            "american_odds",
+            "stake",
+            "fair_prob",
+            "book_prob",
+            "edge_pct",
+            "sleeve",
+            "sizing_method",
+            "rejection_reason",
+        ],
+    )
+    writer.writeheader()
+    for ticket in tickets:
+        if unplaced_only and ticket.ticket_id in placed_ticket_ids:
+            continue
+        if approved_only and not ticket.approved:
+            continue
+        candidate = _require(session, BetCandidate, ticket.candidate_id, "candidate")
+        tournament = session.get(Tournament, candidate.tournament_id)
+        writer.writerow(
+            {
+                "ticket_id": ticket.ticket_id,
+                "candidate_id": ticket.candidate_id,
+                "status": "placed" if ticket.ticket_id in placed_ticket_ids else "open",
+                "approved": ticket.approved,
+                "tournament": _tournament_name(tournament),
+                "market_type": candidate.market_type,
+                "book": candidate.book,
+                "side": candidate.side,
+                "american_odds": ticket.proposed_american_odds,
+                "stake": f"{ticket.proposed_stake:.2f}",
+                "fair_prob": f"{candidate.fair_prob:.6f}",
+                "book_prob": f"{candidate.book_prob:.6f}",
+                "edge_pct": f"{candidate.edge_pct:.6f}",
+                "sleeve": ticket.sleeve,
+                "sizing_method": ticket.sizing_method,
+                "rejection_reason": ticket.rejection_reason or "",
+            }
+        )
+    return output.getvalue()
+
+
+def render_open_actions(session: Session) -> str:
+    """Render unresolved operator actions for paper trading."""
+    placed_bets = session.query(PlacedBet).all()
+    placed_ticket_ids = {bet.ticket_id for bet in placed_bets}
+    settled_bet_ids = {outcome.bet_id for outcome in session.query(BetOutcome).all()}
+    clv_bet_ids = {clv.bet_id for clv in session.query(CLVSnapshot).all()}
+    attribution_bet_ids = {row.bet_id for row in session.query(BetAttribution).all()}
+
+    open_tickets = [
+        ticket
+        for ticket in session.query(BetTicket).order_by(BetTicket.ticket_id).all()
+        if ticket.approved and ticket.ticket_id not in placed_ticket_ids
+    ]
+    rejected_tickets = [
+        ticket
+        for ticket in session.query(BetTicket).order_by(BetTicket.ticket_id).all()
+        if not ticket.approved
+    ]
+    pending_settlement = [bet for bet in placed_bets if bet.bet_id not in settled_bet_ids]
+    missing_clv = [bet for bet in placed_bets if bet.bet_id not in clv_bet_ids]
+    missing_attribution = [
+        bet
+        for bet in placed_bets
+        if bet.bet_id in settled_bet_ids and bet.bet_id not in attribution_bet_ids
+    ]
+
+    lines = ["Open Actions"]
+    lines.append(f"Tickets to place: {len(open_tickets)}")
+    for ticket in open_tickets:
+        lines.append(f"  ticket_id={ticket.ticket_id} stake=${ticket.proposed_stake:.2f}")
+    lines.append(f"Bets pending settlement: {len(pending_settlement)}")
+    for bet in pending_settlement:
+        lines.append(f"  bet_id={bet.bet_id} ticket_id={bet.ticket_id}")
+    lines.append(f"Bets missing CLV: {len(missing_clv)}")
+    for bet in missing_clv:
+        lines.append(f"  bet_id={bet.bet_id} ticket_id={bet.ticket_id}")
+    lines.append(f"Bets missing attribution: {len(missing_attribution)}")
+    for bet in missing_attribution:
+        lines.append(f"  bet_id={bet.bet_id} ticket_id={bet.ticket_id}")
+    lines.append(f"Rejected tickets: {len(rejected_tickets)}")
+    for ticket in rejected_tickets:
+        reason = ticket.rejection_reason or "unknown"
+        lines.append(f"  ticket_id={ticket.ticket_id} reason={reason}")
+    return "\n".join(lines)
+
+
+def _require(session: Session, model, row_id: int, label: str):
+    row = session.get(model, row_id)
+    if row is None:
+        raise ValueError(f"Unknown {label}_id={row_id}")
+    return row
+
+
+def _player_name(player: Player | None) -> str:
+    return "unknown" if player is None else player.name_canonical
+
+
+def _tournament_name(tournament: Tournament | None) -> str:
+    return "unknown" if tournament is None else tournament.name

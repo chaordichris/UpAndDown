@@ -2,26 +2,28 @@
 Unit tests for the config loading module.
 """
 
-import os
-import tempfile
-from pathlib import Path
-
 import pytest
-import yaml
 
 
 def test_settings_load(tmp_path):
     """Settings load successfully from a valid YAML file."""
     # Point loader at real config files
-    from src.config import get_settings, clear_config_cache
+    from src.config import clear_config_cache, get_settings
     clear_config_cache()
     settings = get_settings()
     assert settings.bankroll.reserve_fraction == 0.50
     assert settings.bankroll.active_core_fraction == 0.40
     assert settings.bankroll.convex_fraction == 0.10
     assert settings.sizing.kelly_fraction == 0.25
+    assert settings.sizing.posterior_kelly_enabled is False
     assert settings.edge.min_edge_core == 0.03
     assert settings.edge.min_edge_convex == 0.08
+    assert settings.edge.fdr_enabled is False
+    assert settings.edge.fdr_q_core == 0.20
+    assert settings.edge.fdr_q_convex == 0.10
+    assert settings.ror.bet_count == 100
+    assert settings.ror.simulations == 10000
+    assert settings.ror.seed == 20260430
 
 
 def test_bankroll_fractions_sum_to_one():
@@ -45,7 +47,7 @@ def test_bankroll_fractions_invalid():
 
 def test_books_load():
     """Books config loads with active books."""
-    from src.config import get_books, clear_config_cache
+    from src.config import clear_config_cache, get_books
     clear_config_cache()
     books = get_books()
     active = books.active_books()
@@ -57,7 +59,7 @@ def test_books_load():
 
 def test_books_settlement_rule():
     """Settlement rules are accessible per book."""
-    from src.config import get_books, clear_config_cache
+    from src.config import clear_config_cache, get_books
     clear_config_cache()
     books = get_books()
     rule = books.get_settlement_rule("dk", "matchup_wd_before_tee")
@@ -66,7 +68,7 @@ def test_books_settlement_rule():
 
 def test_books_unknown_book_raises():
     """Requesting a settlement rule for an unknown book raises KeyError."""
-    from src.config import get_books, clear_config_cache
+    from src.config import clear_config_cache, get_books
     clear_config_cache()
     books = get_books()
     with pytest.raises(KeyError):
@@ -75,7 +77,7 @@ def test_books_unknown_book_raises():
 
 def test_market_types_loaded():
     """All expected market types are present."""
-    from src.config import get_books, clear_config_cache
+    from src.config import clear_config_cache, get_books
     clear_config_cache()
     books = get_books()
     expected = {"matchup_2ball", "matchup_3ball", "make_cut", "top_10", "top_20", "outright_win"}
@@ -84,7 +86,7 @@ def test_market_types_loaded():
 
 def test_convex_sleeve_market():
     """Outright win is classified as convex sleeve."""
-    from src.config import get_books, clear_config_cache
+    from src.config import clear_config_cache, get_books
     clear_config_cache()
     books = get_books()
     assert books.market_types["outright_win"].sleeve == "convex"
@@ -92,7 +94,7 @@ def test_convex_sleeve_market():
 
 def test_core_sleeve_markets():
     """Matchup markets are classified as core sleeve."""
-    from src.config import get_books, clear_config_cache
+    from src.config import clear_config_cache, get_books
     clear_config_cache()
     books = get_books()
     assert books.market_types["matchup_2ball"].sleeve == "core"

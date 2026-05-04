@@ -15,14 +15,14 @@ Known-answer tests:
 from __future__ import annotations
 
 import math
+from datetime import UTC, datetime
+
 import pytest
 
-from src.pricing.fair_price import FairPriceResult, METHOD_HARVILLE
 from src.risk.edge import EdgeResult
-from src.risk.sizing import SizingResult, size_core_bet, size_convex_bet
-from datetime import datetime, timezone
+from src.risk.sizing import size_convex_bet, size_core_bet
 
-NOW = datetime(2024, 3, 11, tzinfo=timezone.utc)
+NOW = datetime(2024, 3, 11, tzinfo=UTC)
 
 
 def _edge(
@@ -34,6 +34,8 @@ def _edge(
     book_american_odds: int = -110,
     passes_threshold: bool = True,
     sleeve: str = "core",
+    edge_sd: float | None = None,
+    passes_fdr: bool = True,
 ) -> EdgeResult:
     return EdgeResult(
         datagolf_id=datagolf_id,
@@ -46,6 +48,8 @@ def _edge(
         sleeve=sleeve,
         passes_threshold=passes_threshold,
         book_american_odds=book_american_odds,
+        edge_sd=edge_sd,
+        passes_fdr=passes_fdr,
     )
 
 
@@ -141,6 +145,83 @@ def test_core_bet_kelly_fraction_recorded() -> None:
     )
     # Kelly fraction = 0.05 / (1.909-1) ≈ 0.055
     assert math.isclose(result.kelly_fraction, 0.055, rel_tol=0.02)
+
+
+def test_core_bet_rejected_when_fdr_fails() -> None:
+    result = size_core_bet(
+        edge=_edge(edge=0.05, passes_fdr=False),
+        active_bankroll=10_000,
+        total_bankroll=25_000,
+        kelly_multiplier=0.25,
+        min_bet_dollars=10.0,
+        max_bet_fraction=0.02,
+    )
+
+    assert not result.approved
+    assert result.stake == 0.0
+    assert result.reason == "Candidate failed FDR control."
+
+
+def test_core_bet_posterior_kelly_zero_uncertainty_matches_default() -> None:
+    baseline = size_core_bet(
+        edge=_edge(edge=0.05, book_american_odds=-110),
+        active_bankroll=10_000,
+        total_bankroll=25_000,
+        kelly_multiplier=0.25,
+        min_bet_dollars=10.0,
+        max_bet_fraction=0.02,
+    )
+    posterior = size_core_bet(
+        edge=_edge(edge=0.05, book_american_odds=-110, edge_sd=0.0),
+        active_bankroll=10_000,
+        total_bankroll=25_000,
+        kelly_multiplier=0.25,
+        min_bet_dollars=10.0,
+        max_bet_fraction=0.02,
+        posterior_kelly_enabled=True,
+    )
+
+    assert posterior.approved
+    assert posterior.stake == baseline.stake
+    assert posterior.kelly_fraction == pytest.approx(baseline.kelly_fraction * 0.25)
+
+
+def test_core_bet_posterior_kelly_requires_edge_sd() -> None:
+    result = size_core_bet(
+        edge=_edge(edge=0.05, edge_sd=None),
+        active_bankroll=10_000,
+        total_bankroll=25_000,
+        kelly_multiplier=0.25,
+        min_bet_dollars=10.0,
+        max_bet_fraction=0.02,
+        posterior_kelly_enabled=True,
+    )
+
+    assert not result.approved
+    assert result.reason == "Posterior Kelly requires edge_sd."
+
+
+def test_core_bet_posterior_kelly_shrinks_stake_for_uncertainty() -> None:
+    baseline = size_core_bet(
+        edge=_edge(edge=0.05, book_american_odds=-110),
+        active_bankroll=10_000,
+        total_bankroll=25_000,
+        kelly_multiplier=0.25,
+        min_bet_dollars=10.0,
+        max_bet_fraction=0.02,
+    )
+    posterior = size_core_bet(
+        edge=_edge(edge=0.05, book_american_odds=-110, edge_sd=0.05),
+        active_bankroll=10_000,
+        total_bankroll=25_000,
+        kelly_multiplier=0.25,
+        min_bet_dollars=10.0,
+        max_bet_fraction=0.02,
+        posterior_kelly_enabled=True,
+    )
+
+    assert posterior.approved
+    assert posterior.stake < baseline.stake
 
 
 # ---------------------------------------------------------------------------

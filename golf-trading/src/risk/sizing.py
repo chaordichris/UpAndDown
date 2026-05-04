@@ -25,6 +25,7 @@ from dataclasses import dataclass
 
 from src.normalization.odds import american_to_decimal
 from src.risk.edge import EdgeResult
+from src.risk.posterior_kelly import compute_posterior_kelly_fraction
 
 
 @dataclass(frozen=True)
@@ -44,6 +45,7 @@ def size_core_bet(
     kelly_multiplier: float,
     min_bet_dollars: float,
     max_bet_fraction: float,
+    posterior_kelly_enabled: bool = False,
 ) -> SizingResult:
     """Compute stake for a core (matchup) bet using fractional Kelly.
 
@@ -65,10 +67,42 @@ def size_core_bet(
             reason="Edge below minimum threshold.",
             kelly_fraction=0.0,
         )
+    if not edge.passes_fdr:
+        return SizingResult(
+            stake=0.0,
+            approved=False,
+            reason="Candidate failed FDR control.",
+            kelly_fraction=0.0,
+        )
+    if posterior_kelly_enabled and edge.edge_sd is None:
+        return SizingResult(
+            stake=0.0,
+            approved=False,
+            reason="Posterior Kelly requires edge_sd.",
+            kelly_fraction=0.0,
+        )
 
     decimal_odds = american_to_decimal(edge.book_american_odds)
-    # Kelly fraction = edge / (odds - 1)
-    kelly_f = edge.edge / (decimal_odds - 1.0)
+    if posterior_kelly_enabled:
+        posterior = compute_posterior_kelly_fraction(
+            edge_mean=edge.edge,
+            edge_sd=edge.edge_sd or 0.0,
+            decimal_odds=decimal_odds,
+            user_fraction=kelly_multiplier,
+        )
+        kelly_f = posterior.posterior_kelly_fraction
+        if not posterior.approved:
+            return SizingResult(
+                stake=0.0,
+                approved=False,
+                reason=posterior.reason,
+                kelly_fraction=kelly_f,
+            )
+        stake_multiplier = 1.0
+    else:
+        # Kelly fraction = edge / (odds - 1)
+        kelly_f = edge.edge / (decimal_odds - 1.0)
+        stake_multiplier = kelly_multiplier
 
     if kelly_f <= 0:
         return SizingResult(
@@ -78,7 +112,7 @@ def size_core_bet(
             kelly_fraction=kelly_f,
         )
 
-    raw_stake = kelly_multiplier * kelly_f * active_bankroll
+    raw_stake = stake_multiplier * kelly_f * active_bankroll
     ceiling = max_bet_fraction * total_bankroll
     stake = min(raw_stake, ceiling)
 
@@ -93,10 +127,13 @@ def size_core_bet(
     return SizingResult(
         stake=round(stake, 2),
         approved=True,
-        reason=(
-            f"Kelly={kelly_f:.4f} × {kelly_multiplier}x × ${active_bankroll:.0f} "
-            f"= ${raw_stake:.2f}"
-            + (f" (capped at ${ceiling:.2f})" if raw_stake > ceiling else "")
+        reason=_sizing_reason(
+            kelly_fraction=kelly_f,
+            stake_multiplier=stake_multiplier,
+            active_bankroll=active_bankroll,
+            raw_stake=raw_stake,
+            ceiling=ceiling,
+            posterior_kelly_enabled=posterior_kelly_enabled,
         ),
         kelly_fraction=kelly_f,
     )
@@ -130,6 +167,13 @@ def size_convex_bet(
             reason="Edge below minimum threshold.",
             kelly_fraction=0.0,
         )
+    if not edge.passes_fdr:
+        return SizingResult(
+            stake=0.0,
+            approved=False,
+            reason="Candidate failed FDR control.",
+            kelly_fraction=0.0,
+        )
 
     raw_stake = unit_fraction * convex_bankroll
     ceiling = max_bet_fraction * total_bankroll
@@ -151,4 +195,23 @@ def size_convex_bet(
             + (f" (capped at ${ceiling:.2f})" if raw_stake > ceiling else "")
         ),
         kelly_fraction=0.0,  # not applicable for fixed-unit sizing
+    )
+
+
+def _sizing_reason(
+    *,
+    kelly_fraction: float,
+    stake_multiplier: float,
+    active_bankroll: float,
+    raw_stake: float,
+    ceiling: float,
+    posterior_kelly_enabled: bool,
+) -> str:
+    if posterior_kelly_enabled:
+        prefix = f"Posterior Kelly={kelly_fraction:.4f} × ${active_bankroll:.0f}"
+    else:
+        prefix = f"Kelly={kelly_fraction:.4f} × {stake_multiplier}x × ${active_bankroll:.0f}"
+    return (
+        f"{prefix} = ${raw_stake:.2f}"
+        + (f" (capped at ${ceiling:.2f})" if raw_stake > ceiling else "")
     )

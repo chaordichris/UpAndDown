@@ -10,6 +10,7 @@ import pytest
 def test_init_db_creates_tables(test_database_url):
     """init_db creates all expected tables."""
     from sqlalchemy import inspect
+
     from src.storage.db import get_engine, init_db
 
     engine = get_engine(test_database_url)
@@ -96,6 +97,7 @@ def test_create_player_and_alias(db_session):
 def test_duplicate_alias_raises(db_session):
     """Inserting duplicate (alias_name, source) raises an integrity error."""
     from sqlalchemy.exc import IntegrityError
+
     from src.storage.models import Player, PlayerAlias
 
     player = Player(name_canonical="Test Player", datagolf_player_id="test_dup_alias")
@@ -133,6 +135,40 @@ def test_bankroll_history_roundtrip(db_session):
     assert fetched.total_capital == 10_000.0
     assert fetched.drawdown_state == "normal"
     assert fetched.drawdown_from_peak_pct == 0.0
+
+
+def test_bet_candidate_risk_metadata_roundtrip(db_session):
+    """BetCandidate stores optional Batch C uncertainty and FDR metadata."""
+    from src.storage.models import BetCandidate, Player, Tournament
+
+    tournament = Tournament(name="Risk Metadata Open", tour="pga")
+    player = Player(datagolf_player_id="risk_meta_player", name_canonical="Risk Meta Player")
+    db_session.add_all([tournament, player])
+    db_session.flush()
+
+    candidate = BetCandidate(
+        tournament_id=tournament.tournament_id,
+        market_type="matchup_2ball",
+        side="risk_meta_player",
+        player_id_1=player.player_id,
+        book="dk",
+        fair_prob=0.56,
+        book_prob=0.51,
+        book_american_odds=-110,
+        edge_pct=0.05,
+        edge_sd=0.015,
+        p_value=0.002,
+        passes_fdr=True,
+        confidence_score=1.0,
+        staleness_flag=False,
+    )
+    db_session.add(candidate)
+    db_session.flush()
+
+    fetched = db_session.get(BetCandidate, candidate.candidate_id)
+    assert fetched.edge_sd == 0.015
+    assert fetched.p_value == 0.002
+    assert fetched.passes_fdr is True
 
 
 def test_session_rollback_on_error(test_database_url):

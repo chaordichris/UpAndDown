@@ -1,0 +1,64 @@
+{
+  "scenario": "datagolf_matchup_odds_normalization",
+  "code_version": "phase3-normalization-replay-v1",
+  "book_id": "draftkings",
+  "vig_method": "multiplicative",
+  "raw_response": {
+    "event_name": "Normalization Replay Open",
+    "tour": "pga",
+    "market": "tournament_matchups",
+    "last_updated": "2026-04-30 12:00:00",
+    "match_list": [
+      {
+        "p1_player_name": "Scottie Scheffler",
+        "p2_player_name": "Rory McIlroy",
+        "p1_datagolf_id": "dg_scottie_scheffler",
+        "p2_datagolf_id": "dg_rory_mcilroy",
+        "draftkings": {
+          "p1_odds": -145,
+          "p2_odds": 120
+        },
+        "fanduel": {
+          "p1_odds": -150,
+          "p2_odds": 122
+        },
+        "datagolf_baseline": {
+          "p1_odds": -155,
+          "p2_odds": 128
+        }
+      },
+      {
+        "p1_player_name": "Jon Rahm",
+        "p2_player_name": "Xander Schauffele",
+        "p1_datagolf_id": "dg_jon_rahm",
+        "p2_datagolf_id": "dg_xander_schauffele",
+        "draftkings": {
+          "p1_odds": -110,
+          "p2_odds": -110
+        },
+        "datagolf_baseline": {
+          "p1_odds": -118,
+          "p2_odds": -102
+        }
+      }
+    ]
+  },
+  "expected": {
+    "matchup_count": 2,
+    "normalized_rows": 4,
+    "first_matchup_hold_pct": 4.638219,
+    "first_matchup_no_vig_probs": [
+      0.565603,
+      0.434397
+    ],
+    "second_matchup_no_vig_probs": [
+      0.5,
+      0.5
+    ]
+  },
+  "expected_hashes": {
+    "parsed_snapshot_hash": "285b8f8104799c14c9113005e4a311c942c887ae4f6044fe55428535693df147",
+    "normalized_batch_hash": "135e499c29fbd0e224943a6a7d74d8e6b0395b040b038c6f635a4b4501a51039",
+    "manifest_hash": "69cf5fea95a57196a1a42a65b3f2d24c19a4f7d5c58eac23f768fe1e3654a3a5"
+  }
+}

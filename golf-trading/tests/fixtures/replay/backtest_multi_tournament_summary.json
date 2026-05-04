@@ -1,0 +1,49 @@
+{
+  "scenario": "backtest_multi_tournament_summary",
+  "code_version": "ws7-backtest-summary-v1",
+  "reports": [
+    {
+      "label": "event_1",
+      "ticket_count": 2,
+      "approved_count": 1,
+      "placed_count": 1,
+      "settled_count": 1,
+      "clv_count": 1,
+      "total_staked": 100.0,
+      "strategy_profit_loss": 50.0,
+      "total_profit_loss": 50.0,
+      "average_edge": 0.05,
+      "average_clv_raw": 0.02,
+      "positive_clv_rate": 1.0
+    },
+    {
+      "label": "event_2",
+      "ticket_count": 3,
+      "approved_count": 2,
+      "placed_count": 2,
+      "settled_count": 2,
+      "clv_count": 2,
+      "total_staked": 200.0,
+      "strategy_profit_loss": -75.0,
+      "total_profit_loss": -75.0,
+      "average_edge": 0.03,
+      "average_clv_raw": -0.01,
+      "positive_clv_rate": 0.5
+    }
+  ],
+  "expected": {
+    "tournament_count": 2,
+    "ticket_count": 5,
+    "settled_count": 3,
+    "strategy_profit_loss": -25.0,
+    "strategy_roi": -0.083333,
+    "average_edge": 0.038,
+    "average_clv_raw": 0.0,
+    "positive_clv_rate": 0.666667,
+    "profitable_tournament_count": 1
+  },
+  "expected_hashes": {
+    "summary_hash": "8687b8e5846d163455802ffdfcfee9211222f2f672a499338cb405dd5fd481c7",
+    "manifest_hash": "c8f9df9024140f1d099f90ceda1dd56bb849747c108b80fb6d7130bbb43197ea"
+  }
+}

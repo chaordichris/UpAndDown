@@ -1,0 +1,151 @@
+{
+  "scenario": "backtest_top5_outright_replay",
+  "code_version": "ws7-backtest-replay-v3",
+  "captured_at": "2026-05-14T12:00:00+00:00",
+  "decision_time": "2026-05-14T14:00:00+00:00",
+  "tournament": {
+    "name": "Backtest Convex Sleeve Open",
+    "tour": "pga",
+    "datagolf_event_id": "backtest_convex_sleeve_open"
+  },
+  "players": [
+    {
+      "datagolf_player_id": "dg_jordan_spieth",
+      "name_canonical": "Jordan Spieth"
+    },
+    {
+      "datagolf_player_id": "dg_justin_thomas",
+      "name_canonical": "Justin Thomas"
+    },
+    {
+      "datagolf_player_id": "dg_viktor_hovland",
+      "name_canonical": "Viktor Hovland"
+    },
+    {
+      "datagolf_player_id": "dg_tommy_fleetwood",
+      "name_canonical": "Tommy Fleetwood"
+    }
+  ],
+  "snapshot": {
+    "source": "datagolf",
+    "endpoint": "pretournament_predictions",
+    "dg_model_version": "dg-2026-05-10"
+  },
+  "forecasts": [
+    {
+      "datagolf_id": "dg_jordan_spieth",
+      "forecast_type": "top_5",
+      "probability": 0.7,
+      "datagolf_skill_rating": 2.0
+    },
+    {
+      "datagolf_id": "dg_justin_thomas",
+      "forecast_type": "top_5",
+      "probability": 0.2,
+      "datagolf_skill_rating": 1.7
+    },
+    {
+      "datagolf_id": "dg_viktor_hovland",
+      "forecast_type": "win",
+      "probability": 0.32,
+      "datagolf_skill_rating": 2.1
+    },
+    {
+      "datagolf_id": "dg_tommy_fleetwood",
+      "forecast_type": "win",
+      "probability": 0.05,
+      "datagolf_skill_rating": 1.6
+    }
+  ],
+  "book_lines": [
+    {
+      "datagolf_id": "dg_jordan_spieth",
+      "market_type": "top_5",
+      "book_id": "draftkings",
+      "american_odds": 200
+    },
+    {
+      "datagolf_id": "dg_justin_thomas",
+      "market_type": "top_5",
+      "book_id": "draftkings",
+      "american_odds": 500
+    },
+    {
+      "datagolf_id": "dg_viktor_hovland",
+      "market_type": "outright_win",
+      "book_id": "draftkings",
+      "american_odds": 1000
+    },
+    {
+      "datagolf_id": "dg_tommy_fleetwood",
+      "market_type": "outright_win",
+      "book_id": "draftkings",
+      "american_odds": 200
+    }
+  ],
+  "settlements": [
+    {
+      "datagolf_id": "dg_jordan_spieth",
+      "result": "loss",
+      "closing_american_odds": 175
+    },
+    {
+      "datagolf_id": "dg_justin_thomas",
+      "result": "loss",
+      "closing_american_odds": 450
+    },
+    {
+      "datagolf_id": "dg_viktor_hovland",
+      "result": "win",
+      "closing_american_odds": 850
+    },
+    {
+      "datagolf_id": "dg_tommy_fleetwood",
+      "result": "loss",
+      "closing_american_odds": 225
+    }
+  ],
+  "settled_at": "2026-05-17T22:00:00+00:00",
+  "model_versions": [
+    {
+      "dg_model_version": "dg-2026-05-10",
+      "published_at": "2026-05-10T08:00:00+00:00"
+    }
+  ],
+  "bankroll": {
+    "total": 25000.0,
+    "reserve_fraction": 0.5,
+    "active_core_fraction": 0.4,
+    "convex_fraction": 0.1
+  },
+  "edge_config": {
+    "min_edge_core": 0.03,
+    "min_edge_convex": 0.08,
+    "fdr_enabled": false,
+    "fdr_q_core": 0.2,
+    "fdr_q_convex": 0.1,
+    "vig_method": "multiplicative"
+  },
+  "sizing": {
+    "posterior_kelly_enabled": false,
+    "kelly_multiplier": 0.25,
+    "convex_unit_fraction": 0.005,
+    "min_bet_dollars": 5.0,
+    "max_bet_fraction": 0.02
+  },
+  "expected": {
+    "approved_ticket_count": 2,
+    "rejected_ticket_count": 2,
+    "settled_count": 2,
+    "clv_count": 2,
+    "strategy_profit_loss": 83.33
+  },
+  "expected_hashes": {
+    "forecast_batch_hash": "286ecb59cf84bf5cc53741ebf5ee2edbb61b892ff074c69ae7e714b907cc92c9",
+    "candidate_batch_hash": "a367e2f742b32edbdad60cd98820f2876e601f3a7e9d34df6b1d97fdd98a2fa5",
+    "ticket_batch_hash": "c783ff3867efb124f4961fe2778d4e09c92c883e0540b2f629c7ceeda102253f",
+    "settlement_batch_hash": "0c6fd3cd997f396f200dcb310cf48478828cc16ac0641f2e116637f2b4e9a1eb",
+    "report_hash": "2a006cea1ca7aa4695bf9b07914a54221fce6f2760749ba6076783ad021c27bd",
+    "manifest_hash": "1ef37fac8050811557706e859055ea6655a2fca419d75268a0d79a1823b0b264"
+  }
+}

@@ -14,8 +14,8 @@ matchup markets. Tiny convex sleeve for outrights. Never compromise the bankroll
 ## Current status
 
 - **Phase 2 baseline is complete.** Pricing, edge detection, and baseline risk controls exist and are tested.
-- **Phase 3 is next.** Execution, settlement, CLV tracking, and reporting are still open.
-- **v0.2 quant-risk upgrades are not integrated yet.** Use `docs/agent-execution-plan.md` plus the addendum to sequence them behind the Phase 3 backbone.
+- **Phase 3 is underway.** Ticket generation, manual placement logging, settlement helpers, CLV capture, paper-trading reports, first pinned replay contract, initial P&L attribution, and promo P&L separation now exist. Phase-gate checks remain open.
+- **v0.2 quant-risk upgrades are partially wired behind disabled flags.** Candidate generation now carries FDR/posterior-Kelly metadata into ticketing, and the first leakage-checked backtest replay spine exists. Risk flags remain off while the paper-trading backbone proves the path.
 
 ## What is already built
 
@@ -24,15 +24,15 @@ matchup markets. Tiny convex sleeve for outrights. Never compromise the bankroll
 3. `src/normalization/odds.py`, `src/normalization/vig.py`, `src/normalization/players.py` — core normalization math
 4. `src/pricing/` — matchup, top-N, outright pricing baseline
 5. `src/risk/edge.py`, `src/risk/sizing.py`, `src/risk/exposure.py`, `src/risk/drawdown.py` — baseline edge and risk engine
+6. `src/execution/`, `src/monitoring/`, `scripts/paper_trade.py` — initial Phase 3 paper-trading backbone
+7. `src/backtest/leakage_guard.py`, `src/backtest/replay.py`, `src/backtest/summary.py` — initial WS-7 leakage-checked replay, settlement, and multi-tournament summary spine
 
 ## What to build next
 
-1. `src/execution/` — ticket generation, placement logging, settlement recording
-2. `src/monitoring/` — CLV, reporting, and execution diagnostics
-3. `src/storage/hashing.py` and `tests/replay/` — deterministic provenance and smoke contracts
-4. `src/risk/posterior_kelly.py`, `src/risk/ror.py`, `src/risk/fdr.py` — v0.2 quant-risk floor
-5. `scripts/phase_gate_check.py` plus `dg_model_version` propagation — machine-checkable phase gates and leakage defense
-6. Advanced portfolio modules (`covariance.py`, `portfolio.py`, `account_health.py`, `capacity.py`) only behind config flags
+1. More replay fixtures for ingestion, normalization, pricing, and risk handoffs
+2. Broaden WS-7 backtests with more historical fixture coverage and event DB artifacts
+3. `scripts/phase_gate_check.py` plus expanded `dg_model_version` propagation — machine-checkable phase gates and leakage defense
+4. Advanced portfolio modules (`covariance.py`, `portfolio.py`, `account_health.py`, `capacity.py`) only behind config flags
 
 See `docs/agent-execution-plan.md`, `docs/adr/`, and the build plan addendum for full sequencing.
 

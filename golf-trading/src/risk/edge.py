@@ -26,11 +26,12 @@ we apply vig removal per-matchup (two-side) and per-outright-market (multi-side)
 
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 
 from src.normalization.odds import american_to_decimal, decimal_to_implied
 from src.normalization.vig import remove_vig
 from src.pricing.fair_price import FairPriceResult
+from src.risk.fdr import FdrInput, apply_benjamini_hochberg
 
 # Markets in the convex sleeve (outrights). Everything else is core.
 _CONVEX_MARKETS = frozenset({"outright_win"})
@@ -50,6 +51,9 @@ class EdgeResult:
     sleeve: str              # "core" | "convex"
     passes_threshold: bool   # True if edge ≥ min threshold for this sleeve
     book_american_odds: int  # raw book odds (for display / bet placement)
+    edge_sd: float | None = None  # uncertainty around edge estimate, once available
+    p_value: float | None = None  # candidate-level edge p-value, once available
+    passes_fdr: bool = True       # default preserves pre-FDR behavior
 
 
 def compute_edge(
@@ -171,6 +175,56 @@ def compute_two_way_edges(
         book_american_odds=book_odds_p2,
     )
     return edge_p1, edge_p2
+
+
+def apply_fdr_control(
+    edges: list[EdgeResult],
+    *,
+    enabled: bool,
+    q_core: float,
+    q_convex: float,
+) -> list[EdgeResult]:
+    """Populate candidate-level p-values and FDR decisions when enabled.
+
+    Disabled mode preserves the current threshold-only behavior exactly while
+    still returning a fresh list for callers that build candidates in batches.
+    """
+    if not enabled:
+        return [
+            replace(edge, p_value=None, passes_fdr=True)
+            for edge in edges
+        ]
+
+    results_by_sleeve: dict[str, list[tuple[int, EdgeResult]]] = {"core": [], "convex": []}
+    for index, edge in enumerate(edges):
+        if edge.edge_sd is None:
+            raise ValueError("edge_sd is required when FDR control is enabled.")
+        results_by_sleeve.setdefault(edge.sleeve, []).append((index, edge))
+
+    annotated: list[EdgeResult | None] = [None] * len(edges)
+    for sleeve, indexed_edges in results_by_sleeve.items():
+        if not indexed_edges:
+            continue
+        q = q_convex if sleeve == "convex" else q_core
+        fdr_results = apply_benjamini_hochberg(
+            [
+                FdrInput(
+                    candidate_id=str(index),
+                    edge_mean=edge.edge,
+                    edge_sd=edge.edge_sd or 0.0,
+                )
+                for index, edge in indexed_edges
+            ],
+            q=q,
+        )
+        for (index, edge), fdr_result in zip(indexed_edges, fdr_results, strict=True):
+            annotated[index] = replace(
+                edge,
+                p_value=fdr_result.p_value,
+                passes_fdr=fdr_result.passes_fdr,
+            )
+
+    return [edge for edge in annotated if edge is not None]
 
 
 # ---------------------------------------------------------------------------

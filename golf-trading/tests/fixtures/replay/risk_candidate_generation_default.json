@@ -1,0 +1,77 @@
+{
+  "scenario": "risk_candidate_generation_default_handoff",
+  "code_version": "phase3-risk-candidate-replay-v1",
+  "as_of": "2026-04-30T17:00:00+00:00",
+  "created_at": "2026-04-30T17:05:00+00:00",
+  "tournament": {
+    "name": "Default Risk Handoff Invitational",
+    "tour": "pga",
+    "datagolf_event_id": "default_risk_handoff"
+  },
+  "players": [
+    {
+      "datagolf_player_id": "dg_primary_edge",
+      "name_canonical": "Primary Edge"
+    },
+    {
+      "datagolf_player_id": "dg_negative_edge",
+      "name_canonical": "Negative Edge"
+    }
+  ],
+  "fair_prices": [
+    {
+      "market_type": "matchup_2ball",
+      "datagolf_id": "dg_primary_edge",
+      "opponent_id": "dg_negative_edge",
+      "fair_prob": 0.56,
+      "method": "harville"
+    },
+    {
+      "market_type": "matchup_2ball",
+      "datagolf_id": "dg_negative_edge",
+      "opponent_id": "dg_primary_edge",
+      "fair_prob": 0.44,
+      "method": "harville"
+    }
+  ],
+  "book": {
+    "book_id": "draftkings",
+    "odds": [-110, -110]
+  },
+  "edge_config": {
+    "fdr_enabled": false,
+    "fdr_q_core": 0.2,
+    "fdr_q_convex": 0.1,
+    "min_edge_core": 0.03,
+    "min_edge_convex": 0.08,
+    "vig_method": "multiplicative"
+  },
+  "bankroll": {
+    "total": 25000.0,
+    "reserve_fraction": 0.5,
+    "active_core_fraction": 0.4,
+    "convex_fraction": 0.1
+  },
+  "sizing": {
+    "posterior_kelly_enabled": false,
+    "kelly_multiplier": 0.25,
+    "convex_unit_fraction": 0.005,
+    "min_bet_dollars": 5.0,
+    "max_bet_fraction": 0.02
+  },
+  "expected": {
+    "approved_ticket_count": 1,
+    "rejected_ticket_count": 1,
+    "primary_edge": 0.06,
+    "negative_edge": -0.06,
+    "primary_stake": 165.0,
+    "negative_rejection_reason": "Edge below minimum threshold.",
+    "primary_sizing_method": "fractional_kelly"
+  },
+  "expected_hashes": {
+    "edge_batch_hash": "a99ff8be70a8cda0920a7886e2bc25a2dfff67536525499c5b27703030f61b3d",
+    "candidate_batch_hash": "a977f1eda5d247c0726ad908a488bf2616e40d25afb055a207319b432e08fb6f",
+    "ticket_batch_hash": "f5c9ef729df4f29131701a761291498dff8e62185a9b3f9ca5bd3063438ab8be",
+    "manifest_hash": "9002b61e6534b3b62238ef50b976fe7c6755892ee53c6af3a6128bf24425e0f7"
+  }
+}
