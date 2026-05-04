@@ -25,9 +25,12 @@ from src.execution.tickets import generate_ticket, render_ticket
 from src.monitoring.attribution import record_attribution_for_bet_row
 from src.monitoring.clv import compute_clv
 from src.monitoring.reports import (
+    Phase3ReadinessReport,
+    build_phase3_readiness_report,
     build_stored_paper_trade_report,
     export_tickets_csv,
     render_open_actions,
+    render_phase3_readiness_report,
     render_stored_report,
     render_ticket_detail,
 )
@@ -394,6 +397,23 @@ def run_report(args: argparse.Namespace) -> None:
         print(rendered)
 
 
+def run_readiness(args: argparse.Namespace) -> None:
+    init_db(args.database_url)
+    with get_session(args.database_url) as session:
+        readiness = build_phase3_readiness_report(
+            session,
+            required_tournaments=args.required_tournaments,
+            required_settled_bets=args.required_settled_bets,
+        )
+        rendered = (
+            render_phase3_readiness_json(readiness, code_version=args.code_version)
+            if args.format == "json"
+            else render_phase3_readiness_report(readiness)
+        )
+        _write_output(args.output, rendered)
+        print(rendered)
+
+
 def run_open_actions(args: argparse.Namespace) -> None:
     init_db(args.database_url)
     with get_session(args.database_url) as session:
@@ -479,6 +499,38 @@ def render_stored_report_json(report, *, code_version: str | None = None) -> str
     """Render persisted paper-trading metrics as stable JSON."""
     return json.dumps(
         build_stored_report_artifact(report, code_version=code_version),
+        sort_keys=True,
+        indent=2,
+    )
+
+
+def build_phase3_readiness_artifact(
+    readiness: Phase3ReadinessReport,
+    *,
+    code_version: str | None = None,
+) -> dict:
+    """Build a deterministic Phase 3 readiness artifact."""
+    readiness_payload = asdict(readiness)
+    return {
+        "artifact_type": "phase3_readiness",
+        "readiness": readiness_payload,
+        "artifact_hash": artifact_hash(
+            artifact_type="phase3_readiness",
+            inputs={"readiness": readiness_payload},
+            config=None,
+            code_version=code_version,
+        ),
+    }
+
+
+def render_phase3_readiness_json(
+    readiness: Phase3ReadinessReport,
+    *,
+    code_version: str | None = None,
+) -> str:
+    """Render Phase 3 readiness as stable JSON."""
+    return json.dumps(
+        build_phase3_readiness_artifact(readiness, code_version=code_version),
         sort_keys=True,
         indent=2,
     )
@@ -602,6 +654,18 @@ def build_parser() -> argparse.ArgumentParser:
     report.add_argument("--output", type=Path, help="Optional path to write the rendered report.")
     report.add_argument("--code-version", default=None)
     report.set_defaults(func=run_report)
+
+    readiness = subparsers.add_parser(
+        "readiness",
+        help="Check whether the paper DB is ready for Phase 3 gate review.",
+    )
+    _add_database_url(readiness)
+    readiness.add_argument("--required-tournaments", type=int, default=4)
+    readiness.add_argument("--required-settled-bets", type=int, default=60)
+    readiness.add_argument("--format", choices=["text", "json"], default="text")
+    readiness.add_argument("--output", type=Path, help="Optional path to write the rendered result.")
+    readiness.add_argument("--code-version", default=None)
+    readiness.set_defaults(func=run_readiness)
 
     open_actions = subparsers.add_parser("open-actions", help="Show unresolved paper-trading actions.")
     _add_database_url(open_actions)

@@ -44,8 +44,8 @@
 - One fixture-driven integration test covers candidate → ticket → placement log → settlement log.
 
 **Current implementation notes**
-- `scripts/paper_trade.py` supports smoke data creation, candidate ticketing, ticket detail display, ticket CSV export, placement, settlement, CLV capture, stored reporting, JSON report artifact output, and open-action review.
-- `docs/paper-trading-phase3-proof-runbook.md` defines the real operator-entered paper-trading proof workflow. Fixture and smoke rows are not Phase 3 gate evidence; the gate remains blocked until the real paper DB has at least 4 tournaments and 60 settled paper bets.
+- `scripts/paper_trade.py` supports smoke data creation, candidate ticketing, ticket detail display, ticket CSV export, placement, settlement, CLV capture, stored reporting, JSON report artifact output, readiness diagnostics, and open-action review.
+- `docs/paper-trading-phase3-proof-runbook.md` defines the real operator-entered paper-trading proof workflow. Fixture and smoke rows are not Phase 3 gate evidence; the gate remains blocked until the real paper DB has at least 4 tournaments and 60 settled paper bets. Use `paper_trade.py readiness` to flag undersized samples and unresolved operator work before assembling gate artifacts.
 - Operator smoke shape:
   - `PYTHONPATH=. .venv/bin/python scripts/paper_trade.py create-smoke-candidate --database-url sqlite:////private/tmp/upanddown-phase3-cli-smoke.db`
   - `PYTHONPATH=. .venv/bin/python scripts/paper_trade.py ticket-candidates --total-bankroll 25000 --database-url sqlite:////private/tmp/upanddown-phase3-cli-smoke.db`

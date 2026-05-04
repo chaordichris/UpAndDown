@@ -5,10 +5,16 @@ from pathlib import Path
 
 from scripts.paper_trade import (
     _write_output,
+    build_phase3_readiness_artifact,
     build_stored_report_artifact,
+    render_phase3_readiness_json,
     render_stored_report_json,
 )
-from src.monitoring.reports import StoredPaperTradeReport
+from src.monitoring.reports import (
+    Phase3ReadinessReport,
+    ReadinessCriterion,
+    StoredPaperTradeReport,
+)
 
 
 def test_render_stored_report_json_is_stable() -> None:
@@ -35,12 +41,67 @@ def test_build_stored_report_artifact_is_stable() -> None:
     assert first["report"]["positive_clv_rate"] == 1.0
 
 
+def test_render_phase3_readiness_json_is_stable() -> None:
+    readiness = _readiness()
+    rendered = render_phase3_readiness_json(
+        readiness,
+        code_version="phase3-readiness-test",
+    )
+    payload = json.loads(rendered)
+
+    assert payload["artifact_type"] == "phase3_readiness"
+    assert payload["readiness"]["passed"] is False
+    assert payload["readiness"]["settled_tournament_count"] == 3
+    assert payload["artifact_hash"] == "27afcdd1037a089a675c5070b6f5a3ef334a7a7cbb634cb3de6211c20a74618b"
+    assert rendered == render_phase3_readiness_json(
+        readiness,
+        code_version="phase3-readiness-test",
+    )
+
+
+def test_build_phase3_readiness_artifact_is_stable() -> None:
+    first = build_phase3_readiness_artifact(
+        _readiness(),
+        code_version="phase3-readiness-test",
+    )
+    second = build_phase3_readiness_artifact(
+        _readiness(),
+        code_version="phase3-readiness-test",
+    )
+
+    assert first == second
+    assert first["readiness"]["criteria"][0]["name"] == "paper_tournaments"
+
+
 def test_write_output_creates_parent_dirs(tmp_path: Path) -> None:
     path = tmp_path / "artifacts" / "paper-report.json"
 
     _write_output(path, '{"ticket_count": 2}')
 
     assert path.read_text() == '{"ticket_count": 2}'
+
+
+def _readiness() -> Phase3ReadinessReport:
+    return Phase3ReadinessReport(
+        passed=False,
+        settled_tournament_count=3,
+        open_approved_ticket_count=1,
+        criteria=[
+            ReadinessCriterion(
+                name="paper_tournaments",
+                passed=False,
+                observed="3",
+                required=">= 4",
+            ),
+            ReadinessCriterion(
+                name="settled_bets",
+                passed=True,
+                observed="60",
+                required=">= 60",
+            ),
+        ],
+        report=_report(),
+    )
 
 
 def _report() -> StoredPaperTradeReport:

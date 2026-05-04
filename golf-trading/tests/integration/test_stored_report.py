@@ -15,9 +15,11 @@ from src.execution.persistence import (
 from src.execution.tickets import generate_ticket
 from src.monitoring.attribution import record_attribution_for_bet_row
 from src.monitoring.reports import (
+    build_phase3_readiness_report,
     build_stored_paper_trade_report,
     export_tickets_csv,
     render_open_actions,
+    render_phase3_readiness_report,
     render_stored_report,
     render_ticket_detail,
 )
@@ -215,3 +217,87 @@ def test_stored_report_separates_strategy_and_promo_pnl(db_session) -> None:
     assert report.total_profit_loss == pytest.approx(142.86, abs=0.01)
     assert "Strategy P&L: $95.24" in rendered
     assert "Promo P&L: $47.62" in rendered
+
+
+def test_phase3_readiness_flags_unresolved_operator_work(db_session) -> None:
+    settled_candidate = _candidate(db_session, edge_pct=0.05)
+    settled_ticket = persist_ticket(
+        db_session,
+        _ticket(settled_candidate),
+        candidate_id=settled_candidate.candidate_id,
+    )
+    placed = place_ticket_row(
+        db_session,
+        settled_ticket,
+        settled_candidate,
+        actual_stake=100.0,
+        actual_american_odds=-105,
+        placed_at=NOW,
+    )
+    settle_bet_row(db_session, placed, result="win", settled_at=NOW)
+
+    open_candidate = _candidate(db_session, edge_pct=0.04)
+    persist_ticket(db_session, _ticket(open_candidate), candidate_id=open_candidate.candidate_id)
+
+    readiness = build_phase3_readiness_report(
+        db_session,
+        required_tournaments=1,
+        required_settled_bets=1,
+    )
+    rendered = render_phase3_readiness_report(readiness)
+
+    failed = {criterion.name for criterion in readiness.criteria if not criterion.passed}
+    assert not readiness.passed
+    assert readiness.settled_tournament_count == 1
+    assert readiness.open_approved_ticket_count == 1
+    assert failed == {
+        "open_approved_tickets",
+        "missing_clv",
+        "missing_attribution",
+    }
+    assert "Status: NOT READY" in rendered
+    assert "FAIL missing_clv" in rendered
+
+
+def test_phase3_readiness_passes_when_review_counts_are_clean(db_session) -> None:
+    candidate = _candidate(db_session, edge_pct=0.05)
+    ticket = persist_ticket(
+        db_session,
+        _ticket(candidate),
+        candidate_id=candidate.candidate_id,
+    )
+    placed = place_ticket_row(
+        db_session,
+        ticket,
+        candidate,
+        actual_stake=100.0,
+        actual_american_odds=-105,
+        placed_at=NOW,
+    )
+    outcome = settle_bet_row(db_session, placed, result="win", settled_at=NOW)
+    record_clv_for_bet_row(
+        db_session,
+        placed,
+        ticket,
+        candidate,
+        closing_american_odds=-125,
+        captured_at=NOW,
+    )
+    record_attribution_for_bet_row(
+        db_session,
+        placed,
+        ticket,
+        candidate,
+        outcome,
+        flat_stake=100.0,
+        created_at=NOW,
+    )
+
+    readiness = build_phase3_readiness_report(
+        db_session,
+        required_tournaments=1,
+        required_settled_bets=1,
+    )
+
+    assert readiness.passed
+    assert all(criterion.passed for criterion in readiness.criteria)

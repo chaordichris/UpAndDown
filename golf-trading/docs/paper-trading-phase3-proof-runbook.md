@@ -77,7 +77,31 @@ PYTHONPATH=. .venv/bin/python scripts/paper_trade.py record-attribution BET_ID \
 Repeat until the paper DB contains at least 4 tournaments and 60 settled paper
 bets. Until then, the Phase 3 gate is expected to fail.
 
-## 4. Export Paper Report
+## 4. Check Review Readiness
+
+```bash
+PYTHONPATH=. .venv/bin/python scripts/paper_trade.py readiness \
+  --database-url "$PAPER_DB" \
+  --required-tournaments 4 \
+  --required-settled-bets 60
+```
+
+The readiness check is an operator diagnostic, not the phase gate itself. It
+flags undersized samples, open approved tickets, pending settlements, missing
+CLV, and missing attribution before the review packet is assembled.
+
+For an auditable readiness artifact:
+
+```bash
+PYTHONPATH=. .venv/bin/python scripts/paper_trade.py readiness \
+  --database-url "$PAPER_DB" \
+  --required-tournaments 4 \
+  --required-settled-bets 60 \
+  --format json \
+  --output artifacts/phase3-readiness.json
+```
+
+## 5. Export Paper Report
 
 ```bash
 PYTHONPATH=. .venv/bin/python scripts/paper_trade.py report \
@@ -90,7 +114,7 @@ The report artifact is review evidence. It includes ticket, placement,
 settlement, CLV, attribution, strategy P&L, promo P&L, realized P&L, and ROI
 counts/totals.
 
-## 5. Attach Phase-Gate Review
+## 6. Attach Phase-Gate Review
 
 ```bash
 PYTHONPATH=. .venv/bin/python scripts/phase_gate_check.py \

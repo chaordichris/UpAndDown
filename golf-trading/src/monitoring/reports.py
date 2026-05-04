@@ -67,6 +67,27 @@ class StoredPaperTradeReport:
     variance: float
 
 
+@dataclass(frozen=True)
+class ReadinessCriterion:
+    """One paper-trading readiness check for operator review."""
+
+    name: str
+    passed: bool
+    observed: str
+    required: str
+
+
+@dataclass(frozen=True)
+class Phase3ReadinessReport:
+    """Operational readiness summary before running the Phase 3 gate."""
+
+    passed: bool
+    settled_tournament_count: int
+    open_approved_ticket_count: int
+    criteria: list[ReadinessCriterion]
+    report: StoredPaperTradeReport
+
+
 def build_paper_trade_report(
     tickets: list[BetTicketDraft],
     settlements: list[SettlementLog],
@@ -88,6 +109,64 @@ def build_paper_trade_report(
         average_edge=0.0 if not tickets else sum(t.edge for t in tickets) / len(tickets),
         average_clv_raw=None if not clvs else sum(c.clv_raw for c in clvs) / len(clvs),
         positive_clv_rate=None if not clvs else sum(c.clv_raw > 0 for c in clvs) / len(clvs),
+    )
+
+
+def build_phase3_readiness_report(
+    session: Session,
+    *,
+    required_tournaments: int = 4,
+    required_settled_bets: int = 60,
+) -> Phase3ReadinessReport:
+    """Summarize whether the paper DB is ready for Phase 3 gate review."""
+    report = build_stored_paper_trade_report(session)
+    settled_tournament_count = _settled_tournament_count(session)
+    open_approved_ticket_count = _open_approved_ticket_count(session)
+    missing_attribution_count = report.settled_count - report.attribution_count
+    criteria = [
+        ReadinessCriterion(
+            name="paper_tournaments",
+            passed=settled_tournament_count >= required_tournaments,
+            observed=str(settled_tournament_count),
+            required=f">= {required_tournaments}",
+        ),
+        ReadinessCriterion(
+            name="settled_bets",
+            passed=report.settled_count >= required_settled_bets,
+            observed=str(report.settled_count),
+            required=f">= {required_settled_bets}",
+        ),
+        ReadinessCriterion(
+            name="open_approved_tickets",
+            passed=open_approved_ticket_count == 0,
+            observed=str(open_approved_ticket_count),
+            required="0",
+        ),
+        ReadinessCriterion(
+            name="pending_settlements",
+            passed=report.pending_settlement_count == 0,
+            observed=str(report.pending_settlement_count),
+            required="0",
+        ),
+        ReadinessCriterion(
+            name="missing_clv",
+            passed=report.missing_clv_count == 0,
+            observed=str(report.missing_clv_count),
+            required="0",
+        ),
+        ReadinessCriterion(
+            name="missing_attribution",
+            passed=missing_attribution_count == 0,
+            observed=str(missing_attribution_count),
+            required="0",
+        ),
+    ]
+    return Phase3ReadinessReport(
+        passed=all(criterion.passed for criterion in criteria),
+        settled_tournament_count=settled_tournament_count,
+        open_approved_ticket_count=open_approved_ticket_count,
+        criteria=criteria,
+        report=report,
     )
 
 
@@ -143,6 +222,22 @@ def build_stored_paper_trade_report(session: Session) -> StoredPaperTradeReport:
         sizing_alpha=round(sum(row.sizing_alpha for row in attributions), 2),
         variance=round(sum(row.variance for row in attributions), 2),
     )
+
+
+def render_phase3_readiness_report(readiness: Phase3ReadinessReport) -> str:
+    """Render Phase 3 readiness for terminal operator review."""
+    lines = [
+        "Phase 3 Readiness",
+        f"Status: {'READY' if readiness.passed else 'NOT READY'}",
+        f"Settled tournaments: {readiness.settled_tournament_count}",
+        f"Settled bets: {readiness.report.settled_count}",
+    ]
+    for criterion in readiness.criteria:
+        status = "PASS" if criterion.passed else "FAIL"
+        lines.append(
+            f"{status} {criterion.name}: observed {criterion.observed}, required {criterion.required}"
+        )
+    return "\n".join(lines)
 
 
 def render_stored_report(report: StoredPaperTradeReport) -> str:
@@ -321,6 +416,30 @@ def render_open_actions(session: Session) -> str:
         reason = ticket.rejection_reason or "unknown"
         lines.append(f"  ticket_id={ticket.ticket_id} reason={reason}")
     return "\n".join(lines)
+
+
+def _settled_tournament_count(session: Session) -> int:
+    tournament_ids: set[int] = set()
+    outcomes = session.query(BetOutcome).all()
+    for outcome in outcomes:
+        placed = session.get(PlacedBet, outcome.bet_id)
+        if placed is None:
+            continue
+        ticket = session.get(BetTicket, placed.ticket_id)
+        if ticket is None:
+            continue
+        candidate = session.get(BetCandidate, ticket.candidate_id)
+        if candidate is not None:
+            tournament_ids.add(candidate.tournament_id)
+    return len(tournament_ids)
+
+
+def _open_approved_ticket_count(session: Session) -> int:
+    placed_ticket_ids = {row.ticket_id for row in session.query(PlacedBet.ticket_id).all()}
+    return sum(
+        ticket.approved and ticket.ticket_id not in placed_ticket_ids
+        for ticket in session.query(BetTicket).all()
+    )
 
 
 def _require(session: Session, model, row_id: int, label: str):
