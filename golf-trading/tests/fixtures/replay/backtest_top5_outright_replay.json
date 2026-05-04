@@ -87,22 +87,30 @@
     {
       "datagolf_id": "dg_jordan_spieth",
       "result": "loss",
-      "closing_american_odds": 175
+      "closing_american_odds": 175,
+      "market_type": "top_5",
+      "book_id": "draftkings"
     },
     {
       "datagolf_id": "dg_justin_thomas",
       "result": "loss",
-      "closing_american_odds": 450
+      "closing_american_odds": 450,
+      "market_type": "top_5",
+      "book_id": "draftkings"
     },
     {
       "datagolf_id": "dg_viktor_hovland",
       "result": "win",
-      "closing_american_odds": 850
+      "closing_american_odds": 850,
+      "market_type": "outright_win",
+      "book_id": "draftkings"
     },
     {
       "datagolf_id": "dg_tommy_fleetwood",
       "result": "loss",
-      "closing_american_odds": 225
+      "closing_american_odds": 225,
+      "market_type": "outright_win",
+      "book_id": "draftkings"
     }
   ],
   "settled_at": "2026-05-17T22:00:00+00:00",
@@ -142,10 +150,10 @@
   },
   "expected_hashes": {
     "forecast_batch_hash": "286ecb59cf84bf5cc53741ebf5ee2edbb61b892ff074c69ae7e714b907cc92c9",
-    "candidate_batch_hash": "a367e2f742b32edbdad60cd98820f2876e601f3a7e9d34df6b1d97fdd98a2fa5",
-    "ticket_batch_hash": "c783ff3867efb124f4961fe2778d4e09c92c883e0540b2f629c7ceeda102253f",
+    "candidate_batch_hash": "b3f176ff7b8b0223d40bbff37f094c9d589ecd52f5658b38b553a39327a5773e",
+    "ticket_batch_hash": "2429f9634152b739372c363ca66d30a2ff3266e2190d62532c41d7378d4e4e17",
     "settlement_batch_hash": "0c6fd3cd997f396f200dcb310cf48478828cc16ac0641f2e116637f2b4e9a1eb",
     "report_hash": "2a006cea1ca7aa4695bf9b07914a54221fce6f2760749ba6076783ad021c27bd",
-    "manifest_hash": "1ef37fac8050811557706e859055ea6655a2fca419d75268a0d79a1823b0b264"
+    "manifest_hash": "280bc28325af23e50ec641fd5c774f905f2a6a65d7d41d8279eb4d6f59d97c59"
   }
 }

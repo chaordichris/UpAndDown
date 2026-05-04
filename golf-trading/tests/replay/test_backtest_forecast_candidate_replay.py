@@ -39,10 +39,13 @@ def test_backtest_forecast_candidate_replay_contract_is_stable() -> None:
         "settled": 1,
         "clv": 1,
     }
-    assert first["edges"]["dg_scottie_scheffler"]["edge"] == fixture["expected"][
+    edge_by_label = {edge["label"]: edge for edge in first["edges"]}
+    ticket_by_label = {ticket["label"]: ticket for ticket in first["tickets"]}
+
+    assert edge_by_label["draftkings:make_cut:dg_scottie_scheffler"]["edge"] == fixture["expected"][
         "scheffler_edge"
     ]
-    assert first["tickets"]["dg_rory_mcilroy"]["rejection_reason"] == fixture["expected"][
+    assert ticket_by_label["draftkings:make_cut:dg_rory_mcilroy"]["rejection_reason"] == fixture["expected"][
         "rory_rejection_reason"
     ]
     assert first["ticket_summary"] == {
@@ -140,24 +143,38 @@ def _run_replay(fixture: dict[str, Any]) -> dict[str, Any]:
             }
             for row in forecast_rows
         ]
-        edge_payloads = {
-            edge.datagolf_id: {
+        edge_payloads = [
+            {
+                "label": _market_label(edge.datagolf_id, edge.market_type, edge.book_id),
+                "datagolf_id": edge.datagolf_id,
+                "market_type": edge.market_type,
+                "book_id": edge.book_id,
                 "edge": round(edge.edge, 6),
                 "fair_prob": edge.fair_prob,
                 "book_no_vig_prob": round(edge.book_no_vig_prob, 6),
             }
             for edge in result.edges
-        }
-        candidate_payloads = {
-            candidate.side: {
+        ]
+        candidate_payloads = [
+            {
+                "label": _market_label(candidate.side, candidate.market_type, candidate.book),
+                "side": candidate.side,
                 "candidate_id": candidate.candidate_id,
+                "market_type": candidate.market_type,
+                "book_id": candidate.book,
                 "edge_pct": round(candidate.edge_pct, 6),
                 "inputs_hash": candidate.inputs_hash,
             }
             for candidate in result.candidates
-        }
-        ticket_payloads = {
-            candidate_by_id[ticket.candidate_id].side: {
+        ]
+        ticket_payloads = [
+            {
+                "label": _market_label(
+                    candidate_by_id[ticket.candidate_id].side,
+                    candidate_by_id[ticket.candidate_id].market_type,
+                    candidate_by_id[ticket.candidate_id].book,
+                ),
+                "side": candidate_by_id[ticket.candidate_id].side,
                 "ticket_id": ticket.ticket_id,
                 "market_type": candidate_by_id[ticket.candidate_id].market_type,
                 "book_id": candidate_by_id[ticket.candidate_id].book,
@@ -167,7 +184,7 @@ def _run_replay(fixture: dict[str, Any]) -> dict[str, Any]:
                 "inputs_hash": ticket.inputs_hash,
             }
             for ticket in result.tickets
-        }
+        ]
         settlement_payloads = [
             {
                 "bet_id": outcome.bet_id,
@@ -282,6 +299,10 @@ def _forecast_rows_from_fixture(
             )
         )
     return rows
+
+
+def _market_label(datagolf_id: str, market_type: str, book_id: str) -> str:
+    return f"{book_id}:{market_type}:{datagolf_id}"
 
 
 def _dt(value: str) -> datetime:

@@ -126,24 +126,38 @@ def build_replay_manifest(
         }
         for row in forecast_rows
     ]
-    edge_payloads = {
-        edge.datagolf_id: {
+    edge_payloads = [
+        {
+            "label": _market_label(edge.datagolf_id, edge.market_type, edge.book_id),
+            "datagolf_id": edge.datagolf_id,
+            "market_type": edge.market_type,
+            "book_id": edge.book_id,
             "edge": round(edge.edge, 6),
             "fair_prob": edge.fair_prob,
             "book_no_vig_prob": round(edge.book_no_vig_prob, 6),
         }
         for edge in replay.edges
-    }
-    candidate_payloads = {
-        candidate.side: {
+    ]
+    candidate_payloads = [
+        {
+            "label": _market_label(candidate.side, candidate.market_type, candidate.book),
+            "side": candidate.side,
             "candidate_id": candidate.candidate_id,
+            "market_type": candidate.market_type,
+            "book_id": candidate.book,
             "edge_pct": round(candidate.edge_pct, 6),
             "inputs_hash": candidate.inputs_hash,
         }
         for candidate in replay.candidates
-    }
-    ticket_payloads = {
-        candidate_by_id[ticket.candidate_id].side: {
+    ]
+    ticket_payloads = [
+        {
+            "label": _market_label(
+                candidate_by_id[ticket.candidate_id].side,
+                candidate_by_id[ticket.candidate_id].market_type,
+                candidate_by_id[ticket.candidate_id].book,
+            ),
+            "side": candidate_by_id[ticket.candidate_id].side,
             "ticket_id": ticket.ticket_id,
             "market_type": candidate_by_id[ticket.candidate_id].market_type,
             "book_id": candidate_by_id[ticket.candidate_id].book,
@@ -153,7 +167,7 @@ def build_replay_manifest(
             "inputs_hash": ticket.inputs_hash,
         }
         for ticket in replay.tickets
-    }
+    ]
     settlement_payloads = [
         {
             "bet_id": outcome.bet_id,
@@ -256,6 +270,10 @@ def _assert_empty_event_db(session: Any) -> None:
             "Backtest replay requires an empty event database; found rows in "
             f"{', '.join(populated_tables)}."
         )
+
+
+def _market_label(datagolf_id: str, market_type: str, book_id: str) -> str:
+    return f"{book_id}:{market_type}:{datagolf_id}"
 
 
 def _snapshot_from_fixture(fixture: dict[str, Any], tournament_id: int) -> RawSnapshot:

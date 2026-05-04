@@ -68,6 +68,8 @@ class BacktestSettlementInput:
     """Historical outcome and closing line for one replayed side."""
 
     datagolf_id: str
+    market_type: str
+    book_id: str
     result: str
     closing_american_odds: int | None = None
     actual_american_odds: int | None = None
@@ -199,7 +201,7 @@ def settle_backtest_replay(
     code_version: str | None = None,
 ) -> BacktestSettlementResult:
     """Place and settle approved replay tickets using historical outcomes."""
-    settlement_by_side = {settlement.datagolf_id: settlement for settlement in settlements}
+    settlement_by_key = {_settlement_key(settlement): settlement for settlement in settlements}
     candidates_by_id = {
         candidate.candidate_id: candidate
         for candidate in replay.candidates
@@ -212,9 +214,13 @@ def settle_backtest_replay(
         if not ticket.approved:
             continue
         candidate = candidates_by_id[ticket.candidate_id]
-        settlement = settlement_by_side.get(candidate.side)
+        settlement = settlement_by_key.get(_candidate_key(candidate))
         if settlement is None:
-            raise ValueError(f"Missing settlement input for approved side {candidate.side!r}.")
+            raise ValueError(
+                "Missing settlement input for approved ticket "
+                f"side={candidate.side!r} market_type={candidate.market_type!r} "
+                f"book_id={candidate.book!r}."
+            )
 
         placed_bet = place_ticket_row(
             session,
@@ -255,6 +261,14 @@ def settle_backtest_replay(
         clv_snapshots=clv_snapshots,
         report=build_stored_paper_trade_report(session),
     )
+
+
+def _settlement_key(settlement: BacktestSettlementInput) -> tuple[str, str, str]:
+    return (settlement.datagolf_id, settlement.market_type, settlement.book_id)
+
+
+def _candidate_key(candidate: BetCandidate) -> tuple[str, str, str]:
+    return (candidate.side, candidate.market_type, candidate.book)
 
 
 def _forecast_rows_for_lines(

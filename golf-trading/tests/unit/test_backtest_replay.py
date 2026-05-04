@@ -189,11 +189,15 @@ def test_settle_backtest_replay_records_outcomes_clv_and_report(db_session) -> N
         [
             BacktestSettlementInput(
                 datagolf_id=scheffler.datagolf_player_id,
+                market_type="make_cut",
+                book_id="draftkings",
                 result="win",
                 closing_american_odds=-120,
             ),
             BacktestSettlementInput(
                 datagolf_id=rory.datagolf_player_id,
+                market_type="make_cut",
+                book_id="draftkings",
                 result="loss",
                 closing_american_odds=110,
             ),
@@ -211,6 +215,84 @@ def test_settle_backtest_replay_records_outcomes_clv_and_report(db_session) -> N
     assert settlement.report.settled_count == 1
     assert settlement.report.clv_count == 1
     assert settlement.report.total_profit_loss > 0
+
+
+def test_settle_backtest_replay_keys_results_by_player_market_and_book(db_session) -> None:
+    tournament, scheffler, rory = _seed_forecasts(db_session)
+    replay = replay_forecast_book_lines(
+        db_session,
+        tournament_id=tournament.tournament_id,
+        decision_time=DECISION_TIME,
+        model_versions=_model_versions(),
+        book_lines=[
+            BacktestBookLine(
+                datagolf_id=scheffler.datagolf_player_id,
+                market_type="make_cut",
+                book_id="draftkings",
+                american_odds=100,
+            ),
+            BacktestBookLine(
+                datagolf_id=rory.datagolf_player_id,
+                market_type="make_cut",
+                book_id="draftkings",
+                american_odds=100,
+            ),
+            BacktestBookLine(
+                datagolf_id=scheffler.datagolf_player_id,
+                market_type="top_20",
+                book_id="draftkings",
+                american_odds=100,
+            ),
+            BacktestBookLine(
+                datagolf_id=rory.datagolf_player_id,
+                market_type="top_20",
+                book_id="draftkings",
+                american_odds=100,
+            ),
+        ],
+        total_bankroll=25_000.0,
+        reserve_fraction=0.50,
+        active_core_fraction=0.40,
+        convex_fraction=0.10,
+        kelly_multiplier=0.25,
+        convex_unit_fraction=0.005,
+        min_bet_dollars=5.0,
+        max_bet_fraction=0.02,
+        min_edge_core=0.03,
+        min_edge_convex=0.08,
+    )
+
+    settlement = settle_backtest_replay(
+        db_session,
+        replay,
+        [
+            BacktestSettlementInput(
+                datagolf_id=scheffler.datagolf_player_id,
+                market_type="make_cut",
+                book_id="draftkings",
+                result="loss",
+                closing_american_odds=-120,
+            ),
+            BacktestSettlementInput(
+                datagolf_id=scheffler.datagolf_player_id,
+                market_type="top_20",
+                book_id="draftkings",
+                result="win",
+                closing_american_odds=850,
+            ),
+        ],
+        placed_at=DECISION_TIME,
+        settled_at=datetime(2026, 5, 3, 22, 0, tzinfo=UTC),
+    )
+
+    results_by_bet = {outcome.bet_id: outcome.result for outcome in settlement.outcomes}
+    clv_by_bet = {
+        clv.bet_id: clv.closing_american_odds for clv in settlement.clv_snapshots
+    }
+
+    assert len(settlement.outcomes) == 2
+    assert list(results_by_bet.values()) == ["loss", "win"]
+    assert list(clv_by_bet.values()) == [-120, 850]
 
 
 def test_settle_backtest_replay_requires_result_for_approved_ticket(db_session) -> None:
@@ -340,6 +422,17 @@ def _seed_forecasts(
             Forecast(
                 snapshot_id=snapshot.snapshot_id,
                 tournament_id=tournament.tournament_id,
+                player_id=scheffler.player_id,
+                forecast_type="top_20",
+                probability=0.72,
+                datagolf_skill_rating=2.8,
+                dg_model_version=dg_model_version,
+                captured_at=CAPTURED_AT,
+                inputs_hash="scheffler-top-20-forecast",
+            ),
+            Forecast(
+                snapshot_id=snapshot.snapshot_id,
+                tournament_id=tournament.tournament_id,
                 player_id=rory.player_id,
                 forecast_type="win",
                 probability=0.04,
@@ -358,6 +451,17 @@ def _seed_forecasts(
                 dg_model_version=dg_model_version,
                 captured_at=CAPTURED_AT,
                 inputs_hash="rory-make-cut-forecast",
+            ),
+            Forecast(
+                snapshot_id=snapshot.snapshot_id,
+                tournament_id=tournament.tournament_id,
+                player_id=rory.player_id,
+                forecast_type="top_20",
+                probability=0.40,
+                datagolf_skill_rating=2.2,
+                dg_model_version=dg_model_version,
+                captured_at=CAPTURED_AT,
+                inputs_hash="rory-top-20-forecast",
             ),
         ]
     )

@@ -31,6 +31,9 @@ def collect_backtest_report_slices(
     events: list[tuple[str, str]],
 ) -> list[BacktestReportSlice]:
     """Load one stored report per event database."""
+    if not events:
+        raise ValueError("At least one --event LABEL=DATABASE_URL is required.")
+
     slices: list[BacktestReportSlice] = []
     for label, database_url in events:
         init_db(database_url)

@@ -94,6 +94,11 @@ def test_collect_backtest_report_slices_reads_replay_event_db(tmp_path: Path) ->
     assert slices[0].report.settled_count == 1
 
 
+def test_collect_backtest_report_slices_refuses_zero_events() -> None:
+    with pytest.raises(ValueError, match="At least one --event"):
+        collect_backtest_report_slices([])
+
+
 def test_collect_backtest_report_slices_refuses_empty_event_db(tmp_path: Path) -> None:
     database_url = f"sqlite:///{tmp_path / 'empty.db'}"
     init_db(database_url)

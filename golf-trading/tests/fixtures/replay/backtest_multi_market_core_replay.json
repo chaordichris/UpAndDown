@@ -87,22 +87,30 @@
     {
       "datagolf_id": "dg_scottie_scheffler",
       "result": "win",
-      "closing_american_odds": 175
+      "closing_american_odds": 175,
+      "market_type": "top_10",
+      "book_id": "fanduel"
     },
     {
       "datagolf_id": "dg_rory_mcilroy",
       "result": "loss",
-      "closing_american_odds": 280
+      "closing_american_odds": 280,
+      "market_type": "top_10",
+      "book_id": "fanduel"
     },
     {
       "datagolf_id": "dg_xander_schauffele",
       "result": "loss",
-      "closing_american_odds": -125
+      "closing_american_odds": -125,
+      "market_type": "top_20",
+      "book_id": "fanduel"
     },
     {
       "datagolf_id": "dg_collin_morikawa",
       "result": "loss",
-      "closing_american_odds": 110
+      "closing_american_odds": 110,
+      "market_type": "top_20",
+      "book_id": "fanduel"
     }
   ],
   "settled_at": "2026-05-10T22:00:00+00:00",
@@ -144,10 +152,10 @@
   },
   "expected_hashes": {
     "forecast_batch_hash": "dcfd563d83eaa375b0b723a0ca0fb7f459b315cc5605d2352273de65efd0282a",
-    "candidate_batch_hash": "a69ee57ca0cbdb71149096bb66c6522f3b202cf3986ffbfd36790ae5a59bbb15",
-    "ticket_batch_hash": "8cc8ac0cf699c1ac3342cc3848c27f382b1ca45f0f12b7c7c57b6335ea92a489",
+    "candidate_batch_hash": "169ce2ceac8a4b93eec2fa4417b9e0af17cbcefc3b28bb0644d69449d576de6e",
+    "ticket_batch_hash": "b0271a59aa9dd600f1ea2a55f8469d74ae986e1d5a34260f22e15bec3a2d27f6",
     "settlement_batch_hash": "feb03fb10400606df22edfb62ebaa56724e22d46fadc14e600986b82167c3d7d",
     "report_hash": "a39bfdd9b1b0afa2624fde0e50aa3a03d1127b226e0252e09139e583d1afa59b",
-    "manifest_hash": "3b0dc12dcc722a45d49f9a3d678ee330a5af3125e9ccd23f6488e9b2a86b5dd8"
+    "manifest_hash": "169ec527ac9572f462a7f3274c53fce10eabe64f8323ca40287b11c2044b000c"
   }
 }

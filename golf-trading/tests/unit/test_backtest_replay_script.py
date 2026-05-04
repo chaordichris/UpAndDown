@@ -83,7 +83,4 @@ def test_write_output_creates_parent_dirs(tmp_path: Path) -> None:
 
 
 def _flatten_ticket_payloads(manifest: dict) -> list[dict]:
-    return [
-        {"side": side, **payload}
-        for side, payload in manifest["tickets"].items()
-    ]
+    return manifest["tickets"]
