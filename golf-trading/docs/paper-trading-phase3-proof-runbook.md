@@ -16,6 +16,23 @@ execution is manual.
 PAPER_DB=sqlite:////private/tmp/upanddown-paper-review.db
 ```
 
+## 0. Open The Operator Console
+
+For tournament-week operation, use the local console to review candidates,
+create tickets, place bets, settle bets, record CLV, and record attribution
+against the same paper database used by the CLI commands below.
+
+```bash
+PYTHONPATH=. .venv/bin/python scripts/operator_console.py \
+  --database-url "$PAPER_DB" \
+  --host 127.0.0.1 \
+  --port 8765
+```
+
+Open `http://127.0.0.1:8765`. The console is local-only and does not automate
+book placement; it writes the same manual paper-trading rows as
+`scripts/paper_trade.py`.
+
 ## 1. Ticket Operator Candidates
 
 After ingestion, pricing, edge detection, and candidate persistence have run for
