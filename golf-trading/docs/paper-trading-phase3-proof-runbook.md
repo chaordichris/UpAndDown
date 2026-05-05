@@ -156,12 +156,14 @@ PYTHONPATH=. .venv/bin/python scripts/phase_gate_check.py \
   --expected-return 0.02 \
   --return-sd 1.0 \
   --backtest-summary-json artifacts/backtest-review.json \
+  --phase3-evidence-json artifacts/phase3-evidence.json \
   --format json \
   --output artifacts/phase-gate.json
 ```
 
 The gate criteria remain paper-trading based. Attached WS-7 backtest summaries
-are supporting evidence, not pass/fail criteria.
+are supporting evidence, not pass/fail criteria. The attached Phase 3 evidence
+artifact must pass before the phase-gate artifact can be assembled.
 
 ## 8. Bundle Review Artifacts
 

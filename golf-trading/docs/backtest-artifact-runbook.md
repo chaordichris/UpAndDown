@@ -90,12 +90,15 @@ PYTHONPATH=. .venv/bin/python scripts/phase_gate_check.py \
   --expected-return 0.02 \
   --return-sd 1.0 \
   --backtest-summary-json artifacts/backtest-review.json \
+  --phase3-evidence-json artifacts/phase3-evidence.json \
   --format json \
   --output artifacts/phase-gate.json
 ```
 
 The Phase 3 to Phase 4 gate remains paper-trading based. Attached backtest
-summary metrics are review evidence, not gate criteria.
+summary metrics are review evidence, not gate criteria. If
+`--phase3-evidence-json` is provided, it must be a passing evidence-check
+artifact.
 
 A smoke database with fewer than 4 paper tournaments or 60 settled paper bets is
 expected to fail the gate while still producing a valid JSON artifact.
