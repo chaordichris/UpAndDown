@@ -22,13 +22,14 @@ Edge cases:
 from __future__ import annotations
 
 import math
+
 import pytest
 
 from src.normalization.vig import (
+    VigRemovalResult,
     remove_vig,
     remove_vig_multiplicative,
     remove_vig_power,
-    VigRemovalResult,
 )
 
 SUM_TOLERANCE = 1e-6
@@ -117,14 +118,13 @@ def test_power_symmetric_two_way() -> None:
 
 
 def test_power_asymmetric_two_way() -> None:
-    """Power method on asymmetric market: underdog gets slightly more than multiplicative."""
+    """Power method on asymmetric market: favorite gets more than multiplicative."""
     probs = [0.70, 0.36]  # sum = 1.06
     mult = remove_vig_multiplicative(probs)
     power = remove_vig_power(probs)
     assert_valid_result(power, 2)
-    # Underdog (lower prob) should get a slightly higher no-vig prob with power method
-    # compared to multiplicative — power method favours underdogs
-    assert power.no_vig_probs[1] >= mult.no_vig_probs[1] - 1e-6
+    assert power.no_vig_probs[0] >= mult.no_vig_probs[0] - 1e-6
+    assert power.no_vig_probs[1] <= mult.no_vig_probs[1] + 1e-6
 
 
 def test_power_large_field() -> None:

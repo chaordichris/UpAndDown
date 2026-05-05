@@ -1,0 +1,78 @@
+{
+  "scenario": "phase3_paper_trade_replay_v1",
+  "code_version": "replay-contract-v1",
+  "created_at": "2024-03-11T14:00:00+00:00",
+  "placed_at": "2024-03-11T14:05:00+00:00",
+  "settled_at": "2024-03-14T22:00:00+00:00",
+  "clv_captured_at": "2024-03-13T18:00:00+00:00",
+  "attribution_created_at": "2024-03-14T22:05:00+00:00",
+  "bankroll": {
+    "total": 25000.0,
+    "reserve_fraction": 0.5,
+    "active_core_fraction": 0.4,
+    "convex_fraction": 0.1
+  },
+  "sizing": {
+    "kelly_multiplier": 0.25,
+    "convex_unit_fraction": 0.005,
+    "min_bet_dollars": 5.0,
+    "max_bet_fraction": 0.02
+  },
+  "edge": {
+    "min_edge_core": 0.03,
+    "min_edge_convex": 0.08
+  },
+  "tournament": {
+    "name": "Replay Invitational",
+    "course": "Audit Trail Golf Club",
+    "tour": "pga",
+    "datagolf_event_id": "replay-2024"
+  },
+  "players": [
+    {
+      "datagolf_player_id": "replay-player-1",
+      "name_canonical": "Replay Player"
+    },
+    {
+      "datagolf_player_id": "replay-opponent-1",
+      "name_canonical": "Replay Opponent"
+    }
+  ],
+  "candidate": {
+    "market_type": "matchup_2ball",
+    "side": "replay-player-1",
+    "book": "dk",
+    "fair_prob": 0.56,
+    "book_prob": 0.51,
+    "book_american_odds": -110,
+    "edge_pct": 0.05,
+    "confidence_score": 1.0,
+    "staleness_flag": false
+  },
+  "placement": {
+    "actual_american_odds": -105,
+    "actual_stake": 100.0,
+    "placement_method": "manual",
+    "notes": "Replay fixture placement"
+  },
+  "settlement": {
+    "result": "win",
+    "notes": "Replay fixture settlement"
+  },
+  "clv": {
+    "closing_american_odds": -125
+  },
+  "attribution": {
+    "flat_stake": 100.0
+  },
+  "expected_hashes": {
+    "candidate_inputs_hash": "d21ac0b4c5243ea9676332f920236989c3037f9595baf1bc386a385e2e4e67e8",
+    "ticket_inputs_hash": "1366309c9dec8f946fc0b1994a9697df8f771fc8b703a8946ec5eecc2af9c812",
+    "placed_inputs_hash": "830718e8d8ffb6dfc8108516375980d4259bbc51da464e66ec334dfeb8d1f6bf",
+    "outcome_inputs_hash": "4f30dbb6caa847961fedd0c734f709c9016ec844d1090c40ba4320241a8cc67d",
+    "clv_inputs_hash": "7809a3a565719f488360dbe4ead4a3bc30bab8529453f2dc9f71e194f7c90b1f",
+    "attribution_inputs_hash": "d0f2cb607af42b0df4fbe3108a5821cb69b49ace438b6c574f86346b08fdb724",
+    "rendered_report_hash": "8cb4a06340a4d7ffdcf06d929cd012011434972f4b689c034432722410a86c25",
+    "manifest_hash": "636a8facf52b302a74ec74f52f0c16972d82fac2d0156e7aa18c4aad7a5a553e"
+  }
+}

@@ -1,0 +1,55 @@
+{
+  "scenario": "datagolf_forecast_pricing_contract",
+  "code_version": "phase3-pricing-replay-v1",
+  "as_of": "2026-04-30T12:00:00+00:00",
+  "forecast_response": {
+    "event_name": "Pricing Replay Open",
+    "dg_model_version": "dg-2026-04-01",
+    "players": [
+      {
+        "player_id": "dg_scottie_scheffler",
+        "win_probability": 0.14,
+        "top_5_probability": 0.32,
+        "top_10_probability": 0.48,
+        "top_20_probability": 0.68,
+        "make_cut_probability": 0.91
+      },
+      {
+        "player_id": "dg_rory_mcilroy",
+        "win_probability": 0.09,
+        "top_5_probability": 0.24,
+        "top_10_probability": 0.39,
+        "top_20_probability": 0.61,
+        "make_cut_probability": 0.87
+      },
+      {
+        "player_id": "dg_partial_player",
+        "top_10_probability": 0.18
+      }
+    ]
+  },
+  "expected": {
+    "outright_count": 2,
+    "top_n_count": 9,
+    "fair_price_count": 11,
+    "methods": [
+      "datagolf_forecast"
+    ],
+    "markets": [
+      "make_cut",
+      "outright_win",
+      "top_10",
+      "top_20",
+      "top_5"
+    ],
+    "scottie_outright_prob": 0.14,
+    "partial_player_markets": [
+      "top_10"
+    ]
+  },
+  "expected_hashes": {
+    "fair_price_batch_hash": "3da9a147500baa73cfc42ec32c52d5c430c7b254687d7d4d4ddf6126cc6aaefe",
+    "pricing_inputs_hash": "bfc85108f391703adb095aee7d98b6c33d03e4f3cc039f6ef4f8a50e7a9167c9",
+    "manifest_hash": "e00be8772415ac5a4a43e23d36d9d64a19f4715303133c1f3442ec8e866570df"
+  }
+}

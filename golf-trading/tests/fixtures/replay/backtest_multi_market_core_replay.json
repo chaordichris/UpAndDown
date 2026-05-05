@@ -1,0 +1,161 @@
+{
+  "scenario": "backtest_multi_market_core_replay",
+  "code_version": "ws7-backtest-replay-v2",
+  "captured_at": "2026-05-07T12:00:00+00:00",
+  "decision_time": "2026-05-07T14:00:00+00:00",
+  "tournament": {
+    "name": "Backtest Core Markets Open",
+    "tour": "pga",
+    "datagolf_event_id": "backtest_core_markets_open"
+  },
+  "players": [
+    {
+      "datagolf_player_id": "dg_scottie_scheffler",
+      "name_canonical": "Scottie Scheffler"
+    },
+    {
+      "datagolf_player_id": "dg_rory_mcilroy",
+      "name_canonical": "Rory McIlroy"
+    },
+    {
+      "datagolf_player_id": "dg_xander_schauffele",
+      "name_canonical": "Xander Schauffele"
+    },
+    {
+      "datagolf_player_id": "dg_collin_morikawa",
+      "name_canonical": "Collin Morikawa"
+    }
+  ],
+  "snapshot": {
+    "source": "datagolf",
+    "endpoint": "pretournament_predictions",
+    "dg_model_version": "dg-2026-05-01"
+  },
+  "forecasts": [
+    {
+      "datagolf_id": "dg_scottie_scheffler",
+      "forecast_type": "top_10",
+      "probability": 0.62,
+      "datagolf_skill_rating": 2.9
+    },
+    {
+      "datagolf_id": "dg_rory_mcilroy",
+      "forecast_type": "top_10",
+      "probability": 0.3,
+      "datagolf_skill_rating": 2.3
+    },
+    {
+      "datagolf_id": "dg_xander_schauffele",
+      "forecast_type": "top_20",
+      "probability": 0.58,
+      "datagolf_skill_rating": 2.1
+    },
+    {
+      "datagolf_id": "dg_collin_morikawa",
+      "forecast_type": "top_20",
+      "probability": 0.43,
+      "datagolf_skill_rating": 1.8
+    }
+  ],
+  "book_lines": [
+    {
+      "datagolf_id": "dg_scottie_scheffler",
+      "market_type": "top_10",
+      "book_id": "fanduel",
+      "american_odds": 200
+    },
+    {
+      "datagolf_id": "dg_rory_mcilroy",
+      "market_type": "top_10",
+      "book_id": "fanduel",
+      "american_odds": 300
+    },
+    {
+      "datagolf_id": "dg_xander_schauffele",
+      "market_type": "top_20",
+      "book_id": "fanduel",
+      "american_odds": -110
+    },
+    {
+      "datagolf_id": "dg_collin_morikawa",
+      "market_type": "top_20",
+      "book_id": "fanduel",
+      "american_odds": 100
+    }
+  ],
+  "settlements": [
+    {
+      "datagolf_id": "dg_scottie_scheffler",
+      "result": "win",
+      "closing_american_odds": 175,
+      "market_type": "top_10",
+      "book_id": "fanduel"
+    },
+    {
+      "datagolf_id": "dg_rory_mcilroy",
+      "result": "loss",
+      "closing_american_odds": 280,
+      "market_type": "top_10",
+      "book_id": "fanduel"
+    },
+    {
+      "datagolf_id": "dg_xander_schauffele",
+      "result": "loss",
+      "closing_american_odds": -125,
+      "market_type": "top_20",
+      "book_id": "fanduel"
+    },
+    {
+      "datagolf_id": "dg_collin_morikawa",
+      "result": "loss",
+      "closing_american_odds": 110,
+      "market_type": "top_20",
+      "book_id": "fanduel"
+    }
+  ],
+  "settled_at": "2026-05-10T22:00:00+00:00",
+  "model_versions": [
+    {
+      "dg_model_version": "dg-2026-05-01",
+      "published_at": "2026-05-01T08:00:00+00:00"
+    }
+  ],
+  "bankroll": {
+    "total": 25000.0,
+    "reserve_fraction": 0.5,
+    "active_core_fraction": 0.4,
+    "convex_fraction": 0.1
+  },
+  "edge_config": {
+    "min_edge_core": 0.03,
+    "min_edge_convex": 0.08,
+    "fdr_enabled": false,
+    "fdr_q_core": 0.2,
+    "fdr_q_convex": 0.1,
+    "vig_method": "multiplicative"
+  },
+  "sizing": {
+    "posterior_kelly_enabled": false,
+    "kelly_multiplier": 0.25,
+    "convex_unit_fraction": 0.005,
+    "min_bet_dollars": 5.0,
+    "max_bet_fraction": 0.02
+  },
+  "expected": {
+    "approved_ticket_count": 2,
+    "rejected_ticket_count": 2,
+    "settled_count": 2,
+    "clv_count": 2,
+    "scheffler_edge": 0.048571,
+    "xander_edge": 0.068372,
+    "strategy_profit_loss": -66.6
+  },
+  "expected_hashes": {
+    "forecast_batch_hash": "dcfd563d83eaa375b0b723a0ca0fb7f459b315cc5605d2352273de65efd0282a",
+    "candidate_batch_hash": "169ce2ceac8a4b93eec2fa4417b9e0af17cbcefc3b28bb0644d69449d576de6e",
+    "ticket_batch_hash": "b0271a59aa9dd600f1ea2a55f8469d74ae986e1d5a34260f22e15bec3a2d27f6",
+    "settlement_batch_hash": "feb03fb10400606df22edfb62ebaa56724e22d46fadc14e600986b82167c3d7d",
+    "report_hash": "a39bfdd9b1b0afa2624fde0e50aa3a03d1127b226e0252e09139e583d1afa59b",
+    "manifest_hash": "169ec527ac9572f462a7f3274c53fce10eabe64f8323ca40287b11c2044b000c"
+  }
+}

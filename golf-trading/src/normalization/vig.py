@@ -8,8 +8,8 @@ Two methods are supported:
     q_i = p_i / sum(p_j)
 
   power — find exponent k > 1 such that sum(p_i ^ k) = 1.0.
-    Slightly more favourable to underdogs than multiplicative because
-    larger probabilities shrink faster under exponentiation.
+    Preserves rank order while shrinking lower probabilities more on a
+    relative basis than multiplicative removal.
     Falls back to multiplicative if the solver doesn't converge.
 
 Both methods guarantee output probabilities that sum to 1.0 within tolerance,
@@ -18,9 +18,7 @@ and every output probability is in (0, 1).
 
 from __future__ import annotations
 
-import math
-from dataclasses import dataclass, field
-
+from dataclasses import dataclass
 
 _SUM_TOLERANCE = 1e-9   # acceptable deviation from 1.0 in output
 _POWER_MAX_ITER = 200   # binary search iterations for power method
@@ -113,7 +111,6 @@ def remove_vig_power(
     # f(large) → 0 (max prob dominates) → f(large) < 0 for large enough k
     k_lo, k_hi = 1.0, 1.0
     # Find an upper bound where sum < 1
-    max_prob = max(probs)
     k_hi = 1.0
     for _ in range(64):
         k_hi *= 2.0

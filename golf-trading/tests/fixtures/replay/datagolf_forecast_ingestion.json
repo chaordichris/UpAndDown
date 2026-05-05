@@ -1,0 +1,79 @@
+{
+  "scenario": "datagolf_forecast_ingestion_leakage_guard",
+  "code_version": "phase3-forecast-replay-v1",
+  "captured_at": "2026-04-30T12:00:00+00:00",
+  "decision_time": "2026-04-30T14:00:00+00:00",
+  "tournament": {
+    "name": "Forecast Replay Open",
+    "tour": "pga",
+    "datagolf_event_id": "forecast_replay_open"
+  },
+  "players": [
+    {
+      "datagolf_player_id": "dg_scottie_scheffler",
+      "name_canonical": "Scottie Scheffler"
+    },
+    {
+      "datagolf_player_id": "dg_rory_mcilroy",
+      "name_canonical": "Rory McIlroy"
+    }
+  ],
+  "raw_snapshot": {
+    "source": "datagolf",
+    "endpoint": "pretournament_predictions",
+    "dg_model_version": "dg-2026-04-01",
+    "response_body": {
+      "event_name": "Forecast Replay Open",
+      "dg_model_version": "dg-2026-04-01",
+      "players": [
+        {
+          "player_id": "dg_scottie_scheffler",
+          "win_probability": 0.14,
+          "top_5_probability": 0.32,
+          "top_10_probability": 0.48,
+          "top_20_probability": 0.68,
+          "make_cut_probability": 0.91,
+          "datagolf_skill_rating": 2.8
+        },
+        {
+          "player_id": "dg_rory_mcilroy",
+          "win_probability": 0.09,
+          "top_5_probability": 0.24,
+          "top_10_probability": 0.39,
+          "top_20_probability": 0.61,
+          "make_cut_probability": 0.87,
+          "datagolf_skill_rating": 2.2
+        },
+        {
+          "player_id": "dg_unknown_player",
+          "win_probability": 0.01
+        }
+      ]
+    }
+  },
+  "model_versions": [
+    {
+      "dg_model_version": "dg-2026-04-01",
+      "published_at": "2026-04-01T08:00:00+00:00"
+    }
+  ],
+  "expected": {
+    "forecast_count": 10,
+    "players_persisted": 2,
+    "model_version": "dg-2026-04-01",
+    "forecast_types": [
+      "make_cut",
+      "top_10",
+      "top_20",
+      "top_5",
+      "win"
+    ],
+    "leakage_guard_passed": true
+  },
+  "expected_hashes": {
+    "snapshot_inputs_hash": "078912616b4560534dd9641df19cde334de867baa8469aa3943bc8ab6ab0994f",
+    "forecast_batch_hash": "cc07efc45e62bb3509020c8829cb1feefa68a2a1c121cd103ae7eb922b4b11c3",
+    "leakage_guard_hash": "4839efbcee983bafdd7bc22b6d4aa773fb63e1a4a289c84623d5c2e15afdcca7",
+    "manifest_hash": "a0965fe962da87f453c21d79cb43cae09d03e2506cd6b0c75e533e14d9b94644"
+  }
+}

@@ -13,7 +13,6 @@ Usage:
 
 from __future__ import annotations
 
-import os
 from functools import lru_cache
 from pathlib import Path
 from typing import Any
@@ -88,6 +87,7 @@ class BankrollConfig:
 class SizingConfig:
     def __init__(self, d: dict[str, Any]) -> None:
         self.kelly_fraction: float = d["kelly_fraction"]
+        self.posterior_kelly_enabled: bool = d.get("posterior_kelly_enabled", False)
         self.convex_unit_fraction: float = d["convex_unit_fraction"]
         self.min_bet_dollars: float = d["min_bet_dollars"]
         self.max_bet_fraction: float = d["max_bet_fraction"]
@@ -104,6 +104,9 @@ class EdgeConfig:
     def __init__(self, d: dict[str, Any]) -> None:
         self.min_edge_core: float = d["min_edge_core"]
         self.min_edge_convex: float = d["min_edge_convex"]
+        self.fdr_enabled: bool = d.get("fdr_enabled", False)
+        self.fdr_q_core: float = d.get("fdr_q_core", 0.20)
+        self.fdr_q_convex: float = d.get("fdr_q_convex", 0.10)
 
 
 class DrawdownConfig:
@@ -113,6 +116,13 @@ class DrawdownConfig:
         self.severe_threshold: float = d["severe_threshold"]
         self.paper_only_threshold: float = d["paper_only_threshold"]
         self.halt_threshold: float = d["halt_threshold"]
+
+
+class RiskOfRuinConfig:
+    def __init__(self, d: dict[str, Any]) -> None:
+        self.bet_count: int = d["bet_count"]
+        self.simulations: int = d["simulations"]
+        self.seed: int = d["seed"]
 
 
 class VigRemovalConfig:
@@ -132,6 +142,7 @@ class Settings:
         self.exposure = ExposureConfig(yaml_data["exposure"])
         self.edge = EdgeConfig(yaml_data["edge"])
         self.drawdown = DrawdownConfig(yaml_data["drawdown"])
+        self.ror = RiskOfRuinConfig(yaml_data["ror"])
         self.vig_removal = VigRemovalConfig(yaml_data["vig_removal"])
 
         # Convenience pass-throughs from secrets
@@ -149,7 +160,7 @@ class BookMarketConfig:
 
 class BookConfig:
     def __init__(self, book_id: str, d: dict[str, Any]) -> None:
-        self.book_id: str = book_id
+        self.book_id: str = d.get("book_id", book_id)
         self.display_name: str = d["display_name"]
         self.active: bool = d["active"]
         self.markets: list[str] = d["markets"]
@@ -159,8 +170,9 @@ class BookConfig:
 class BooksConfig:
     def __init__(self, yaml_data: dict[str, Any]) -> None:
         self.books: dict[str, BookConfig] = {
-            book_id: BookConfig(book_id, book_data)
-            for book_id, book_data in yaml_data["books"].items()
+            book.book_id: book
+            for yaml_id, book_data in yaml_data["books"].items()
+            for book in [BookConfig(yaml_id, book_data)]
         }
         self.market_types: dict[str, BookMarketConfig] = {
             market_id: BookMarketConfig(market_data)

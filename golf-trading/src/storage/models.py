@@ -17,6 +17,7 @@ Table overview:
   placed_bets       — bets actually placed with actual odds/stake
   bet_outcomes      — settlement results
   clv_snapshots     — closing line value calculations per placed bet
+  bet_attribution   — model/execution/sizing/variance P&L decomposition
   bankroll_history  — daily bankroll state snapshot
 """
 
@@ -116,6 +117,8 @@ class RawSnapshot(Base):
     # False if response failed schema validation
     is_valid: Mapped[bool] = mapped_column(Boolean, nullable=False, default=True)
     validation_errors: Mapped[Optional[str]] = mapped_column(Text)
+    dg_model_version: Mapped[Optional[str]] = mapped_column(String(100))
+    inputs_hash: Mapped[str] = mapped_column(String(64), nullable=False, default="")
 
     tournament: Mapped[Optional["Tournament"]] = relationship(back_populates="raw_snapshots")
 
@@ -164,7 +167,9 @@ class Forecast(Base):
     forecast_type: Mapped[str] = mapped_column(String(50), nullable=False)
     probability: Mapped[float] = mapped_column(Float, nullable=False)
     datagolf_skill_rating: Mapped[Optional[float]] = mapped_column(Float)
+    dg_model_version: Mapped[Optional[str]] = mapped_column(String(100))
     captured_at: Mapped[datetime] = mapped_column(DateTime, nullable=False)
+    inputs_hash: Mapped[str] = mapped_column(String(64), nullable=False, default="")
 
     tournament: Mapped["Tournament"] = relationship(back_populates="forecasts")
     player: Mapped["Player"] = relationship(back_populates="forecasts")
@@ -189,6 +194,7 @@ class FairPrice(Base):
     # Pricing method used: "datagolf_direct", "datagolf_derived"
     method: Mapped[str] = mapped_column(String(100), nullable=False)
     calculated_at: Mapped[datetime] = mapped_column(DateTime, nullable=False)
+    inputs_hash: Mapped[str] = mapped_column(String(64), nullable=False, default="")
 
 
 class BetCandidate(Base):
@@ -206,12 +212,19 @@ class BetCandidate(Base):
     fair_prob: Mapped[float] = mapped_column(Float, nullable=False)
     # No-vig book probability
     book_prob: Mapped[float] = mapped_column(Float, nullable=False)
+    # Raw book American odds for the candidate side at decision time
+    book_american_odds: Mapped[Optional[int]] = mapped_column(Integer)
     # Edge = fair_prob - book_prob (positive = we have the edge)
     edge_pct: Mapped[float] = mapped_column(Float, nullable=False)
+    # Uncertainty and FDR fields are populated once Batch C risk controls are wired.
+    edge_sd: Mapped[Optional[float]] = mapped_column(Float)
+    p_value: Mapped[Optional[float]] = mapped_column(Float)
+    passes_fdr: Mapped[bool] = mapped_column(Boolean, nullable=False, default=True)
     # 0.0 to 1.0 confidence score from meta-model (Stage 3; initially just 1.0)
     confidence_score: Mapped[float] = mapped_column(Float, nullable=False, default=1.0)
     # True if data was older than staleness threshold
     staleness_flag: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
+    inputs_hash: Mapped[str] = mapped_column(String(64), nullable=False, default="")
     created_at: Mapped[datetime] = mapped_column(DateTime, nullable=False, default=datetime.utcnow)
 
 
@@ -235,6 +248,7 @@ class BetTicket(Base):
     # True = passed all risk checks, False = blocked
     approved: Mapped[bool] = mapped_column(Boolean, nullable=False)
     rejection_reason: Mapped[Optional[str]] = mapped_column(Text)
+    inputs_hash: Mapped[str] = mapped_column(String(64), nullable=False, default="")
     created_at: Mapped[datetime] = mapped_column(DateTime, nullable=False, default=datetime.utcnow)
 
 
@@ -251,6 +265,10 @@ class PlacedBet(Base):
     notes: Mapped[Optional[str]] = mapped_column(Text)
     # "manual" for MVP; "automated" later
     placement_method: Mapped[str] = mapped_column(String(50), nullable=False, default="manual")
+    # STANDARD, BOOSTED_ODDS, FREE_BET, RISK_FREE
+    bet_class: Mapped[str] = mapped_column(String(50), nullable=False, default="STANDARD")
+    boost_terms_json: Mapped[Optional[str]] = mapped_column(Text)
+    inputs_hash: Mapped[str] = mapped_column(String(64), nullable=False, default="")
 
 
 class BetOutcome(Base):
@@ -265,8 +283,13 @@ class BetOutcome(Base):
     payout: Mapped[float] = mapped_column(Float, nullable=False)
     # Net profit/loss (payout - stake)
     profit_loss: Mapped[float] = mapped_column(Float, nullable=False)
+    payout_raw: Mapped[float] = mapped_column(Float, nullable=False, default=0.0)
+    profit_loss_raw: Mapped[float] = mapped_column(Float, nullable=False, default=0.0)
+    payout_realized: Mapped[float] = mapped_column(Float, nullable=False, default=0.0)
+    profit_loss_realized: Mapped[float] = mapped_column(Float, nullable=False, default=0.0)
     settled_at: Mapped[datetime] = mapped_column(DateTime, nullable=False)
     settlement_notes: Mapped[Optional[str]] = mapped_column(Text)
+    inputs_hash: Mapped[str] = mapped_column(String(64), nullable=False, default="")
 
 
 # ---------------------------------------------------------------------------
@@ -289,6 +312,23 @@ class CLVSnapshot(Base):
     # Model CLV: our_fair_prob - closing_implied_prob
     clv_model: Mapped[Optional[float]] = mapped_column(Float)
     captured_at: Mapped[datetime] = mapped_column(DateTime, nullable=False)
+    inputs_hash: Mapped[str] = mapped_column(String(64), nullable=False, default="")
+
+
+class BetAttribution(Base):
+    """P&L attribution for one settled bet."""
+    __tablename__ = "bet_attribution"
+
+    attribution_id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    bet_id: Mapped[int] = mapped_column(Integer, ForeignKey("placed_bets.bet_id"), nullable=False, unique=True)
+    model_alpha: Mapped[float] = mapped_column(Float, nullable=False)
+    execution_drift: Mapped[float] = mapped_column(Float, nullable=False)
+    sizing_alpha: Mapped[float] = mapped_column(Float, nullable=False)
+    variance: Mapped[float] = mapped_column(Float, nullable=False)
+    realized_profit_loss: Mapped[float] = mapped_column(Float, nullable=False)
+    flat_stake: Mapped[float] = mapped_column(Float, nullable=False)
+    inputs_hash: Mapped[str] = mapped_column(String(64), nullable=False, default="")
+    created_at: Mapped[datetime] = mapped_column(DateTime, nullable=False, default=datetime.utcnow)
 
 
 class BankrollHistory(Base):

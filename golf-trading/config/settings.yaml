@@ -21,6 +21,9 @@ bankroll:
 sizing:
   # Kelly multiplier for core bets (0.25 = quarter Kelly)
   kelly_fraction: 0.25
+  # Posterior Kelly is wired through candidates/ticketing, but disabled for live sizing
+  # until parallel paper-trading proves the Batch C path.
+  posterior_kelly_enabled: false
   # Fixed unit for convex bets as fraction of convex sleeve
   convex_unit_fraction: 0.005
   # Minimum bet size in dollars
@@ -41,6 +44,12 @@ edge:
   min_edge_core: 0.03
   # Minimum edge to consider a convex (outright) bet
   min_edge_convex: 0.08
+  # FDR control is wired through candidate generation, but disabled for live selection
+  # until parallel paper-trading proves the Batch C path.
+  fdr_enabled: false
+  # Benjamini-Hochberg q values by sleeve when FDR is enabled.
+  fdr_q_core: 0.20
+  fdr_q_convex: 0.10
 
 drawdown:
   # Drawdown levels as fraction of peak active-core bankroll
@@ -49,6 +58,12 @@ drawdown:
   severe_threshold: 0.20   # quarter unit sizes
   paper_only_threshold: 0.25  # no real bets
   halt_threshold: 0.35     # full system halt
+
+ror:
+  # Default Monte Carlo shape for phase-gate risk-of-ruin reviews.
+  bet_count: 100
+  simulations: 10000
+  seed: 20260430
 
 vig_removal:
   # Method for two-way markets: "multiplicative" or "power"

@@ -1,0 +1,103 @@
+{
+  "scenario": "fdr_posterior_ticketing_core_batch",
+  "code_version": "phase3-risk-replay-v2",
+  "created_at": "2026-04-30T16:00:00+00:00",
+  "tournament": {
+    "name": "Risk Replay Invitational",
+    "tour": "pga",
+    "datagolf_event_id": "risk_replay_invitational"
+  },
+  "players": [
+    {
+      "datagolf_player_id": "dg_strong_edge",
+      "name_canonical": "Strong Edge"
+    },
+    {
+      "datagolf_player_id": "dg_medium_edge",
+      "name_canonical": "Medium Edge"
+    },
+    {
+      "datagolf_player_id": "dg_noisy_edge",
+      "name_canonical": "Noisy Edge"
+    },
+    {
+      "datagolf_player_id": "dg_field_opponent",
+      "name_canonical": "Field Opponent"
+    }
+  ],
+  "edges": [
+    {
+      "datagolf_id": "dg_strong_edge",
+      "opponent_id": "dg_field_opponent",
+      "market_type": "matchup_2ball",
+      "book_id": "draftkings",
+      "fair_prob": 0.58,
+      "book_no_vig_prob": 0.5,
+      "edge": 0.08,
+      "sleeve": "core",
+      "passes_threshold": true,
+      "book_american_odds": -110,
+      "edge_sd": 0.01
+    },
+    {
+      "datagolf_id": "dg_medium_edge",
+      "opponent_id": "dg_field_opponent",
+      "market_type": "matchup_2ball",
+      "book_id": "draftkings",
+      "fair_prob": 0.54,
+      "book_no_vig_prob": 0.5,
+      "edge": 0.04,
+      "sleeve": "core",
+      "passes_threshold": true,
+      "book_american_odds": -110,
+      "edge_sd": 0.02
+    },
+    {
+      "datagolf_id": "dg_noisy_edge",
+      "opponent_id": "dg_field_opponent",
+      "market_type": "matchup_2ball",
+      "book_id": "draftkings",
+      "fair_prob": 0.531,
+      "book_no_vig_prob": 0.5,
+      "edge": 0.031,
+      "sleeve": "core",
+      "passes_threshold": true,
+      "book_american_odds": -110,
+      "edge_sd": 0.08
+    }
+  ],
+  "edge_config": {
+    "fdr_enabled": true,
+    "fdr_q_core": 0.2,
+    "fdr_q_convex": 0.1,
+    "min_edge_core": 0.03,
+    "min_edge_convex": 0.08
+  },
+  "bankroll": {
+    "total": 25000.0,
+    "reserve_fraction": 0.5,
+    "active_core_fraction": 0.4,
+    "convex_fraction": 0.1
+  },
+  "sizing": {
+    "posterior_kelly_enabled": true,
+    "kelly_multiplier": 0.25,
+    "convex_unit_fraction": 0.005,
+    "min_bet_dollars": 10.0,
+    "max_bet_fraction": 0.02
+  },
+  "expected": {
+    "approved_ticket_count": 2,
+    "rejected_ticket_count": 1,
+    "strong_stake": 218.9,
+    "medium_stake": 105.6,
+    "noisy_rejection_reason": "Candidate failed FDR control.",
+    "sizing_method": "posterior_kelly"
+  },
+  "expected_hashes": {
+    "edge_annotation_hash": "938790bfd442fcc158f189ea357b9083b23306c31552871bcde30adbbee8766b",
+    "candidate_batch_hash": "9b88c92a376970c619465e4e49169dbdaf78610a2b983c5a2d95766c6be1e630",
+    "ticket_batch_hash": "46426df75313a775e1a8feffc4200968b76f5dc5adffc17659f1635224f7db44",
+    "manifest_hash": "2847b67a70540b2c02e5e58b6025997e2abf0dd61ae53ab794929aaba55f9501"
+  }
+}

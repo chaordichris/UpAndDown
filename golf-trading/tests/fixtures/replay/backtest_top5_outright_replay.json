@@ -1,0 +1,159 @@
+{
+  "scenario": "backtest_top5_outright_replay",
+  "code_version": "ws7-backtest-replay-v3",
+  "captured_at": "2026-05-14T12:00:00+00:00",
+  "decision_time": "2026-05-14T14:00:00+00:00",
+  "tournament": {
+    "name": "Backtest Convex Sleeve Open",
+    "tour": "pga",
+    "datagolf_event_id": "backtest_convex_sleeve_open"
+  },
+  "players": [
+    {
+      "datagolf_player_id": "dg_jordan_spieth",
+      "name_canonical": "Jordan Spieth"
+    },
+    {
+      "datagolf_player_id": "dg_justin_thomas",
+      "name_canonical": "Justin Thomas"
+    },
+    {
+      "datagolf_player_id": "dg_viktor_hovland",
+      "name_canonical": "Viktor Hovland"
+    },
+    {
+      "datagolf_player_id": "dg_tommy_fleetwood",
+      "name_canonical": "Tommy Fleetwood"
+    }
+  ],
+  "snapshot": {
+    "source": "datagolf",
+    "endpoint": "pretournament_predictions",
+    "dg_model_version": "dg-2026-05-10"
+  },
+  "forecasts": [
+    {
+      "datagolf_id": "dg_jordan_spieth",
+      "forecast_type": "top_5",
+      "probability": 0.7,
+      "datagolf_skill_rating": 2.0
+    },
+    {
+      "datagolf_id": "dg_justin_thomas",
+      "forecast_type": "top_5",
+      "probability": 0.2,
+      "datagolf_skill_rating": 1.7
+    },
+    {
+      "datagolf_id": "dg_viktor_hovland",
+      "forecast_type": "win",
+      "probability": 0.32,
+      "datagolf_skill_rating": 2.1
+    },
+    {
+      "datagolf_id": "dg_tommy_fleetwood",
+      "forecast_type": "win",
+      "probability": 0.05,
+      "datagolf_skill_rating": 1.6
+    }
+  ],
+  "book_lines": [
+    {
+      "datagolf_id": "dg_jordan_spieth",
+      "market_type": "top_5",
+      "book_id": "draftkings",
+      "american_odds": 200
+    },
+    {
+      "datagolf_id": "dg_justin_thomas",
+      "market_type": "top_5",
+      "book_id": "draftkings",
+      "american_odds": 500
+    },
+    {
+      "datagolf_id": "dg_viktor_hovland",
+      "market_type": "outright_win",
+      "book_id": "draftkings",
+      "american_odds": 1000
+    },
+    {
+      "datagolf_id": "dg_tommy_fleetwood",
+      "market_type": "outright_win",
+      "book_id": "draftkings",
+      "american_odds": 200
+    }
+  ],
+  "settlements": [
+    {
+      "datagolf_id": "dg_jordan_spieth",
+      "result": "loss",
+      "closing_american_odds": 175,
+      "market_type": "top_5",
+      "book_id": "draftkings"
+    },
+    {
+      "datagolf_id": "dg_justin_thomas",
+      "result": "loss",
+      "closing_american_odds": 450,
+      "market_type": "top_5",
+      "book_id": "draftkings"
+    },
+    {
+      "datagolf_id": "dg_viktor_hovland",
+      "result": "win",
+      "closing_american_odds": 850,
+      "market_type": "outright_win",
+      "book_id": "draftkings"
+    },
+    {
+      "datagolf_id": "dg_tommy_fleetwood",
+      "result": "loss",
+      "closing_american_odds": 225,
+      "market_type": "outright_win",
+      "book_id": "draftkings"
+    }
+  ],
+  "settled_at": "2026-05-17T22:00:00+00:00",
+  "model_versions": [
+    {
+      "dg_model_version": "dg-2026-05-10",
+      "published_at": "2026-05-10T08:00:00+00:00"
+    }
+  ],
+  "bankroll": {
+    "total": 25000.0,
+    "reserve_fraction": 0.5,
+    "active_core_fraction": 0.4,
+    "convex_fraction": 0.1
+  },
+  "edge_config": {
+    "min_edge_core": 0.03,
+    "min_edge_convex": 0.08,
+    "fdr_enabled": false,
+    "fdr_q_core": 0.2,
+    "fdr_q_convex": 0.1,
+    "vig_method": "multiplicative"
+  },
+  "sizing": {
+    "posterior_kelly_enabled": false,
+    "kelly_multiplier": 0.25,
+    "convex_unit_fraction": 0.005,
+    "min_bet_dollars": 5.0,
+    "max_bet_fraction": 0.02
+  },
+  "expected": {
+    "approved_ticket_count": 2,
+    "rejected_ticket_count": 2,
+    "settled_count": 2,
+    "clv_count": 2,
+    "strategy_profit_loss": 83.33
+  },
+  "expected_hashes": {
+    "forecast_batch_hash": "286ecb59cf84bf5cc53741ebf5ee2edbb61b892ff074c69ae7e714b907cc92c9",
+    "candidate_batch_hash": "b3f176ff7b8b0223d40bbff37f094c9d589ecd52f5658b38b553a39327a5773e",
+    "ticket_batch_hash": "2429f9634152b739372c363ca66d30a2ff3266e2190d62532c41d7378d4e4e17",
+    "settlement_batch_hash": "0c6fd3cd997f396f200dcb310cf48478828cc16ac0641f2e116637f2b4e9a1eb",
+    "report_hash": "2a006cea1ca7aa4695bf9b07914a54221fce6f2760749ba6076783ad021c27bd",
+    "manifest_hash": "280bc28325af23e50ec641fd5c774f905f2a6a65d7d41d8279eb4d6f59d97c59"
+  }
+}

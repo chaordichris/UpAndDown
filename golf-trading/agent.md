@@ -11,29 +11,31 @@ sportsbook lines, sizes bets conservatively, and tracks performance.
 **Survival first. No-bet is the default.** Small repeatable edges in
 matchup markets. Tiny convex sleeve for outrights. Never compromise the bankroll.
 
-## Current phase
+## Current status
 
-**Phase 1 — Ingestion + Normalization complete.** Next: Phase 2 (Pricing + Risk).
+- **Phase 2 baseline is complete.** Pricing, edge detection, and baseline risk controls exist and are tested.
+- **Phase 3 is underway.** Ticket generation, manual placement logging, settlement helpers, CLV capture, paper-trading reports, readiness diagnostics, initial P&L attribution, promo P&L separation, and phase-gate artifact checks now exist. The gate remains data-blocked until real operator-entered paper trading reaches the required sample.
+- **v0.2 quant-risk upgrades are partially wired behind disabled flags.** Candidate generation now carries FDR/posterior-Kelly metadata into ticketing, DataGolf model versions propagate into leakage-checked replays, and RoR is available for phase-gate artifacts. Risk flags remain off while the paper-trading backbone proves the path.
 
-## What was built in Phase 1
+## What is already built
 
-1. `src/normalization/odds.py` — American ↔ decimal ↔ implied prob (pure math, fully tested)
-2. `src/normalization/vig.py` — Multiplicative and power vig removal (20+ tests)
-3. `src/normalization/players.py` — Player name/ID resolution (exact, alias, fuzzy with difflib)
-4. `src/ingestion/datagolf.py` — DataGolf API client (httpx, 3-retry backoff, snapshot persistence)
-5. `src/ingestion/sportsbooks.py` — Parsers for DataGolf betting-tools format (matchups + outrights); no separate book fetchers needed
+1. `src/config.py`, `src/storage/`, `scripts/init_db.py` — foundation, config, schema, and DB lifecycle
+2. `src/ingestion/datagolf.py`, `src/ingestion/sportsbooks.py` — DataGolf ingestion and odds snapshot parsing
+3. `src/normalization/odds.py`, `src/normalization/vig.py`, `src/normalization/players.py` — core normalization math
+4. `src/pricing/` — matchup, top-N, outright pricing baseline
+5. `src/risk/edge.py`, `src/risk/sizing.py`, `src/risk/exposure.py`, `src/risk/drawdown.py` — baseline edge and risk engine
+6. `src/execution/`, `src/monitoring/`, `scripts/paper_trade.py` — initial Phase 3 paper-trading backbone
+7. `src/backtest/leakage_guard.py`, `src/backtest/replay.py`, `src/backtest/summary.py` — initial WS-7 leakage-checked replay, settlement, and multi-tournament summary spine
+8. `scripts/phase_gate_check.py`, `scripts/backtest_replay.py`, `scripts/backtest_review.py`, `scripts/artifact_bundle.py` — deterministic review artifacts for Phase 3 and WS-7 audit handoffs
 
-## What to build next (Phase 2)
+## What to build next
 
-1. `src/pricing/matchups.py` — P(A beats B) from DataGolf's individual finish distributions
-2. `src/pricing/top_n.py` — Make-cut and top-N fair prices directly from DG probabilities
-3. `src/pricing/outrights.py` — Outright win fair prices from DG win probabilities
-4. `src/risk/edge.py` — Edge detection: fair_prob − book_no_vig_prob; filter by min_edge thresholds
-5. `src/risk/sizing.py` — Fractional Kelly sizing (0.25x) + max_bet_fraction cap
-6. `src/risk/exposure.py` — Golfer / tournament / book concentration limits
-7. `src/risk/drawdown.py` — 4-level drawdown brake logic
+1. Run the Phase 3 paper-trading proof on real operator-entered events until the gate has enough settled evidence.
+2. Broaden WS-7 backtests with more historical fixture coverage and event DB artifacts.
+3. Keep exporting paper-report, phase-gate, and review-bundle artifacts for manual audit.
+4. Advanced portfolio modules (`covariance.py`, `portfolio.py`, `account_health.py`, `capacity.py`) only behind config flags.
 
-See `docs/adr/` and build plan for full specs.
+See `docs/agent-execution-plan.md`, `docs/adr/`, and the build plan addendum for full sequencing.
 
 ## Conventions
 
@@ -44,6 +46,8 @@ See `docs/adr/` and build plan for full specs.
 - Every function that does math has property-based or table-driven tests.
 - No hardcoded magic numbers anywhere.
 - Every bet decision is logged with full provenance (snapshot IDs, fair price, book price, edge, reason).
+- Every new downstream artifact should carry an `inputs_hash`.
+- Every workstream handoff should include a passing replay or smoke contract.
 - `make test` must pass before any commit.
 
 ## Module interfaces
@@ -59,6 +63,8 @@ All modules communicate via typed dataclasses. The key interface types are:
 | `BetTicket` | risk | execution |
 | `PlacedBet` | execution | monitoring |
 | `BetOutcome` | settlement | monitoring |
+| `BankrollState` | risk | risk / monitoring |
+| `ExposureReport` | risk | execution / monitoring |
 
 ## What NOT to do
 
@@ -69,16 +75,22 @@ All modules communicate via typed dataclasses. The key interface types are:
 - Do not use ROI as a signal over fewer than 100 bets. Use CLV instead.
 - Do not override the risk engine. It has veto power over every bet.
 - Do not hardcode any number that could reasonably need to change.
+- Do not size on a point edge estimate once `edge_sd` exists. Use posterior Kelly.
+- Do not relax quantitative phase-exit gates mid-phase. Re-commit before re-entry.
 
 ## Key files
 
 | File | Purpose |
 |------|---------|
+| `AGENTS.md` | Codex-local instructions for this subtree |
+| `CLAUDE.md` | Claude-local instructions for this subtree |
 | `config/settings.yaml` | All non-secret parameters |
 | `config/books.yaml` | Book-specific rules and market config |
 | `config/.env.example` | Template for secrets |
+| `docs/agent-execution-plan.md` | Current workstream backlog and handoff contract |
 | `docs/adr/` | Architecture decision records |
-| `docs/skills/` | Skill specs per module |
+| `../skills/` | Shared agent skill sources |
+| `../.codex/skills/` | Codex mirror of shared skills |
 | `src/config.py` | Typed config loader |
 | `src/storage/models.py` | All 13 DB table definitions |
 | `src/storage/db.py` | Connection and session management |
@@ -120,3 +132,4 @@ Phase 6: Iteration + Expansion
 
 Positive aggregate CLV over 50+ bets across 8+ tournaments.
 ROI is tracked but not used as a signal below 100 bets.
+All phase-gate checks must pass before capital is increased.
