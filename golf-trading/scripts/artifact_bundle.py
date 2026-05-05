@@ -35,6 +35,7 @@ def build_review_bundle_artifact(
     backtest_review: Path,
     paper_report: Path,
     phase_gate: Path,
+    phase3_evidence: Path | None = None,
     code_version: str | None = None,
 ) -> dict[str, Any]:
     """Build a deterministic file-level index for one review bundle."""
@@ -44,10 +45,16 @@ def build_review_bundle_artifact(
         "paper_report": paper_report,
         "phase_gate": phase_gate,
     }
+    if phase3_evidence is not None:
+        path_by_label["phase3_evidence"] = phase3_evidence
+
     artifacts = [
         _artifact_file_entry(label, path_by_label[label])
         for label, _argument_name in ARTIFACT_FIELDS
     ]
+    if phase3_evidence is not None:
+        artifacts.append(_artifact_file_entry("phase3_evidence", phase3_evidence))
+
     payload = {
         "artifact_type": "review_bundle",
         "shape": {"artifacts": len(artifacts)},
@@ -112,6 +119,7 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--backtest-review", type=Path, required=True)
     parser.add_argument("--paper-report", type=Path, required=True)
     parser.add_argument("--phase-gate", type=Path, required=True)
+    parser.add_argument("--phase3-evidence", type=Path)
     parser.add_argument("--format", choices=["json"], default="json")
     parser.add_argument("--output", type=Path, help="Optional path to write the bundle artifact.")
     parser.add_argument("--code-version", default=None)
@@ -125,6 +133,7 @@ def main() -> None:
         backtest_review=args.backtest_review,
         paper_report=args.paper_report,
         phase_gate=args.phase_gate,
+        phase3_evidence=args.phase3_evidence,
         code_version=args.code_version,
     )
     rendered = render_review_bundle_artifact_json(artifact)

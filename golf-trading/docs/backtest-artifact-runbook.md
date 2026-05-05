@@ -107,6 +107,7 @@ PYTHONPATH=. .venv/bin/python scripts/artifact_bundle.py \
   --replay artifacts/replay.json \
   --backtest-review artifacts/backtest-review.json \
   --paper-report artifacts/paper-report.json \
+  --phase3-evidence artifacts/phase3-evidence.json \
   --phase-gate artifacts/phase-gate.json \
   --format json \
   --output artifacts/review-bundle.json
@@ -117,8 +118,8 @@ Outputs:
 - Stable file-level review bundle at `artifacts/review-bundle.json`.
 - SHA-256 hash for each rendered artifact file.
 - Embedded artifact hashes surfaced from replay, backtest-review, paper-report,
-  and phase-gate JSON when present.
-- `bundle_hash` tying the four reviewed artifact files into one audit index.
+  phase3-evidence, and phase-gate JSON when present.
+- `bundle_hash` tying the reviewed artifact files into one audit index.
 
 ## Useful Fixtures
 

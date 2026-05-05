@@ -162,3 +162,22 @@ PYTHONPATH=. .venv/bin/python scripts/phase_gate_check.py \
 
 The gate criteria remain paper-trading based. Attached WS-7 backtest summaries
 are supporting evidence, not pass/fail criteria.
+
+## 8. Bundle Review Artifacts
+
+After replay, backtest-review, paper-report, evidence-check, and phase-gate
+artifacts exist, build the review bundle:
+
+```bash
+PYTHONPATH=. .venv/bin/python scripts/artifact_bundle.py \
+  --replay artifacts/replay.json \
+  --backtest-review artifacts/backtest-review.json \
+  --paper-report artifacts/paper-report.json \
+  --phase3-evidence artifacts/phase3-evidence.json \
+  --phase-gate artifacts/phase-gate.json \
+  --format json \
+  --output artifacts/review-bundle.json
+```
+
+The bundle records file-level SHA-256 values and embedded artifact hashes so
+the manual review packet can be rechecked without trusting filenames alone.

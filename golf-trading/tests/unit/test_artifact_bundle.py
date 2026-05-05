@@ -106,6 +106,41 @@ def test_review_bundle_artifact_hash_changes_when_file_content_changes(
     assert first["bundle_hash"] != second["bundle_hash"]
 
 
+def test_review_bundle_can_include_phase3_evidence_artifact(tmp_path: Path) -> None:
+    replay = _write_json(tmp_path / "replay.json", {"manifest_hash": "replay-v1"})
+    backtest_review = _write_json(tmp_path / "backtest-review.json", {})
+    paper_report = _write_json(tmp_path / "paper-report.json", {})
+    phase_gate = _write_json(tmp_path / "phase-gate.json", {})
+    phase3_evidence = _write_json(
+        tmp_path / "phase3-evidence.json",
+        {
+            "artifact_type": "phase3_evidence_check",
+            "artifact_hash": "evidence-hash",
+        },
+    )
+
+    artifact = build_review_bundle_artifact(
+        replay=replay,
+        backtest_review=backtest_review,
+        paper_report=paper_report,
+        phase_gate=phase_gate,
+        phase3_evidence=phase3_evidence,
+    )
+
+    assert artifact["shape"] == {"artifacts": 5}
+    assert [entry["label"] for entry in artifact["artifacts"]] == [
+        "replay",
+        "backtest_review",
+        "paper_report",
+        "phase_gate",
+        "phase3_evidence",
+    ]
+    assert artifact["artifacts"][-1]["artifact_type"] == "phase3_evidence_check"
+    assert artifact["artifacts"][-1]["embedded_hashes"] == {
+        "artifact_hash": "evidence-hash"
+    }
+
+
 def test_review_bundle_refuses_missing_artifact(tmp_path: Path) -> None:
     existing = _write_json(tmp_path / "existing.json", {})
 
