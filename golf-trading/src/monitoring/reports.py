@@ -88,6 +88,17 @@ class Phase3ReadinessReport:
     report: StoredPaperTradeReport
 
 
+@dataclass(frozen=True)
+class Phase3EvidenceReport:
+    """Operator evidence guardrail before assembling Phase 3 gate artifacts."""
+
+    passed: bool
+    evidence_clean: bool
+    contamination_count: int
+    criteria: list[ReadinessCriterion]
+    readiness: Phase3ReadinessReport
+
+
 def build_paper_trade_report(
     tickets: list[BetTicketDraft],
     settlements: list[SettlementLog],
@@ -170,6 +181,70 @@ def build_phase3_readiness_report(
     )
 
 
+def build_phase3_evidence_report(
+    session: Session,
+    *,
+    required_tournaments: int = 4,
+    required_settled_bets: int = 60,
+) -> Phase3EvidenceReport:
+    """Check that Phase 3 review evidence is real operator-entered paper data."""
+    readiness = build_phase3_readiness_report(
+        session,
+        required_tournaments=required_tournaments,
+        required_settled_bets=required_settled_bets,
+    )
+    smoke_tournaments = _smoke_tournament_count(session)
+    suspicious_hashes = _suspicious_inputs_hash_count(session)
+    non_manual_placements = _non_manual_placement_count(session)
+    suspicious_notes = _suspicious_note_count(session)
+    contamination_count = (
+        smoke_tournaments
+        + suspicious_hashes
+        + non_manual_placements
+        + suspicious_notes
+    )
+    criteria = [
+        ReadinessCriterion(
+            name="phase3_readiness",
+            passed=readiness.passed,
+            observed="passed" if readiness.passed else "not_ready",
+            required="passed",
+        ),
+        ReadinessCriterion(
+            name="no_smoke_tournaments",
+            passed=smoke_tournaments == 0,
+            observed=str(smoke_tournaments),
+            required="0",
+        ),
+        ReadinessCriterion(
+            name="no_smoke_fixture_hashes",
+            passed=suspicious_hashes == 0,
+            observed=str(suspicious_hashes),
+            required="0",
+        ),
+        ReadinessCriterion(
+            name="manual_placements_only",
+            passed=non_manual_placements == 0,
+            observed=str(non_manual_placements),
+            required="0",
+        ),
+        ReadinessCriterion(
+            name="no_smoke_fixture_notes",
+            passed=suspicious_notes == 0,
+            observed=str(suspicious_notes),
+            required="0",
+        ),
+    ]
+    evidence_clean = contamination_count == 0
+    return Phase3EvidenceReport(
+        passed=evidence_clean and readiness.passed,
+        evidence_clean=evidence_clean,
+        contamination_count=contamination_count,
+        criteria=criteria,
+        readiness=readiness,
+    )
+
+
 def build_stored_paper_trade_report(session: Session) -> StoredPaperTradeReport:
     """Summarize the persisted paper-trading database state."""
     tickets = session.query(BetTicket).all()
@@ -233,6 +308,24 @@ def render_phase3_readiness_report(readiness: Phase3ReadinessReport) -> str:
         f"Settled bets: {readiness.report.settled_count}",
     ]
     for criterion in readiness.criteria:
+        status = "PASS" if criterion.passed else "FAIL"
+        lines.append(
+            f"{status} {criterion.name}: observed {criterion.observed}, required {criterion.required}"
+        )
+    return "\n".join(lines)
+
+
+def render_phase3_evidence_report(evidence: Phase3EvidenceReport) -> str:
+    """Render the Phase 3 evidence guardrail for terminal operator review."""
+    lines = [
+        "Phase 3 Evidence Check",
+        f"Status: {'READY' if evidence.passed else 'NOT READY'}",
+        f"Evidence clean: {'YES' if evidence.evidence_clean else 'NO'}",
+        f"Contamination count: {evidence.contamination_count}",
+        f"Settled tournaments: {evidence.readiness.settled_tournament_count}",
+        f"Settled bets: {evidence.readiness.report.settled_count}",
+    ]
+    for criterion in evidence.criteria:
         status = "PASS" if criterion.passed else "FAIL"
         lines.append(
             f"{status} {criterion.name}: observed {criterion.observed}, required {criterion.required}"
@@ -440,6 +533,49 @@ def _open_approved_ticket_count(session: Session) -> int:
         ticket.approved and ticket.ticket_id not in placed_ticket_ids
         for ticket in session.query(BetTicket).all()
     )
+
+
+def _smoke_tournament_count(session: Session) -> int:
+    return sum(
+        _contains_non_review_token(tournament.name)
+        or _contains_non_review_token(tournament.datagolf_event_id)
+        for tournament in session.query(Tournament).all()
+    )
+
+
+def _suspicious_inputs_hash_count(session: Session) -> int:
+    rows = [
+        *session.query(BetCandidate).all(),
+        *session.query(BetTicket).all(),
+        *session.query(PlacedBet).all(),
+        *session.query(BetOutcome).all(),
+        *session.query(CLVSnapshot).all(),
+        *session.query(BetAttribution).all(),
+    ]
+    return sum(_contains_non_review_token(row.inputs_hash) for row in rows)
+
+
+def _non_manual_placement_count(session: Session) -> int:
+    return sum(
+        bet.placement_method != "manual"
+        for bet in session.query(PlacedBet).all()
+    )
+
+
+def _suspicious_note_count(session: Session) -> int:
+    placed_bets = session.query(PlacedBet).all()
+    outcomes = session.query(BetOutcome).all()
+    return sum(_contains_non_review_token(bet.notes) for bet in placed_bets) + sum(
+        _contains_non_review_token(outcome.settlement_notes)
+        for outcome in outcomes
+    )
+
+
+def _contains_non_review_token(value: str | None) -> bool:
+    if value is None:
+        return False
+    lowered = value.lower()
+    return any(token in lowered for token in ("smoke", "fixture", "backtest"))
 
 
 def _require(session: Session, model, row_id: int, label: str):

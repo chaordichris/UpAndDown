@@ -101,7 +101,35 @@ PYTHONPATH=. .venv/bin/python scripts/paper_trade.py readiness \
   --output artifacts/phase3-readiness.json
 ```
 
-## 5. Export Paper Report
+## 5. Check Evidence Provenance
+
+Before assembling gate artifacts, run the evidence guardrail. It reuses the
+readiness checks and also flags smoke, fixture, or backtest rows that must not
+be counted as real operator-entered Phase 3 evidence.
+
+```bash
+PYTHONPATH=. .venv/bin/python scripts/paper_trade.py evidence-check \
+  --database-url "$PAPER_DB" \
+  --required-tournaments 4 \
+  --required-settled-bets 60
+```
+
+For an auditable evidence artifact:
+
+```bash
+PYTHONPATH=. .venv/bin/python scripts/paper_trade.py evidence-check \
+  --database-url "$PAPER_DB" \
+  --required-tournaments 4 \
+  --required-settled-bets 60 \
+  --format json \
+  --output artifacts/phase3-evidence.json
+```
+
+The evidence check is a guardrail, not a replacement for the phase gate. If it
+reports `Evidence clean: NO`, stop and remove the contaminated review database
+from Phase 3 evidence before continuing.
+
+## 6. Export Paper Report
 
 ```bash
 PYTHONPATH=. .venv/bin/python scripts/paper_trade.py report \
@@ -114,7 +142,7 @@ The report artifact is review evidence. It includes ticket, placement,
 settlement, CLV, attribution, strategy P&L, promo P&L, realized P&L, and ROI
 counts/totals.
 
-## 6. Attach Phase-Gate Review
+## 7. Attach Phase-Gate Review
 
 ```bash
 PYTHONPATH=. .venv/bin/python scripts/phase_gate_check.py \
