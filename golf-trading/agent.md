@@ -14,8 +14,8 @@ matchup markets. Tiny convex sleeve for outrights. Never compromise the bankroll
 ## Current status
 
 - **Phase 2 baseline is complete.** Pricing, edge detection, and baseline risk controls exist and are tested.
-- **Phase 3 is underway.** Ticket generation, manual placement logging, settlement helpers, CLV capture, paper-trading reports, first pinned replay contract, initial P&L attribution, and promo P&L separation now exist. Phase-gate checks remain open.
-- **v0.2 quant-risk upgrades are partially wired behind disabled flags.** Candidate generation now carries FDR/posterior-Kelly metadata into ticketing, and the first leakage-checked backtest replay spine exists. Risk flags remain off while the paper-trading backbone proves the path.
+- **Phase 3 is underway.** Ticket generation, manual placement logging, settlement helpers, CLV capture, paper-trading reports, readiness diagnostics, initial P&L attribution, promo P&L separation, and phase-gate artifact checks now exist. The gate remains data-blocked until real operator-entered paper trading reaches the required sample.
+- **v0.2 quant-risk upgrades are partially wired behind disabled flags.** Candidate generation now carries FDR/posterior-Kelly metadata into ticketing, DataGolf model versions propagate into leakage-checked replays, and RoR is available for phase-gate artifacts. Risk flags remain off while the paper-trading backbone proves the path.
 
 ## What is already built
 
@@ -26,13 +26,14 @@ matchup markets. Tiny convex sleeve for outrights. Never compromise the bankroll
 5. `src/risk/edge.py`, `src/risk/sizing.py`, `src/risk/exposure.py`, `src/risk/drawdown.py` — baseline edge and risk engine
 6. `src/execution/`, `src/monitoring/`, `scripts/paper_trade.py` — initial Phase 3 paper-trading backbone
 7. `src/backtest/leakage_guard.py`, `src/backtest/replay.py`, `src/backtest/summary.py` — initial WS-7 leakage-checked replay, settlement, and multi-tournament summary spine
+8. `scripts/phase_gate_check.py`, `scripts/backtest_replay.py`, `scripts/backtest_review.py`, `scripts/artifact_bundle.py` — deterministic review artifacts for Phase 3 and WS-7 audit handoffs
 
 ## What to build next
 
-1. More replay fixtures for ingestion, normalization, pricing, and risk handoffs
-2. Broaden WS-7 backtests with more historical fixture coverage and event DB artifacts
-3. `scripts/phase_gate_check.py` plus expanded `dg_model_version` propagation — machine-checkable phase gates and leakage defense
-4. Advanced portfolio modules (`covariance.py`, `portfolio.py`, `account_health.py`, `capacity.py`) only behind config flags
+1. Run the Phase 3 paper-trading proof on real operator-entered events until the gate has enough settled evidence.
+2. Broaden WS-7 backtests with more historical fixture coverage and event DB artifacts.
+3. Keep exporting paper-report, phase-gate, and review-bundle artifacts for manual audit.
+4. Advanced portfolio modules (`covariance.py`, `portfolio.py`, `account_health.py`, `capacity.py`) only behind config flags.
 
 See `docs/agent-execution-plan.md`, `docs/adr/`, and the build plan addendum for full sequencing.
 
