@@ -259,7 +259,10 @@ def settle_backtest_replay(
         placed_bets=placed_bets,
         outcomes=outcomes,
         clv_snapshots=clv_snapshots,
-        report=build_stored_paper_trade_report(session),
+        report=build_stored_paper_trade_report(
+            session,
+            placement_methods=frozenset({"backtest"}),
+        ),
     )
 
 

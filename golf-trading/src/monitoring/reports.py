@@ -28,7 +28,6 @@ _SHADOW_LIVE_METHOD: str = "shadow_live"
 
 # placement_method values that belong to paper-trade gate evidence.
 _PAPER_METHODS: frozenset[str] = frozenset({"manual"})
-
 # placement_method values that ARE contamination (synthetic / test data).
 _CONTAMINATING_METHODS: frozenset[str] = frozenset({"backtest"})
 
@@ -270,16 +269,19 @@ def build_phase3_evidence_report(
     )
 
 
-def build_stored_paper_trade_report(session: Session) -> StoredPaperTradeReport:
+def build_stored_paper_trade_report(
+    session: Session,
+    placement_methods: frozenset[str] = _PAPER_METHODS,
+) -> StoredPaperTradeReport:
     """Summarize the persisted paper-trading database state.
 
-    Only includes bets with a paper placement method (``manual``).
-    Shadow-live and backtest bets are excluded so gate evidence metrics stay
-    clean even when the same DB is used for both paper and shadow-live trading.
+    By default, only includes bets with a paper placement method (``manual``).
+    Backtest callers can pass ``placement_methods=frozenset({"backtest"})`` to
+    build replay reports without contaminating paper-gate evidence.
     """
     tickets = session.query(BetTicket).all()
     all_placed = session.query(PlacedBet).all()
-    placed_bets = [b for b in all_placed if b.placement_method in _PAPER_METHODS]
+    placed_bets = [b for b in all_placed if b.placement_method in placement_methods]
     paper_bet_ids = {b.bet_id for b in placed_bets}
     all_outcomes = session.query(BetOutcome).all()
     outcomes = [o for o in all_outcomes if o.bet_id in paper_bet_ids]

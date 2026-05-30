@@ -42,7 +42,10 @@ def collect_backtest_report_slices(
             slices.append(
                 BacktestReportSlice(
                     label=label,
-                    report=build_stored_paper_trade_report(session),
+                    report=build_stored_paper_trade_report(
+                        session,
+                        placement_methods=frozenset({"backtest"}),
+                    ),
                 )
             )
     return slices

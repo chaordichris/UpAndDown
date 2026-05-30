@@ -357,6 +357,7 @@ def test_phase3_evidence_flags_smoke_and_backtest_rows(db_session) -> None:
         "no_smoke_fixture_hashes",
         "manual_placements_only",
         "no_smoke_fixture_notes",
+        "phase3_readiness",
     }
     assert "Evidence clean: NO" in rendered
 
