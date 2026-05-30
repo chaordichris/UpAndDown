@@ -16,22 +16,20 @@ Covers:
 from __future__ import annotations
 
 import json
+from datetime import UTC
 from pathlib import Path
 
 import pytest
 
 from src.ingestion.sportsbooks import (
     BookSnapshot,
-    RawMatchupOdds,
-    RawOutrightOdds,
+    _parse_last_updated,
     available_books_in_matchups,
     available_books_in_outrights,
     parse_datagolf_matchups_response,
     parse_datagolf_outrights_response,
     persist_book_snapshot,
-    _parse_last_updated,
 )
-
 
 # ---------------------------------------------------------------------------
 # Fixtures
@@ -113,6 +111,36 @@ def test_matchups_missing_required_key_raises(matchups_raw) -> None:
         parse_datagolf_matchups_response(bad, book_id="draftkings")
 
 
+def test_matchups_supports_live_nested_odds_shape() -> None:
+    raw = {
+        "event_name": "Truist Championship",
+        "market": "tournament_matchups",
+        "last_updated": "2026-05-05 13:00:00",
+        "match_list": [
+            {
+                "p1_player_name": "Fleetwood, Tommy",
+                "p2_player_name": "Aberg, Ludvig",
+                "p1_dg_id": 12294,
+                "p2_dg_id": 23950,
+                "ties": "separate bet offered",
+                "odds": {
+                    "draftkings": {"p1": "+120", "p2": "-145", "tie": "+1600"},
+                    "datagolf": {"p1": "+123", "p2": "-100", "tie": "+1896"},
+                },
+            }
+        ],
+    }
+
+    result = parse_datagolf_matchups_response(raw, book_id="draftkings")
+
+    assert len(result.matchups) == 1
+    first = result.matchups[0]
+    assert first.players[0].datagolf_id == "12294"
+    assert first.players[0].american_odds == 120
+    assert first.players[1].datagolf_id == "23950"
+    assert first.players[1].american_odds == -145
+
+
 # ---------------------------------------------------------------------------
 # parse_datagolf_outrights_response
 # ---------------------------------------------------------------------------
@@ -154,6 +182,30 @@ def test_outrights_missing_required_key_raises(outrights_raw) -> None:
         parse_datagolf_outrights_response(bad, book_id="draftkings")
 
 
+def test_outrights_supports_live_odds_list_shape() -> None:
+    raw = {
+        "event_name": "Truist Championship",
+        "market": "win",
+        "last_updated": "2026-05-05 13:00:00",
+        "odds": [
+            {
+                "player_name": "McIlroy, Rory",
+                "dg_id": 10091,
+                "draftkings": "+580",
+                "fanduel": "+550",
+                "datagolf": {"baseline": "+1286", "baseline_history_fit": "+796"},
+            }
+        ],
+    }
+
+    result = parse_datagolf_outrights_response(raw, book_id="draftkings")
+
+    assert len(result.outrights) == 1
+    first = result.outrights[0]
+    assert first.datagolf_id == "10091"
+    assert first.american_odds == 580
+
+
 # ---------------------------------------------------------------------------
 # available_books_in_* helpers
 # ---------------------------------------------------------------------------
@@ -185,6 +237,56 @@ def test_available_books_empty_player_list() -> None:
     assert available_books_in_outrights({"player_list": []}) == []
 
 
+def test_available_books_in_live_matchups_shape_excludes_datagolf() -> None:
+    raw = {
+        "match_list": [
+            {
+                "odds": {
+                    "draftkings": {"p1": "+120", "p2": "-145"},
+                    "datagolf": {"p1": "+123", "p2": "-100"},
+                }
+            },
+            {
+                "odds": {
+                    "fanduel": {"p1": "+118", "p2": "-142"},
+                    "datagolf": {"p1": "+123", "p2": "-100"},
+                }
+            }
+        ]
+    }
+
+    books = available_books_in_matchups(raw)
+
+    assert "draftkings" in books
+    assert "fanduel" in books
+    assert "datagolf" not in books
+
+
+def test_available_books_in_live_outrights_shape_excludes_datagolf() -> None:
+    raw = {
+        "odds": [
+            {
+                "player_name": "McIlroy, Rory",
+                "dg_id": 10091,
+                "draftkings": "+580",
+                "datagolf": {"baseline": "+1286"},
+            },
+            {
+                "player_name": "Scheffler, Scottie",
+                "dg_id": 18417,
+                "fanduel": "+550",
+                "datagolf": {"baseline": "+1100"},
+            }
+        ]
+    }
+
+    books = available_books_in_outrights(raw)
+
+    assert "draftkings" in books
+    assert "fanduel" in books
+    assert "datagolf" not in books
+
+
 # ---------------------------------------------------------------------------
 # persist_book_snapshot
 # ---------------------------------------------------------------------------
@@ -210,12 +312,11 @@ def test_persist_outright_snapshot(outrights_raw, db_session) -> None:
 
 def test_parse_datagolf_space_format() -> None:
     """DataGolf's 'YYYY-MM-DD HH:MM:SS' format parses to UTC datetime."""
-    from datetime import timezone
     dt = _parse_last_updated("2024-03-11 14:00:00")
     assert dt.year == 2024
     assert dt.month == 3
     assert dt.day == 11
-    assert dt.tzinfo == timezone.utc
+    assert dt.tzinfo == UTC
 
 
 def test_parse_iso_format() -> None:
@@ -223,3 +324,11 @@ def test_parse_iso_format() -> None:
     dt = _parse_last_updated("2024-03-11T14:00:00Z")
     assert dt.year == 2024
     assert dt.hour == 14
+
+
+def test_parse_space_format_with_utc_suffix() -> None:
+    dt = _parse_last_updated("2026-05-05 11:33:00 UTC")
+    assert dt.year == 2026
+    assert dt.month == 5
+    assert dt.day == 5
+    assert dt.tzinfo == UTC
