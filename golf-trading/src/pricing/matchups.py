@@ -4,8 +4,9 @@ Matchup fair-price calculation.
 Two paths:
 
   1. datagolf_direct — Read DG's own baseline odds from a betting-tools/matchups
-     response entry. The `datagolf_baseline` sub-dict contains DG's no-vig
-     head-to-head estimate already. Convert to probability via odds normalization.
+     response entry. The `datagolf_baseline` sub-dict or live `odds.datagolf`
+     sub-dict contains DG's no-vig head-to-head estimate already. Convert to
+     probability via odds normalization.
 
   2. harville — Derive P(A beats B) from individual win probabilities using the
      Harville formula: P(A | {A,B}) = P_win(A) / (P_win(A) + P_win(B)).
@@ -45,24 +46,26 @@ def price_matchup_from_datagolf(
 ) -> list[FairPriceResult]:
     """Extract fair prices from a DataGolf betting-tools matchup entry.
 
-    Reads the `datagolf_baseline` sub-dict, which contains DG's own no-vig
-    head-to-head odds. Converts those odds to probabilities.
+    Reads DG's own no-vig head-to-head odds from either the legacy
+    `datagolf_baseline` sub-dict or the live `odds.datagolf` sub-dict.
+    Converts those odds to probabilities.
 
     Args:
         match_entry: One item from the DataGolf match_list response array.
-                     Must contain `datagolf_baseline` with `p1_odds` / `p2_odds`
-                     (and optionally `p3_odds` for 3-balls), plus player name/id fields.
+                     Must contain DG baseline odds with `p1_odds` / `p2_odds`
+                     or `p1` / `p2` (and optionally p3 keys for 3-balls), plus
+                     player name/id fields.
         as_of: Timestamp to attach to the result. Defaults to now (UTC).
 
     Returns:
         List of FairPriceResult, one per player side (2 for 2-ball, 3 for 3-ball).
 
     Raises:
-        KeyError: If `datagolf_baseline` or required player fields are missing.
+        KeyError: If DG baseline odds or required player fields are missing.
         ValueError: If odds cannot be converted (e.g., zero odds).
     """
     as_of = as_of or datetime.now(timezone.utc)
-    baseline = match_entry["datagolf_baseline"]
+    baseline = _datagolf_baseline_odds(match_entry)
 
     n_players = 3 if "p3_player_name" in match_entry else 2
     market_type = MARKET_3BALL if n_players == 3 else MARKET_2BALL
@@ -71,9 +74,9 @@ def price_matchup_from_datagolf(
     sides: list[tuple[str, float]] = []
     for i in range(1, n_players + 1):
         pk = f"p{i}"
-        dg_id = match_entry.get(f"{pk}_datagolf_id", match_entry.get(f"{pk}_player_name", ""))
-        raw_odds = baseline[f"{pk}_odds"]
-        sides.append((dg_id, float(raw_odds)))
+        dg_id = _matchup_datagolf_id(match_entry, pk)
+        raw_odds = _baseline_side_odds(baseline, pk)
+        sides.append((dg_id, raw_odds))
 
     return _sides_to_fair_prices(sides, market_type, METHOD_DATAGOLF_DIRECT, as_of)
 
@@ -130,6 +133,38 @@ def price_matchup_harville(
 # ---------------------------------------------------------------------------
 # Internal helper
 # ---------------------------------------------------------------------------
+
+def _datagolf_baseline_odds(match_entry: dict) -> dict:
+    """Return DG baseline odds from the legacy or live matchup shape."""
+    baseline = match_entry.get("datagolf_baseline")
+    if isinstance(baseline, dict):
+        return baseline
+
+    odds = match_entry.get("odds")
+    if isinstance(odds, dict):
+        baseline = odds.get("datagolf")
+        if isinstance(baseline, dict):
+            return baseline
+
+    raise KeyError("datagolf baseline odds not found")
+
+
+def _baseline_side_odds(baseline: dict, player_key: str) -> float:
+    raw_odds = baseline.get(f"{player_key}_odds", baseline.get(player_key))
+    if raw_odds is None:
+        raise KeyError(f"datagolf baseline odds missing {player_key}")
+    return float(raw_odds)
+
+
+def _matchup_datagolf_id(match_entry: dict, player_key: str) -> str:
+    dg_id = match_entry.get(
+        f"{player_key}_datagolf_id",
+        match_entry.get(f"{player_key}_dg_id", match_entry.get(f"{player_key}_player_name")),
+    )
+    if dg_id is None:
+        raise KeyError(f"matchup player identifier missing {player_key}")
+    return str(dg_id)
+
 
 def _sides_to_fair_prices(
     sides: list[tuple[str, float]],
