@@ -3,8 +3,9 @@
 ## Current State
 
 - `WS-1` through `WS-5` baseline modules are in place: config, storage, ingestion, normalization, pricing, edge detection, sizing, exposure, and drawdown.
-- `src/execution/`, `src/backtest/`, `src/monitoring/`, and `src/orchestration/` are still skeletons.
-- The repo is at the boundary between Phase 2 completion and Phase 3 paper-trading implementation.
+- `WS-6`, `WS-7`, and `WS-8` scaffolding is in place: tickets, placement, settlement, CLV, attribution, backtest replay, reports, phase-gate checks.
+- `scripts/run_pipeline.py` provides the end-to-end fetch → price → edge → persist pipeline that feeds the paper-trading loop.
+- The system is in Phase 3 — scaffolding complete, awaiting real operator-entered paper trades (0/60 bets, 0/4 tournaments).
 
 ## Read Before Changing Architecture
 
@@ -29,10 +30,11 @@
 
 ## Current Priority Order
 
-1. Build the Phase 3 paper-trading backbone (`execution`, settlement, CLV, reports).
-2. Add cross-cutting verifiability (`inputs_hash`, replay fixtures, smoke contracts).
-3. Ship the quant-risk P0 items from the addendum (`dg_model_version`, posterior Kelly, RoR, quantitative phase gates).
-4. Keep advanced portfolio controls behind config flags until they prove themselves in parallel tests.
+1. **Run the pipeline on live tournaments** — use `scripts/run_pipeline.py` each week to generate candidates, then paper-trade them through the operator console.
+2. Accumulate 60+ settled paper bets across 4+ tournaments to reach the Phase 3 → 4 gate.
+3. Seed historical fixture data and broaden WS-7 backtest coverage.
+4. Keep v0.2 quant-risk controls behind config flags until the paper-trading loop has enough volume.
+5. Advanced portfolio controls stay deferred.
 
 ## Doc Hygiene
 

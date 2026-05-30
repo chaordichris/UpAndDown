@@ -80,6 +80,28 @@ def test_matchup_datagolf_direct_favourite_has_higher_prob() -> None:
     assert scheffler.fair_prob > mcilroy.fair_prob
 
 
+def test_matchup_datagolf_direct_live_odds_shape() -> None:
+    entry = {
+        "p1_player_name": "Henley, Russell",
+        "p2_player_name": "Aberg, Ludvig",
+        "p1_dg_id": 14578,
+        "p2_dg_id": 23950,
+        "ties": "separate bet offered",
+        "odds": {
+            "datagolf": {"p1": "+143", "p2": "-118", "tie": "+2080"},
+            "draftkings": {"p1": "+140", "p2": "-165", "tie": "+1600"},
+        },
+    }
+
+    results = price_matchup_from_datagolf(entry, as_of=NOW)
+
+    assert len(results) == 2
+    assert {r.datagolf_id for r in results} == {"14578", "23950"}
+    assert all(r.market_type == MARKET_2BALL for r in results)
+    assert all(r.method == METHOD_DATAGOLF_DIRECT for r in results)
+    assert math.isclose(sum(r.fair_prob for r in results), 1.0, abs_tol=1e-6)
+
+
 def test_matchup_datagolf_direct_missing_baseline_raises() -> None:
     bad = {k: v for k, v in MATCHUP_ENTRY.items() if k != "datagolf_baseline"}
     with pytest.raises(KeyError):

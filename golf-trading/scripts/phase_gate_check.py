@@ -163,6 +163,7 @@ def build_phase_gate_artifact(
     operator_inputs: dict[str, Any],
     config: dict[str, Any],
     backtest_summary: BacktestAggregateSummary | dict[str, Any] | None = None,
+    phase3_evidence: dict[str, Any] | None = None,
     code_version: str | None = None,
 ) -> dict[str, Any]:
     """Build a deterministic JSON artifact for an audited phase-gate review."""
@@ -173,6 +174,8 @@ def build_phase_gate_artifact(
     }
     if backtest_summary is not None:
         metrics["backtest_summary"] = _backtest_summary_payload(backtest_summary)
+    if phase3_evidence is not None:
+        metrics["phase3_evidence"] = phase3_evidence
 
     payload = {
         "artifact_type": "phase_gate_review",
@@ -233,6 +236,24 @@ def load_backtest_summary_artifact(path: Path) -> dict[str, Any]:
     }
 
 
+def load_phase3_evidence_artifact(path: Path) -> dict[str, Any]:
+    """Load and require a passing Phase 3 evidence-check artifact."""
+    with path.open() as file:
+        payload = json.load(file)
+    if payload.get("artifact_type") != "phase3_evidence_check":
+        raise ValueError("phase3 evidence artifact must have artifact_type='phase3_evidence_check'.")
+    evidence = payload.get("evidence")
+    if not isinstance(evidence, dict):
+        raise ValueError("phase3 evidence artifact must contain an evidence object.")
+    if evidence.get("passed") is not True:
+        raise ValueError("phase3 evidence artifact must pass before phase-gate review.")
+    return {
+        "artifact_file": path.name,
+        "evidence": evidence,
+        "artifact_hash": payload.get("artifact_hash"),
+    }
+
+
 def run_phase3_check(args: argparse.Namespace) -> PhaseGateResult:
     return run_phase3_check_artifact(args)["result_obj"]
 
@@ -250,6 +271,11 @@ def run_phase3_check_artifact(
     backtest_summary = (
         load_backtest_summary_artifact(Path(args.backtest_summary_json))
         if args.backtest_summary_json
+        else None
+    )
+    phase3_evidence = (
+        load_phase3_evidence_artifact(Path(getattr(args, "phase3_evidence_json")))
+        if getattr(args, "phase3_evidence_json", None)
         else None
     )
 
@@ -308,6 +334,7 @@ def run_phase3_check_artifact(
         operator_inputs=operator_inputs,
         config=config,
         backtest_summary=backtest_summary,
+        phase3_evidence=phase3_evidence,
         code_version=code_version,
     )
     return {**artifact, "result_obj": result}
@@ -340,6 +367,10 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument(
         "--backtest-summary-json",
         help="Optional WS-7 summary artifact JSON to attach to the phase review.",
+    )
+    parser.add_argument(
+        "--phase3-evidence-json",
+        help="Optional passing Phase 3 evidence-check JSON to attach to the phase review.",
     )
     parser.add_argument("--format", choices=["text", "json"], default="text")
     parser.add_argument("--output", type=Path, help="Optional path to write the rendered result.")

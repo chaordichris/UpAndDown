@@ -25,7 +25,7 @@ from __future__ import annotations
 import json
 import logging
 from dataclasses import dataclass, field
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from typing import Any
 
 from src.storage.models import RawSnapshot
@@ -55,13 +55,16 @@ DATAGOLF_BOOK_IDS: tuple[str, ...] = (
 _MATCHUP_META_KEYS = frozenset({
     "p1_player_name", "p2_player_name", "p3_player_name",
     "p1_datagolf_id", "p2_datagolf_id", "p3_datagolf_id",
+    "p1_dg_id", "p2_dg_id", "p3_dg_id",
     "datagolf_baseline", "datagolf_baseline_history_fit",
+    "odds", "ties",
 })
 
 # Keys in an outright player entry that are NOT book odds.
 _OUTRIGHT_META_KEYS = frozenset({
-    "player_name", "datagolf_id",
+    "player_name", "datagolf_id", "dg_id",
     "datagolf_baseline", "datagolf_baseline_history_fit",
+    "books_offering", "odds",
 })
 
 
@@ -146,7 +149,7 @@ def parse_datagolf_matchups_response(
 
     matchups = []
     for entry in raw.get("match_list", []):
-        book_odds = entry.get(book_id)
+        book_odds = _matchup_book_odds(entry, book_id)
         if book_odds is None:
             # This book hasn't posted odds for this matchup — skip it.
             continue
@@ -155,12 +158,12 @@ def parse_datagolf_matchups_response(
         players = []
         for i in range(1, n_players + 1):
             pk = f"p{i}"
-            odds_val = book_odds.get(f"{pk}_odds")
+            odds_val = _matchup_player_odds(book_odds, pk)
             if odds_val is None:
                 continue
             players.append(RawPlayerOdds(
                 name=entry[f"{pk}_player_name"],
-                datagolf_id=entry.get(f"{pk}_datagolf_id", ""),
+                datagolf_id=_matchup_datagolf_id(entry, pk),
                 american_odds=int(odds_val),
             ))
 
@@ -218,13 +221,13 @@ def parse_datagolf_outrights_response(
     captured_at = _parse_last_updated(raw["last_updated"])
 
     outrights = []
-    for entry in raw.get("player_list", []):
+    for entry in _outright_entries(raw):
         odds_val = entry.get(book_id)
         if odds_val is None:
             continue
         outrights.append(RawOutrightOdds(
             player_name=entry["player_name"],
-            datagolf_id=entry.get("datagolf_id", ""),
+            datagolf_id=_outright_datagolf_id(entry),
             american_odds=int(odds_val),
             market=market,
             book_id=book_id,
@@ -248,16 +251,27 @@ def available_books_in_matchups(raw: dict[str, Any]) -> list[str]:
     """
     if not raw.get("match_list"):
         return []
-    first_entry = raw["match_list"][0]
-    return [k for k in first_entry if k not in _MATCHUP_META_KEYS]
+    books: set[str] = set()
+    for entry in raw["match_list"]:
+        if "odds" in entry and isinstance(entry["odds"], dict):
+            books.update(k for k in entry["odds"] if k != "datagolf")
+        else:
+            books.update(k for k in entry if k not in _MATCHUP_META_KEYS)
+    return sorted(books)
 
 
 def available_books_in_outrights(raw: dict[str, Any]) -> list[str]:
     """Return which book IDs are present in an outrights response."""
-    if not raw.get("player_list"):
+    entries = _outright_entries(raw)
+    if not entries:
         return []
-    first_entry = raw["player_list"][0]
-    return [k for k in first_entry if k not in _OUTRIGHT_META_KEYS]
+    books: set[str] = set()
+    for entry in entries:
+        books.update(
+            k for k in entry
+            if k not in _OUTRIGHT_META_KEYS and k != "datagolf"
+        )
+    return sorted(books)
 
 
 # ---------------------------------------------------------------------------
@@ -307,14 +321,43 @@ def _parse_last_updated(value: str) -> datetime:
 
     DataGolf uses "YYYY-MM-DD HH:MM:SS" (no timezone; assumed UTC).
     """
+    normalized = value.removesuffix(" UTC")
     try:
         # Try ISO format with timezone first
-        dt = datetime.fromisoformat(value.replace("Z", "+00:00"))
+        dt = datetime.fromisoformat(normalized.replace("Z", "+00:00"))
         if dt.tzinfo is None:
-            dt = dt.replace(tzinfo=timezone.utc)
+            dt = dt.replace(tzinfo=UTC)
         return dt
     except ValueError:
         pass
     # Fall back to DataGolf's space-separated format "YYYY-MM-DD HH:MM:SS"
-    dt = datetime.strptime(value, "%Y-%m-%d %H:%M:%S")
-    return dt.replace(tzinfo=timezone.utc)
+    dt = datetime.strptime(normalized, "%Y-%m-%d %H:%M:%S")
+    return dt.replace(tzinfo=UTC)
+
+
+def _matchup_book_odds(entry: dict[str, Any], book_id: str) -> dict[str, Any] | None:
+    odds = entry.get("odds")
+    if isinstance(odds, dict):
+        book_odds = odds.get(book_id)
+        return book_odds if isinstance(book_odds, dict) else None
+    book_odds = entry.get(book_id)
+    return book_odds if isinstance(book_odds, dict) else None
+
+
+def _matchup_player_odds(book_odds: dict[str, Any], player_key: str) -> Any:
+    return book_odds.get(f"{player_key}_odds", book_odds.get(player_key))
+
+
+def _matchup_datagolf_id(entry: dict[str, Any], player_key: str) -> str:
+    return str(entry.get(f"{player_key}_datagolf_id", entry.get(f"{player_key}_dg_id", "")))
+
+
+def _outright_entries(raw: dict[str, Any]) -> list[dict[str, Any]]:
+    entries = raw.get("player_list")
+    if entries is None:
+        entries = raw.get("odds", [])
+    return entries
+
+
+def _outright_datagolf_id(entry: dict[str, Any]) -> str:
+    return str(entry.get("datagolf_id", entry.get("dg_id", "")))

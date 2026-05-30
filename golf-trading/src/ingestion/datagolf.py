@@ -175,24 +175,27 @@ class DataGolfClient:
             market: "tournament_matchups" | "round_matchups" | "3_balls"
             odds_format: "american" | "decimal" | "percent"
 
-        Response shape (assumed from API docs — verify against live data):
+        Observed response shape:
             {
               "event_name": str,
-              "tour": str,
               "market": str,
               "last_updated": str,   # "YYYY-MM-DD HH:MM:SS"
               "match_list": [
                 {
                   "p1_player_name": str,
                   "p2_player_name": str,
-                  "p1_datagolf_id": str,
-                  "p2_datagolf_id": str,
-                  "<book_id>": {"p1_odds": int, "p2_odds": int},
-                  ...
-                  "datagolf_baseline": {"p1_odds": int, "p2_odds": int}
+                  "p1_dg_id": int | str,
+                  "p2_dg_id": int | str,
+                  "ties": str,
+                  "odds": {
+                    "datagolf": {"p1": str | int, "p2": str | int, "tie": str | int},
+                    "<book_id>": {"p1": str | int, "p2": str | int, "tie": str | int}
+                  }
                 }
               ]
             }
+            Some older payloads used p*_datagolf_id and a top-level
+            datagolf_baseline dict with p*_odds keys.
         """
         return self._fetch_and_store(
             endpoint="/betting-tools/matchups",

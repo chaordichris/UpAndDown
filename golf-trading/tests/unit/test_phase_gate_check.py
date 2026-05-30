@@ -8,6 +8,7 @@ from scripts.phase_gate_check import (
     build_phase_gate_artifact,
     evaluate_phase3_gate,
     load_backtest_summary_artifact,
+    load_phase3_evidence_artifact,
     render_phase_gate_artifact_json,
     render_phase_gate_result,
     write_output,
@@ -179,6 +180,40 @@ def test_phase_gate_artifact_can_include_backtest_summary() -> None:
     assert artifact["artifact_hash"] == "aea75acfd3ef1850e31a361513e23f9fa821d89dbfc424ae089e2ce584b8a7c8"
 
 
+def test_phase_gate_artifact_can_include_phase3_evidence() -> None:
+    result = evaluate_phase3_gate(
+        report=_report(settled_count=60, average_clv_raw=0.01),
+        clv_values=[0.01] * 60,
+        paper_tournaments=4,
+        pipeline_crashes=0,
+        data_completeness=0.95,
+        ror_estimate=_ror(paper_only_probability=0.05),
+        clv_bootstrap_seed=7,
+    )
+    phase3_evidence = {
+        "artifact_file": "phase3-evidence.json",
+        "evidence": {"passed": True, "evidence_clean": True},
+        "artifact_hash": "evidence-hash",
+    }
+
+    artifact = build_phase_gate_artifact(
+        result=result,
+        report=_report(settled_count=60, average_clv_raw=0.01),
+        clv_values=[0.01] * 60,
+        ror_estimate=_ror(paper_only_probability=0.05),
+        operator_inputs={
+            "paper_tournaments": 4,
+            "pipeline_crashes": 0,
+            "data_completeness": 0.95,
+        },
+        config={"ror": {"bet_count": 100, "simulations": 100, "seed": 7}},
+        phase3_evidence=phase3_evidence,
+        code_version="phase-gate-evidence-test",
+    )
+
+    assert artifact["metrics"]["phase3_evidence"] == phase3_evidence
+
+
 def test_load_backtest_summary_artifact(tmp_path: Path) -> None:
     path = tmp_path / "backtest-summary.json"
     path.write_text(
@@ -199,6 +234,47 @@ def test_load_backtest_summary_artifact(tmp_path: Path) -> None:
         "summary_hash": "summary-hash",
         "manifest_hash": "manifest-hash",
     }
+
+
+def test_load_phase3_evidence_artifact_requires_passing_artifact(tmp_path: Path) -> None:
+    path = tmp_path / "phase3-evidence.json"
+    path.write_text(
+        json.dumps(
+            {
+                "artifact_type": "phase3_evidence_check",
+                "artifact_hash": "evidence-hash",
+                "evidence": {"passed": True, "evidence_clean": True},
+            }
+        )
+    )
+
+    loaded = load_phase3_evidence_artifact(path)
+
+    assert loaded == {
+        "artifact_file": "phase3-evidence.json",
+        "evidence": {"passed": True, "evidence_clean": True},
+        "artifact_hash": "evidence-hash",
+    }
+
+
+def test_load_phase3_evidence_artifact_refuses_failed_artifact(tmp_path: Path) -> None:
+    path = tmp_path / "phase3-evidence.json"
+    path.write_text(
+        json.dumps(
+            {
+                "artifact_type": "phase3_evidence_check",
+                "artifact_hash": "evidence-hash",
+                "evidence": {"passed": False, "evidence_clean": False},
+            }
+        )
+    )
+
+    try:
+        load_phase3_evidence_artifact(path)
+    except ValueError as exc:
+        assert "must pass" in str(exc)
+    else:
+        raise AssertionError("Expected failed evidence artifact to be refused.")
 
 
 def test_write_output_creates_parent_dirs(tmp_path: Path) -> None:

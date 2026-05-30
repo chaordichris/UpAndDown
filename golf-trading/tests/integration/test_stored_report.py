@@ -15,10 +15,12 @@ from src.execution.persistence import (
 from src.execution.tickets import generate_ticket
 from src.monitoring.attribution import record_attribution_for_bet_row
 from src.monitoring.reports import (
+    build_phase3_evidence_report,
     build_phase3_readiness_report,
     build_stored_paper_trade_report,
     export_tickets_csv,
     render_open_actions,
+    render_phase3_evidence_report,
     render_phase3_readiness_report,
     render_stored_report,
     render_ticket_detail,
@@ -301,3 +303,107 @@ def test_phase3_readiness_passes_when_review_counts_are_clean(db_session) -> Non
 
     assert readiness.passed
     assert all(criterion.passed for criterion in readiness.criteria)
+
+
+def test_phase3_evidence_flags_smoke_and_backtest_rows(db_session) -> None:
+    candidate = _candidate(db_session, edge_pct=0.05)
+    candidate.inputs_hash = "paper-trade-smoke-candidate"
+    ticket = persist_ticket(
+        db_session,
+        _ticket(candidate),
+        candidate_id=candidate.candidate_id,
+    )
+    placed = place_ticket_row(
+        db_session,
+        ticket,
+        candidate,
+        actual_stake=100.0,
+        actual_american_odds=-105,
+        placed_at=NOW,
+        placement_method="backtest",
+        notes="fixture replay row",
+    )
+    outcome = settle_bet_row(db_session, placed, result="win", settled_at=NOW)
+    record_clv_for_bet_row(
+        db_session,
+        placed,
+        ticket,
+        candidate,
+        closing_american_odds=-125,
+        captured_at=NOW,
+    )
+    record_attribution_for_bet_row(
+        db_session,
+        placed,
+        ticket,
+        candidate,
+        outcome,
+        flat_stake=100.0,
+        created_at=NOW,
+    )
+
+    evidence = build_phase3_evidence_report(
+        db_session,
+        required_tournaments=1,
+        required_settled_bets=1,
+    )
+    rendered = render_phase3_evidence_report(evidence)
+
+    failed = {criterion.name for criterion in evidence.criteria if not criterion.passed}
+    assert not evidence.passed
+    assert not evidence.evidence_clean
+    assert evidence.contamination_count == 3
+    assert failed == {
+        "no_smoke_fixture_hashes",
+        "manual_placements_only",
+        "no_smoke_fixture_notes",
+        "phase3_readiness",
+    }
+    assert "Evidence clean: NO" in rendered
+
+
+def test_phase3_evidence_passes_for_clean_operator_rows(db_session) -> None:
+    candidate = _candidate(db_session, edge_pct=0.05)
+    ticket = persist_ticket(
+        db_session,
+        _ticket(candidate),
+        candidate_id=candidate.candidate_id,
+    )
+    placed = place_ticket_row(
+        db_session,
+        ticket,
+        candidate,
+        actual_stake=100.0,
+        actual_american_odds=-105,
+        placed_at=NOW,
+        notes="operator-entered paper placement",
+    )
+    outcome = settle_bet_row(db_session, placed, result="win", settled_at=NOW)
+    record_clv_for_bet_row(
+        db_session,
+        placed,
+        ticket,
+        candidate,
+        closing_american_odds=-125,
+        captured_at=NOW,
+    )
+    record_attribution_for_bet_row(
+        db_session,
+        placed,
+        ticket,
+        candidate,
+        outcome,
+        flat_stake=100.0,
+        created_at=NOW,
+    )
+
+    evidence = build_phase3_evidence_report(
+        db_session,
+        required_tournaments=1,
+        required_settled_bets=1,
+    )
+
+    assert evidence.passed
+    assert evidence.evidence_clean
+    assert evidence.contamination_count == 0
+    assert all(criterion.passed for criterion in evidence.criteria)

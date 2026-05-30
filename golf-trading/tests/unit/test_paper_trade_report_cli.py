@@ -5,12 +5,15 @@ from pathlib import Path
 
 from scripts.paper_trade import (
     _write_output,
+    build_phase3_evidence_artifact,
     build_phase3_readiness_artifact,
     build_stored_report_artifact,
+    render_phase3_evidence_json,
     render_phase3_readiness_json,
     render_stored_report_json,
 )
 from src.monitoring.reports import (
+    Phase3EvidenceReport,
     Phase3ReadinessReport,
     ReadinessCriterion,
     StoredPaperTradeReport,
@@ -73,6 +76,39 @@ def test_build_phase3_readiness_artifact_is_stable() -> None:
     assert first["readiness"]["criteria"][0]["name"] == "paper_tournaments"
 
 
+def test_render_phase3_evidence_json_is_stable() -> None:
+    evidence = _evidence()
+    rendered = render_phase3_evidence_json(
+        evidence,
+        code_version="phase3-evidence-test",
+    )
+    payload = json.loads(rendered)
+
+    assert payload["artifact_type"] == "phase3_evidence_check"
+    assert payload["evidence"]["passed"] is False
+    assert payload["evidence"]["evidence_clean"] is False
+    assert payload["evidence"]["contamination_count"] == 2
+    assert payload["artifact_hash"]
+    assert rendered == render_phase3_evidence_json(
+        evidence,
+        code_version="phase3-evidence-test",
+    )
+
+
+def test_build_phase3_evidence_artifact_is_stable() -> None:
+    first = build_phase3_evidence_artifact(
+        _evidence(),
+        code_version="phase3-evidence-test",
+    )
+    second = build_phase3_evidence_artifact(
+        _evidence(),
+        code_version="phase3-evidence-test",
+    )
+
+    assert first == second
+    assert first["evidence"]["criteria"][0]["name"] == "phase3_readiness"
+
+
 def test_write_output_creates_parent_dirs(tmp_path: Path) -> None:
     path = tmp_path / "artifacts" / "paper-report.json"
 
@@ -101,6 +137,29 @@ def _readiness() -> Phase3ReadinessReport:
             ),
         ],
         report=_report(),
+    )
+
+
+def _evidence() -> Phase3EvidenceReport:
+    return Phase3EvidenceReport(
+        passed=False,
+        evidence_clean=False,
+        contamination_count=2,
+        criteria=[
+            ReadinessCriterion(
+                name="phase3_readiness",
+                passed=False,
+                observed="not_ready",
+                required="passed",
+            ),
+            ReadinessCriterion(
+                name="no_smoke_fixture_hashes",
+                passed=False,
+                observed="2",
+                required="0",
+            ),
+        ],
+        readiness=_readiness(),
     )
 
 

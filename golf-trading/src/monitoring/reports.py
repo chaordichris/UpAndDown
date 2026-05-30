@@ -22,6 +22,15 @@ from src.storage.models import (
     Tournament,
 )
 
+# placement_method values that are real-money but not paper-gate evidence.
+# These are intentional operational placements, not synthetic contamination.
+_SHADOW_LIVE_METHOD: str = "shadow_live"
+
+# placement_method values that belong to paper-trade gate evidence.
+_PAPER_METHODS: frozenset[str] = frozenset({"manual"})
+# placement_method values that ARE contamination (synthetic / test data).
+_CONTAMINATING_METHODS: frozenset[str] = frozenset({"backtest"})
+
 
 @dataclass(frozen=True)
 class PaperTradeReport:
@@ -86,6 +95,32 @@ class Phase3ReadinessReport:
     open_approved_ticket_count: int
     criteria: list[ReadinessCriterion]
     report: StoredPaperTradeReport
+
+
+@dataclass(frozen=True)
+class Phase3EvidenceReport:
+    """Operator evidence guardrail before assembling Phase 3 gate artifacts."""
+
+    passed: bool
+    evidence_clean: bool
+    contamination_count: int
+    criteria: list[ReadinessCriterion]
+    readiness: Phase3ReadinessReport
+
+
+@dataclass(frozen=True)
+class ShadowLiveSummary:
+    """Aggregate metrics for shadow-live (real-stake) bets in the DB.
+
+    Shadow-live bets are excluded from the paper-trade gate evidence metrics.
+    This summary is informational only — not a gate criterion.
+    """
+
+    bet_count: int
+    total_staked: float
+    settled_count: int
+    total_profit_loss: float
+    roi: float
 
 
 def build_paper_trade_report(
@@ -170,13 +205,90 @@ def build_phase3_readiness_report(
     )
 
 
-def build_stored_paper_trade_report(session: Session) -> StoredPaperTradeReport:
-    """Summarize the persisted paper-trading database state."""
+def build_phase3_evidence_report(
+    session: Session,
+    *,
+    required_tournaments: int = 4,
+    required_settled_bets: int = 60,
+) -> Phase3EvidenceReport:
+    """Check that Phase 3 review evidence is real operator-entered paper data."""
+    readiness = build_phase3_readiness_report(
+        session,
+        required_tournaments=required_tournaments,
+        required_settled_bets=required_settled_bets,
+    )
+    smoke_tournaments = _smoke_tournament_count(session)
+    suspicious_hashes = _suspicious_inputs_hash_count(session)
+    non_manual_placements = _non_manual_placement_count(session)
+    suspicious_notes = _suspicious_note_count(session)
+    contamination_count = (
+        smoke_tournaments
+        + suspicious_hashes
+        + non_manual_placements
+        + suspicious_notes
+    )
+    criteria = [
+        ReadinessCriterion(
+            name="phase3_readiness",
+            passed=readiness.passed,
+            observed="passed" if readiness.passed else "not_ready",
+            required="passed",
+        ),
+        ReadinessCriterion(
+            name="no_smoke_tournaments",
+            passed=smoke_tournaments == 0,
+            observed=str(smoke_tournaments),
+            required="0",
+        ),
+        ReadinessCriterion(
+            name="no_smoke_fixture_hashes",
+            passed=suspicious_hashes == 0,
+            observed=str(suspicious_hashes),
+            required="0",
+        ),
+        ReadinessCriterion(
+            name="manual_placements_only",
+            passed=non_manual_placements == 0,
+            observed=str(non_manual_placements),
+            required="0",
+        ),
+        ReadinessCriterion(
+            name="no_smoke_fixture_notes",
+            passed=suspicious_notes == 0,
+            observed=str(suspicious_notes),
+            required="0",
+        ),
+    ]
+    evidence_clean = contamination_count == 0
+    return Phase3EvidenceReport(
+        passed=evidence_clean and readiness.passed,
+        evidence_clean=evidence_clean,
+        contamination_count=contamination_count,
+        criteria=criteria,
+        readiness=readiness,
+    )
+
+
+def build_stored_paper_trade_report(
+    session: Session,
+    placement_methods: frozenset[str] = _PAPER_METHODS,
+) -> StoredPaperTradeReport:
+    """Summarize the persisted paper-trading database state.
+
+    By default, only includes bets with a paper placement method (``manual``).
+    Backtest callers can pass ``placement_methods=frozenset({"backtest"})`` to
+    build replay reports without contaminating paper-gate evidence.
+    """
     tickets = session.query(BetTicket).all()
-    placed_bets = session.query(PlacedBet).all()
-    outcomes = session.query(BetOutcome).all()
-    clvs = session.query(CLVSnapshot).all()
-    attributions = session.query(BetAttribution).all()
+    all_placed = session.query(PlacedBet).all()
+    placed_bets = [b for b in all_placed if b.placement_method in placement_methods]
+    paper_bet_ids = {b.bet_id for b in placed_bets}
+    all_outcomes = session.query(BetOutcome).all()
+    outcomes = [o for o in all_outcomes if o.bet_id in paper_bet_ids]
+    all_clvs = session.query(CLVSnapshot).all()
+    clvs = [c for c in all_clvs if c.bet_id in paper_bet_ids]
+    all_attributions = session.query(BetAttribution).all()
+    attributions = [a for a in all_attributions if a.bet_id in paper_bet_ids]
 
     placed_ticket_ids = {bet.ticket_id for bet in placed_bets}
     settled_bet_ids = {outcome.bet_id for outcome in outcomes}
@@ -224,6 +336,33 @@ def build_stored_paper_trade_report(session: Session) -> StoredPaperTradeReport:
     )
 
 
+def build_shadow_live_summary(session: Session) -> ShadowLiveSummary:
+    """Summarize shadow-live (real-stake) bets in the DB.
+
+    Informational only — not included in Phase 3 gate metrics.
+    """
+    shadow_bets = [
+        bet
+        for bet in session.query(PlacedBet).all()
+        if bet.placement_method == _SHADOW_LIVE_METHOD
+    ]
+    shadow_bet_ids = {bet.bet_id for bet in shadow_bets}
+    outcomes = [
+        outcome
+        for outcome in session.query(BetOutcome).all()
+        if outcome.bet_id in shadow_bet_ids
+    ]
+    total_staked = sum(bet.actual_stake for bet in shadow_bets)
+    total_profit_loss = sum(o.profit_loss for o in outcomes)
+    return ShadowLiveSummary(
+        bet_count=len(shadow_bets),
+        total_staked=round(total_staked, 2),
+        settled_count=len(outcomes),
+        total_profit_loss=round(total_profit_loss, 2),
+        roi=0.0 if total_staked == 0 else total_profit_loss / total_staked,
+    )
+
+
 def render_phase3_readiness_report(readiness: Phase3ReadinessReport) -> str:
     """Render Phase 3 readiness for terminal operator review."""
     lines = [
@@ -233,6 +372,24 @@ def render_phase3_readiness_report(readiness: Phase3ReadinessReport) -> str:
         f"Settled bets: {readiness.report.settled_count}",
     ]
     for criterion in readiness.criteria:
+        status = "PASS" if criterion.passed else "FAIL"
+        lines.append(
+            f"{status} {criterion.name}: observed {criterion.observed}, required {criterion.required}"
+        )
+    return "\n".join(lines)
+
+
+def render_phase3_evidence_report(evidence: Phase3EvidenceReport) -> str:
+    """Render the Phase 3 evidence guardrail for terminal operator review."""
+    lines = [
+        "Phase 3 Evidence Check",
+        f"Status: {'READY' if evidence.passed else 'NOT READY'}",
+        f"Evidence clean: {'YES' if evidence.evidence_clean else 'NO'}",
+        f"Contamination count: {evidence.contamination_count}",
+        f"Settled tournaments: {evidence.readiness.settled_tournament_count}",
+        f"Settled bets: {evidence.readiness.report.settled_count}",
+    ]
+    for criterion in evidence.criteria:
         status = "PASS" if criterion.passed else "FAIL"
         lines.append(
             f"{status} {criterion.name}: observed {criterion.observed}, required {criterion.required}"
@@ -419,11 +576,16 @@ def render_open_actions(session: Session) -> str:
 
 
 def _settled_tournament_count(session: Session) -> int:
+    """Count distinct tournaments with at least one settled paper bet.
+
+    Only paper placements (``manual``) count toward the Phase 3 gate evidence
+    tournament tally. Shadow-live and backtest bets are excluded.
+    """
     tournament_ids: set[int] = set()
     outcomes = session.query(BetOutcome).all()
     for outcome in outcomes:
         placed = session.get(PlacedBet, outcome.bet_id)
-        if placed is None:
+        if placed is None or placed.placement_method not in _PAPER_METHODS:
             continue
         ticket = session.get(BetTicket, placed.ticket_id)
         if ticket is None:
@@ -440,6 +602,55 @@ def _open_approved_ticket_count(session: Session) -> int:
         ticket.approved and ticket.ticket_id not in placed_ticket_ids
         for ticket in session.query(BetTicket).all()
     )
+
+
+def _smoke_tournament_count(session: Session) -> int:
+    return sum(
+        _contains_non_review_token(tournament.name)
+        or _contains_non_review_token(tournament.datagolf_event_id)
+        for tournament in session.query(Tournament).all()
+    )
+
+
+def _suspicious_inputs_hash_count(session: Session) -> int:
+    rows = [
+        *session.query(BetCandidate).all(),
+        *session.query(BetTicket).all(),
+        *session.query(PlacedBet).all(),
+        *session.query(BetOutcome).all(),
+        *session.query(CLVSnapshot).all(),
+        *session.query(BetAttribution).all(),
+    ]
+    return sum(_contains_non_review_token(row.inputs_hash) for row in rows)
+
+
+def _non_manual_placement_count(session: Session) -> int:
+    """Count placed bets with contaminating placement methods.
+
+    Shadow-live bets (``shadow_live``) are intentional real-money placements
+    and are NOT contamination. Only synthetic/replay placements (``backtest``)
+    are treated as contamination in the Phase 3 evidence guardrail.
+    """
+    return sum(
+        bet.placement_method in _CONTAMINATING_METHODS
+        for bet in session.query(PlacedBet).all()
+    )
+
+
+def _suspicious_note_count(session: Session) -> int:
+    placed_bets = session.query(PlacedBet).all()
+    outcomes = session.query(BetOutcome).all()
+    return sum(_contains_non_review_token(bet.notes) for bet in placed_bets) + sum(
+        _contains_non_review_token(outcome.settlement_notes)
+        for outcome in outcomes
+    )
+
+
+def _contains_non_review_token(value: str | None) -> bool:
+    if value is None:
+        return False
+    lowered = value.lower()
+    return any(token in lowered for token in ("smoke", "fixture", "backtest"))
 
 
 def _require(session: Session, model, row_id: int, label: str):

@@ -25,11 +25,14 @@ from src.execution.tickets import generate_ticket, render_ticket
 from src.monitoring.attribution import record_attribution_for_bet_row
 from src.monitoring.clv import compute_clv
 from src.monitoring.reports import (
+    Phase3EvidenceReport,
     Phase3ReadinessReport,
+    build_phase3_evidence_report,
     build_phase3_readiness_report,
     build_stored_paper_trade_report,
     export_tickets_csv,
     render_open_actions,
+    render_phase3_evidence_report,
     render_phase3_readiness_report,
     render_stored_report,
     render_ticket_detail,
@@ -414,6 +417,23 @@ def run_readiness(args: argparse.Namespace) -> None:
         print(rendered)
 
 
+def run_evidence_check(args: argparse.Namespace) -> None:
+    init_db(args.database_url)
+    with get_session(args.database_url) as session:
+        evidence = build_phase3_evidence_report(
+            session,
+            required_tournaments=args.required_tournaments,
+            required_settled_bets=args.required_settled_bets,
+        )
+        rendered = (
+            render_phase3_evidence_json(evidence, code_version=args.code_version)
+            if args.format == "json"
+            else render_phase3_evidence_report(evidence)
+        )
+        _write_output(args.output, rendered)
+        print(rendered)
+
+
 def run_open_actions(args: argparse.Namespace) -> None:
     init_db(args.database_url)
     with get_session(args.database_url) as session:
@@ -531,6 +551,38 @@ def render_phase3_readiness_json(
     """Render Phase 3 readiness as stable JSON."""
     return json.dumps(
         build_phase3_readiness_artifact(readiness, code_version=code_version),
+        sort_keys=True,
+        indent=2,
+    )
+
+
+def build_phase3_evidence_artifact(
+    evidence: Phase3EvidenceReport,
+    *,
+    code_version: str | None = None,
+) -> dict:
+    """Build a deterministic Phase 3 evidence-check artifact."""
+    evidence_payload = asdict(evidence)
+    return {
+        "artifact_type": "phase3_evidence_check",
+        "evidence": evidence_payload,
+        "artifact_hash": artifact_hash(
+            artifact_type="phase3_evidence_check",
+            inputs={"evidence": evidence_payload},
+            config=None,
+            code_version=code_version,
+        ),
+    }
+
+
+def render_phase3_evidence_json(
+    evidence: Phase3EvidenceReport,
+    *,
+    code_version: str | None = None,
+) -> str:
+    """Render Phase 3 evidence guardrails as stable JSON."""
+    return json.dumps(
+        build_phase3_evidence_artifact(evidence, code_version=code_version),
         sort_keys=True,
         indent=2,
     )
@@ -666,6 +718,18 @@ def build_parser() -> argparse.ArgumentParser:
     readiness.add_argument("--output", type=Path, help="Optional path to write the rendered result.")
     readiness.add_argument("--code-version", default=None)
     readiness.set_defaults(func=run_readiness)
+
+    evidence = subparsers.add_parser(
+        "evidence-check",
+        help="Check that Phase 3 gate evidence is operator-entered paper data.",
+    )
+    _add_database_url(evidence)
+    evidence.add_argument("--required-tournaments", type=int, default=4)
+    evidence.add_argument("--required-settled-bets", type=int, default=60)
+    evidence.add_argument("--format", choices=["text", "json"], default="text")
+    evidence.add_argument("--output", type=Path, help="Optional path to write the rendered result.")
+    evidence.add_argument("--code-version", default=None)
+    evidence.set_defaults(func=run_evidence_check)
 
     open_actions = subparsers.add_parser("open-actions", help="Show unresolved paper-trading actions.")
     _add_database_url(open_actions)

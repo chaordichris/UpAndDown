@@ -25,6 +25,29 @@
 
 ## 3. Priority execution order
 
+### Batch 0 — End-to-end pipeline script
+
+**Goal:** provide a single command that chains fetch → price → edge → persist so
+the paper-trading loop can start.
+
+**File targets**
+- `scripts/run_pipeline.py`
+
+**Definition of done**
+- One command fetches live matchup odds from DataGolf, prices via DG baseline,
+  computes two-way edges per requested book, and persists Tournament, Player,
+  and BetCandidate rows to the target paper DB.
+- `--dry-run` mode prints edges without writing to DB.
+- Downstream `paper_trade.py ticket-candidates` picks up persisted candidates.
+
+**Current implementation notes**
+- `scripts/run_pipeline.py` is complete. It supports `--tour`, `--books`,
+  `--market`, `--database-url`, `--dry-run`, and `--verbose`.
+- Only 2-ball tournament matchups are processed in MVP; 3-balls are skipped.
+- Tournament and Player rows are created on first encounter (get-or-create).
+- Operator workflow: `run_pipeline.py` → `paper_trade.py ticket-candidates` →
+  `operator_console.py` for placement/settlement/CLV.
+
 ### Batch A — Phase 3 paper-trading backbone
 
 **Goal:** close the loop from `BetCandidate` to settled paper-trade record.
@@ -44,8 +67,9 @@
 - One fixture-driven integration test covers candidate → ticket → placement log → settlement log.
 
 **Current implementation notes**
-- `scripts/paper_trade.py` supports smoke data creation, candidate ticketing, ticket detail display, ticket CSV export, placement, settlement, CLV capture, stored reporting, JSON report artifact output, readiness diagnostics, and open-action review.
-- `docs/paper-trading-phase3-proof-runbook.md` defines the real operator-entered paper-trading proof workflow. Fixture and smoke rows are not Phase 3 gate evidence; the gate remains blocked until the real paper DB has at least 4 tournaments and 60 settled paper bets. Use `paper_trade.py readiness` to flag undersized samples and unresolved operator work before assembling gate artifacts.
+- `scripts/paper_trade.py` supports smoke data creation, candidate ticketing, ticket detail display, ticket CSV export, placement, settlement, CLV capture, stored reporting, JSON report artifact output, readiness diagnostics, evidence provenance checks, and open-action review.
+- `scripts/operator_console.py` provides a local no-dependency operator UI for tournament-week paper trading. It reads the same paper DB, shows candidates/tickets/placed bets/open actions, and posts manual placement, settlement, CLV, attribution, and ticket-candidate actions through the existing execution helpers.
+- `docs/paper-trading-phase3-proof-runbook.md` defines the real operator-entered paper-trading proof workflow. Fixture and smoke rows are not Phase 3 gate evidence; the gate remains blocked until the real paper DB has at least 4 tournaments and 60 settled paper bets. Use `paper_trade.py readiness` to flag undersized samples and unresolved operator work before assembling gate artifacts, then use `paper_trade.py evidence-check` to flag smoke, fixture, or backtest contamination in the review DB.
 - Operator smoke shape:
   - `PYTHONPATH=. .venv/bin/python scripts/paper_trade.py create-smoke-candidate --database-url sqlite:////private/tmp/upanddown-phase3-cli-smoke.db`
   - `PYTHONPATH=. .venv/bin/python scripts/paper_trade.py ticket-candidates --total-bankroll 25000 --database-url sqlite:////private/tmp/upanddown-phase3-cli-smoke.db`
@@ -152,6 +176,39 @@
 - `placed_bets.bet_class` and `boost_terms_json` identify standard, boosted-odds, free-bet, and risk-free bets.
 - `bet_outcomes` stores raw strategy P&L separately from realized promo-adjusted P&L.
 - Stored reports show strategy P&L, promo P&L, realized P&L, strategy ROI, and realized ROI. CLV and attribution remain tied to raw strategy performance.
+
+### Phase 4 initial — Shadow-live / minimum-stake workflow
+
+**Goal:** support real-money learning at minimum stakes alongside the Phase 3
+paper-trading record, without contaminating gate evidence or automating execution.
+
+**Definition of done**
+- A distinct `placement_method = "shadow_live"` value marks real-stake bets.
+- Guardrails enforce `enabled` flag, per-bet cap, and per-tournament cap before
+  any write.
+- `build_stored_paper_trade_report` filters to paper-only bets; gate evidence
+  counts stay clean.
+- `build_shadow_live_summary` provides an informational P&L summary.
+- Evidence check does not flag `shadow_live` as contamination (only `backtest`
+  is treated as contamination).
+- Operator console shows a Shadow-Live Status panel and a mode dropdown on the
+  Place Ticket form.
+- `docs/shadow-live-runbook.md` explains the workflow.
+- Shadow-live is not a Phase 3 gate substitute; paper evidence remains the
+  formal gate path.
+
+**Files added/changed**
+- `config/settings.yaml` — `shadow_live` block (enabled, bankroll, caps)
+- `src/config.py` — `ShadowLiveConfig`
+- `src/execution/shadow_live.py` — `SHADOW_LIVE_METHOD`, `ShadowLiveGuardrail`,
+  `check_shadow_live_placement`, `get_tournament_shadow_live_staked`
+- `src/monitoring/reports.py` — paper-only filtering, `ShadowLiveSummary`,
+  `build_shadow_live_summary`, updated `_non_manual_placement_count` and
+  `_settled_tournament_count`
+- `scripts/operator_console.py` — shadow-live panel, mode dropdown, guardrail
+  call in `_post_place_ticket`
+- `tests/unit/test_shadow_live.py` — guardrail, reporting, evidence checks
+- `docs/shadow-live-runbook.md` — operator runbook
 
 ### Batch E — Advanced portfolio controls
 

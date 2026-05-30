@@ -90,12 +90,15 @@ PYTHONPATH=. .venv/bin/python scripts/phase_gate_check.py \
   --expected-return 0.02 \
   --return-sd 1.0 \
   --backtest-summary-json artifacts/backtest-review.json \
+  --phase3-evidence-json artifacts/phase3-evidence.json \
   --format json \
   --output artifacts/phase-gate.json
 ```
 
 The Phase 3 to Phase 4 gate remains paper-trading based. Attached backtest
-summary metrics are review evidence, not gate criteria.
+summary metrics are review evidence, not gate criteria. If
+`--phase3-evidence-json` is provided, it must be a passing evidence-check
+artifact.
 
 A smoke database with fewer than 4 paper tournaments or 60 settled paper bets is
 expected to fail the gate while still producing a valid JSON artifact.
@@ -107,6 +110,7 @@ PYTHONPATH=. .venv/bin/python scripts/artifact_bundle.py \
   --replay artifacts/replay.json \
   --backtest-review artifacts/backtest-review.json \
   --paper-report artifacts/paper-report.json \
+  --phase3-evidence artifacts/phase3-evidence.json \
   --phase-gate artifacts/phase-gate.json \
   --format json \
   --output artifacts/review-bundle.json
@@ -117,8 +121,8 @@ Outputs:
 - Stable file-level review bundle at `artifacts/review-bundle.json`.
 - SHA-256 hash for each rendered artifact file.
 - Embedded artifact hashes surfaced from replay, backtest-review, paper-report,
-  and phase-gate JSON when present.
-- `bundle_hash` tying the four reviewed artifact files into one audit index.
+  phase3-evidence, and phase-gate JSON when present.
+- `bundle_hash` tying the reviewed artifact files into one audit index.
 
 ## Useful Fixtures
 
