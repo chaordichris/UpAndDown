@@ -131,6 +131,16 @@ class VigRemovalConfig:
         self.multi_way_method: str = d["multi_way_method"]
 
 
+class ShadowLiveConfig:
+    """Config for shadow-live / minimum-stake Phase 4 learning mode."""
+
+    def __init__(self, d: dict[str, Any]) -> None:
+        self.enabled: bool = d.get("enabled", False)
+        self.starting_bankroll_dollars: float = d.get("starting_bankroll_dollars", 500.0)
+        self.per_bet_cap_dollars: float = d.get("per_bet_cap_dollars", 25.0)
+        self.per_tournament_cap_dollars: float = d.get("per_tournament_cap_dollars", 100.0)
+
+
 class Settings:
     """Full settings object combining secrets + YAML config."""
 
@@ -144,6 +154,7 @@ class Settings:
         self.drawdown = DrawdownConfig(yaml_data["drawdown"])
         self.ror = RiskOfRuinConfig(yaml_data["ror"])
         self.vig_removal = VigRemovalConfig(yaml_data["vig_removal"])
+        self.shadow_live = ShadowLiveConfig(yaml_data.get("shadow_live", {}))
 
         # Convenience pass-throughs from secrets
         self.database_url: str = secrets.database_url

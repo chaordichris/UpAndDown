@@ -70,3 +70,16 @@ vig_removal:
   two_way_method: multiplicative
   # Method for multi-way markets (outrights, top-N)
   multi_way_method: power
+
+shadow_live:
+  # Shadow-live / minimum-stake mode — Phase 4 operational learning.
+  # Paper trading remains the Phase 3 gate evidence path.
+  # Set enabled: true only when deliberately placing real-money shadow bets.
+  # All placement is still manual; no automation is added.
+  enabled: false
+  # Total real bankroll allocated to shadow-live learning.
+  starting_bankroll_dollars: 500.0
+  # Hard cap per individual shadow-live bet (enforced before write).
+  per_bet_cap_dollars: 25.0
+  # Hard cap on cumulative shadow-live stakes in one tournament week.
+  per_tournament_cap_dollars: 100.0
