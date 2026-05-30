@@ -27,13 +27,15 @@ matchup markets. Tiny convex sleeve for outrights. Never compromise the bankroll
 6. `src/execution/`, `src/monitoring/`, `scripts/paper_trade.py` — initial Phase 3 paper-trading backbone
 7. `src/backtest/leakage_guard.py`, `src/backtest/replay.py`, `src/backtest/summary.py` — initial WS-7 leakage-checked replay, settlement, and multi-tournament summary spine
 8. `scripts/phase_gate_check.py`, `scripts/backtest_replay.py`, `scripts/backtest_review.py`, `scripts/artifact_bundle.py` — deterministic review artifacts for Phase 3 and WS-7 audit handoffs
+9. `scripts/run_pipeline.py` — end-to-end fetch → price → edge → persist pipeline that feeds the paper-trading loop
 
 ## What to build next
 
-1. Run the Phase 3 paper-trading proof on real operator-entered events until the gate has enough settled evidence.
-2. Broaden WS-7 backtests with more historical fixture coverage and event DB artifacts.
-3. Keep exporting paper-report, phase-gate, and review-bundle artifacts for manual audit.
-4. Advanced portfolio modules (`covariance.py`, `portfolio.py`, `account_health.py`, `capacity.py`) only behind config flags.
+1. **Run `scripts/run_pipeline.py` every tournament week** to generate candidates from live DataGolf data. Then use `scripts/paper_trade.py` or `scripts/operator_console.py` to ticket, place, settle, and record CLV.
+2. Accumulate real operator-entered paper trades until the Phase 3 gate has enough evidence (≥60 settled bets, ≥4 tournaments).
+3. Broaden WS-7 backtests with more historical fixture coverage and event DB artifacts.
+4. Keep exporting paper-report, phase-gate, and review-bundle artifacts for manual audit.
+5. Advanced portfolio modules (`covariance.py`, `portfolio.py`, `account_health.py`, `capacity.py`) only behind config flags.
 
 See `docs/agent-execution-plan.md`, `docs/adr/`, and the build plan addendum for full sequencing.
 

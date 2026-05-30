@@ -16,7 +16,34 @@ execution is manual.
 PAPER_DB=sqlite:////private/tmp/upanddown-paper-review.db
 ```
 
-## 0. Open The Operator Console
+## 0a. Run The Pipeline
+
+Before anything else, fetch live data and generate candidates for this week's
+tournament. This is the upstream step that feeds everything below.
+
+```bash
+# Dry-run first to see what edges exist (no DB writes):
+PYTHONPATH=. .venv/bin/python scripts/run_pipeline.py \
+  --tour pga \
+  --books draftkings fanduel \
+  --dry-run
+
+# If edges look reasonable, persist to the paper DB:
+PYTHONPATH=. .venv/bin/python scripts/run_pipeline.py \
+  --database-url "$PAPER_DB" \
+  --tour pga \
+  --books draftkings fanduel
+```
+
+The script fetches live matchup odds from DataGolf's betting-tools endpoint,
+prices every 2-ball matchup via DG's own baseline, computes edges per requested
+book, and persists Tournament, Player, and BetCandidate rows. Only matchups
+above the configured edge threshold (default 3% core) become candidates.
+
+Run this once or twice during tournament week (e.g., Tuesday evening and
+Wednesday morning) to capture line snapshots at different times.
+
+## 0b. Open The Operator Console
 
 For tournament-week operation, use the local console to review candidates,
 create tickets, place bets, settle bets, record CLV, and record attribution
@@ -35,8 +62,7 @@ book placement; it writes the same manual paper-trading rows as
 
 ## 1. Ticket Operator Candidates
 
-After ingestion, pricing, edge detection, and candidate persistence have run for
-the tournament under review:
+After the pipeline has run for the tournament under review:
 
 ```bash
 PYTHONPATH=. .venv/bin/python scripts/paper_trade.py list-candidates \
