@@ -1,0 +1,52 @@
+{
+  "port": 4600,
+  "statusGlobs": ["../golf-trading/artifacts/control-plane"],
+  "freshnessHours": {
+    "default": 36,
+    "sportsbook-edges": 24,
+    "splash-dfs": 48,
+    "pm-market-making": 168
+  },
+  "actions": [
+    {
+      "id": "export-status",
+      "label": "Refresh dashboard data",
+      "description": "Rebuild all strategy status files from artifacts and the paper DB.",
+      "cwd": "../golf-trading",
+      "argv": ["python3", "scripts/export_control_plane_status.py"],
+      "danger": false
+    },
+    {
+      "id": "run-edge-pipeline-dry",
+      "label": "Edge pipeline (dry run)",
+      "description": "Fetch → price → edge for matchups without writing to the DB.",
+      "cwd": "../golf-trading",
+      "argv": ["python3", "scripts/run_pipeline.py", "--dry-run"],
+      "danger": false
+    },
+    {
+      "id": "run-edge-pipeline",
+      "label": "Edge pipeline (persist)",
+      "description": "Full fetch → price → edge → persist run for the current tournament.",
+      "cwd": "../golf-trading",
+      "argv": ["python3", "scripts/run_pipeline.py"],
+      "danger": true
+    },
+    {
+      "id": "phase-gate-check",
+      "label": "Phase 3 gate check",
+      "description": "Recompute phase-gate evidence artifacts.",
+      "cwd": "../golf-trading",
+      "argv": ["python3", "scripts/phase_gate_check.py"],
+      "danger": false
+    },
+    {
+      "id": "mm-simulate",
+      "label": "MM simulator (paper)",
+      "description": "Run the prediction-market market-making simulator and publish its status.",
+      "cwd": "../golf-trading",
+      "argv": ["python3", "scripts/mm_simulate.py", "--publish-status"],
+      "danger": false
+    }
+  ]
+}

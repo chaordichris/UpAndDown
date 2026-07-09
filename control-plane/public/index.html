@@ -1,0 +1,42 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>UpAndDown — Control Plane</title>
+  <link rel="stylesheet" href="/style.css" />
+</head>
+<body>
+  <header>
+    <h1>UpAndDown <span class="sub">control plane</span></h1>
+    <div id="summary" class="summary"></div>
+  </header>
+
+  <main>
+    <section id="actions-bar" class="actions-bar"></section>
+    <section>
+      <h2>Today's trades <span class="hint">no-bet is the default — an empty board is a good board</span></h2>
+      <div id="opportunities"></div>
+    </section>
+    <section>
+      <h2>Open positions</h2>
+      <div id="positions"></div>
+    </section>
+    <section>
+      <h2>Exposure</h2>
+      <div id="exposures"></div>
+    </section>
+    <section>
+      <h2>Strategy pods</h2>
+      <div id="strategies" class="cards"></div>
+    </section>
+    <section>
+      <h2>Runs</h2>
+      <div id="runs"></div>
+      <pre id="run-output" class="run-output" hidden></pre>
+    </section>
+  </main>
+
+  <script src="/app.js"></script>
+</body>
+</html>
