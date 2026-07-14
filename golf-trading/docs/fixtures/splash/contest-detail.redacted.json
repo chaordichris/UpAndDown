@@ -1,0 +1,1436 @@
+{
+  "fixture_version": 1,
+  "captured_at": "2026-07-01T15:57:30Z",
+  "method": "GET",
+  "url": "https://api.splashsports.com/contests-service/api/contests/<public_contest_uuid>",
+  "request_headers": {
+    "Accept": "application/json",
+    "Content-Type": "application/json",
+    "X-App-Platform": "web",
+    "X-App-Version": "1.251.0"
+  },
+  "request_body": null,
+  "response_status": "HTTP/2 200",
+  "response_headers": {
+    "content-type": "application/json; charset=utf-8",
+    "content-length": "32081",
+    "date": "Wed, 01 Jul 2026 15:48:09 GMT",
+    "etag": "W/\"7d51-cL0SWr5ox1xza6sYHYmKNw3UHPA\"",
+    "vary": "Origin"
+  },
+  "response_body": {
+    "id": "<public_contest_uuid>",
+    "contest_type": "player_tier",
+    "contest_type_alt_text": "Tiers",
+    "contest_template_name": "Single Tournament Tiers - Total Strokes",
+    "contest_template_id": "<contest-template-id_uuid_7d59deeb>",
+    "schedule_id": "<schedule-id_uuid_85dcfdb4>",
+    "name": "RunGood $25K John Deere Classic - Total Strokes",
+    "commissioner": {
+      "username": "<redacted_username>",
+      "id": "<user_uuid_93167775>",
+      "handle": "<redacted_handle>",
+      "avatarUrl": "<redacted_url>"
+    },
+    "entries": {
+      "filled": 625,
+      "max": 1112,
+      "max_per_user": 33,
+      "is_unlimited_entries": false
+    },
+    "entry_fee": 2500,
+    "entry_fee_in_dollars": 25,
+    "tags": [
+      "golf",
+      "multientry",
+      "topx"
+    ],
+    "prize_pool": 2502000,
+    "prize_pool_in_dollars": 25020,
+    "start_date": "2026-07-02T11:40:00.000Z",
+    "end_date": "2026-07-02T12:00:00.000Z",
+    "rules": "-1 fantasy points for each stroke under par\n0 fantasy points for a par\n1 fantasy point for each stroke over par\n8 fantasy points for missed or incomplete rounds\nWorst scoring golfer does not count towards the score",
+    "short_rules": "Select 6 golfers, and your top 5 will count towards your score. Each golfer accumulates fantasy points for their performance (score) on each hole. Golfers will be awarded a penalty for each round missed (Withdrawal, Missed Cut, etc). Consider the golfers\u2019 injury status when selecting your lineup, as your lineup will lock when the tournament starts. Lowest score at the end of the contest wins. See the \u201cRules\u201d section for more specifics on scoring and the \u201cPrizes\u201d section for more specifics on payouts!\n\nThis contest was created by a Splash Employee.",
+    "created_at": "2026-06-24T14:24:54.183Z",
+    "roster_requirements": "Entrants will be required to select 1 golfer from each of the 6 tiers to fill their roster. The 1 golfer with the highest score for the tournament will not count towards the entrant's score.",
+    "formattedRules": null,
+    "is_private": false,
+    "is_password_protected": false,
+    "created_by_admin": false,
+    "resizing_mode": "GUARANTEED",
+    "payout_schedule": [
+      {
+        "label": "1st",
+        "value": "$2,502.00",
+        "order": 0
+      },
+      {
+        "label": "2nd",
+        "value": "$1,876.50",
+        "order": 1
+      },
+      {
+        "label": "3rd",
+        "value": "$1,125.90",
+        "order": 2
+      },
+      {
+        "label": "4th",
+        "value": "$750.60",
+        "order": 3
+      },
+      {
+        "label": "5th",
+        "value": "$500.40",
+        "order": 4
+      },
+      {
+        "label": "6th - 10th",
+        "value": "$375.30",
+        "order": 5
+      },
+      {
+        "label": "11th - 20th",
+        "value": "$250.20",
+        "order": 10
+      },
+      {
+        "label": "21st - 30th",
+        "value": "$187.65",
+        "order": 20
+      },
+      {
+        "label": "31st - 50th",
+        "value": "$125.10",
+        "order": 30
+      },
+      {
+        "label": "51st - 73rd",
+        "value": "$100.08",
+        "order": 50
+      },
+      {
+        "label": "74th - 107th",
+        "value": "$75.06",
+        "order": 73
+      },
+      {
+        "label": "108th - 200th",
+        "value": "$50.04",
+        "order": 107
+      }
+    ],
+    "roster_category_rules_settings": {},
+    "tier_rules_settings": {
+      "numberOfTiers": 6,
+      "numberPerTier": 1,
+      "metricName": "datagolf_rank"
+    },
+    "roster_category_rules": {
+      "baseline": [
+        {
+          "id": "<id_uuid_35079984>",
+          "name": "All Players",
+          "occupancy": {
+            "min": 1,
+            "max": 100
+          },
+          "matches": []
+        }
+      ]
+    },
+    "tier_rules": {
+      "numberOfTiers": [
+        4,
+        5,
+        6,
+        7,
+        8
+      ],
+      "metrics": [
+        {
+          "name": "datagolf_rank",
+          "order": "asc"
+        }
+      ],
+      "maxPlayersPerTier": 10,
+      "remainingPlayersInLastTier": true
+    },
+    "status": "SCHEDULED",
+    "settings": {
+      "scoreType": "golf_score",
+      "entryLives": 1,
+      "slateLabel": "Tournament",
+      "dropWorstCount": 1,
+      "expectedPicksCount": 6
+    },
+    "unlisted": false,
+    "description": null,
+    "league": {
+      "id": "<pga_league_uuid>",
+      "alias": "pga",
+      "name": "PGA",
+      "sport": "golf",
+      "settings": {
+        "players": {
+          "relevantAttributes": [
+            {
+              "key": "datagolf_rank",
+              "label": "Datagolf rank",
+              "sortOrder": "ASC"
+            },
+            {
+              "key": "world_rank",
+              "label": "World rank",
+              "sortOrder": "ASC"
+            }
+          ]
+        },
+        "playerPool": {
+          "removeAfterGeneration": false,
+          "gameStartAttributes": {
+            "competing_status": "WD",
+            "penalized_rounds": 4
+          },
+          "markRemovedPlayersAsDnp": true,
+          "statusBackup": "WD",
+          "statusLocation": "competing_status",
+          "statusNotificationMessage": [
+            "player_name",
+            "\" has withdrawn from the upcoming PGA tournament. Adjust your picks before lock!\""
+          ]
+        }
+      },
+      "isActive": true,
+      "visible": true,
+      "cloudinaryVersion": "1776191445",
+      "sortOrder": 20,
+      "icon": "<redacted_url>"
+    },
+    "slates": [
+      {
+        "id": "<slate_uuid>",
+        "name": "John Deere Classic",
+        "abbreviation": null,
+        "late_swap_deadline": null,
+        "start_date": "2026-07-02T11:40:00.000Z",
+        "end_date": "2026-07-02T11:40:00.000Z",
+        "status": "SCHEDULED",
+        "allGamesDecided": true,
+        "games": [
+          {
+            "id": "<id_uuid_57b41993>",
+            "sportradarId": "<uuid_2ad3f425>",
+            "name": "John Deere Classic",
+            "start_date": "2026-07-02T11:40:00.000Z",
+            "startDate": "2026-07-02T11:40:00.000Z",
+            "status": "SCHEDULED",
+            "isPlaceholder": false,
+            "availableAt": "2025-08-20T22:16:54.932433+00:00",
+            "state": {
+              "type": "golf",
+              "sport": "golf",
+              "league": "pga",
+              "rounds": [
+                {
+                  "number": 1,
+                  "status": "SCHEDULED",
+                  "first_teetime": "2026-07-02T11:40:00.000Z",
+                  "teetimes": [
+                    {
+                      "playerId": "<player_uuid_924b01e5>",
+                      "teetime": "2026-07-02T11:40:00.000Z"
+                    },
+                    {
+                      "playerId": "<player_uuid_3b30be56>",
+                      "teetime": "2026-07-02T11:40:00.000Z"
+                    },
+                    {
+                      "playerId": "<player_uuid_ded88935>",
+                      "teetime": "2026-07-02T11:40:00.000Z"
+                    },
+                    {
+                      "playerId": "<player_uuid_d2a59c83>",
+                      "teetime": "2026-07-02T11:40:00.000Z"
+                    },
+                    {
+                      "playerId": "<player_uuid_0de3ea88>",
+                      "teetime": "2026-07-02T11:40:00.000Z"
+                    },
+                    {
+                      "playerId": "<player_uuid_d38e7496>",
+                      "teetime": "2026-07-02T11:40:00.000Z"
+                    },
+                    {
+                      "playerId": "<player_uuid_ec48423d>",
+                      "teetime": "2026-07-02T11:51:00.000Z"
+                    },
+                    {
+                      "playerId": "<player_uuid_141ef9a7>",
+                      "teetime": "2026-07-02T11:51:00.000Z"
+                    },
+                    {
+                      "playerId": "<player_uuid_abec2958>",
+                      "teetime": "2026-07-02T11:51:00.000Z"
+                    },
+                    {
+                      "playerId": "<player_uuid_4b0a7906>",
+                      "teetime": "2026-07-02T11:51:00.000Z"
+                    },
+                    {
+                      "playerId": "<player_uuid_0bedaf3d>",
+                      "teetime": "2026-07-02T11:51:00.000Z"
+                    },
+                    {
+                      "playerId": "<player_uuid_50196a1a>",
+                      "teetime": "2026-07-02T11:51:00.000Z"
+                    },
+                    {
+                      "playerId": "<player_uuid_57cde239>",
+                      "teetime": "2026-07-02T12:02:00.000Z"
+                    },
+                    {
+                      "playerId": "<player_uuid_198ec4bd>",
+                      "teetime": "2026-07-02T12:02:00.000Z"
+                    },
+                    {
+                      "playerId": "<player_uuid_e25c2bdd>",
+                      "teetime": "2026-07-02T12:02:00.000Z"
+                    },
+                    {
+                      "playerId": "<player_uuid_b34cdebd>",
+                      "teetime": "2026-07-02T12:02:00.000Z"
+                    },
+                    {
+                      "playerId": "<player_uuid_b2fe21ec>",
+                      "teetime": "2026-07-02T12:02:00.000Z"
+                    },
+                    {
+                      "playerId": "<player_uuid_4f8ff110>",
+                      "teetime": "2026-07-02T12:02:00.000Z"
+                    },
+                    {
+                      "playerId": "<player_uuid_f36b1523>",
+                      "teetime": "2026-07-02T12:13:00.000Z"
+                    },
+                    {
+                      "playerId": "<player_uuid_aad89847>",
+                      "teetime": "2026-07-02T12:13:00.000Z"
+                    },
+                    {
+                      "playerId": "<player_uuid_d37e6745>",
+                      "teetime": "2026-07-02T12:13:00.000Z"
+                    },
+                    {
+                      "playerId": "<player_uuid_c7db13e0>",
+                      "teetime": "2026-07-02T12:13:00.000Z"
+                    },
+                    {
+                      "playerId": "<player_uuid_4470cdbb>",
+                      "teetime": "2026-07-02T12:13:00.000Z"
+                    },
+                    {
+                      "playerId": "<player_uuid_23a2971a>",
+                      "teetime": "2026-07-02T12:13:00.000Z"
+                    },
+                    {
+                      "playerId": "<player_uuid_38d41062>",
+                      "teetime": "2026-07-02T12:24:00.000Z"
+                    },
+                    {
+                      "playerId": "<player_uuid_447dad0e>",
+                      "teetime": "2026-07-02T12:24:00.000Z"
+                    },
+                    {
+                      "playerId": "<player_uuid_3616f302>",
+                      "teetime": "2026-07-02T12:24:00.000Z"
+                    },
+                    {
+                      "playerId": "<player_uuid_e93e20c6>",
+                      "teetime": "2026-07-02T12:24:00.000Z"
+                    },
+                    {
+                      "playerId": "<player_uuid_87b2b539>",
+                      "teetime": "2026-07-02T12:24:00.000Z"
+                    },
+                    {
+                      "playerId": "<player_uuid_8612274c>",
+                      "teetime": "2026-07-02T12:24:00.000Z"
+                    },
+                    {
+                      "playerId": "<player_uuid_16eba24e>",
+                      "teetime": "2026-07-02T12:35:00.000Z"
+                    },
+                    {
+                      "playerId": "<player_uuid_d245f168>",
+                      "teetime": "2026-07-02T12:35:00.000Z"
+                    },
+                    {
+                      "playerId": "<player_uuid_0ad57584>",
+                      "teetime": "2026-07-02T12:35:00.000Z"
+                    },
+                    {
+                      "playerId": "<player_uuid_3c82d0f5>",
+                      "teetime": "2026-07-02T12:35:00.000Z"
+                    },
+                    {
+                      "playerId": "<player_uuid_924fd44c>",
+                      "teetime": "2026-07-02T12:35:00.000Z"
+                    },
+                    {
+                      "playerId": "<player_uuid_7ff03fa3>",
+                      "teetime": "2026-07-02T12:35:00.000Z"
+                    },
+                    {
+                      "playerId": "<player_uuid_df1d57bd>",
+                      "teetime": "2026-07-02T12:46:00.000Z"
+                    },
+                    {
+                      "playerId": "<player_uuid_dcc83887>",
+                      "teetime": "2026-07-02T12:46:00.000Z"
+                    },
+                    {
+                      "playerId": "<player_uuid_5f2adca1>",
+                      "teetime": "2026-07-02T12:46:00.000Z"
+                    },
+                    {
+                      "playerId": "<player_uuid_e32f6f1f>",
+                      "teetime": "2026-07-02T12:46:00.000Z"
+                    },
+                    {
+                      "playerId": "<player_uuid_7d7ac0a8>",
+                      "teetime": "2026-07-02T12:46:00.000Z"
+                    },
+                    {
+                      "playerId": "<player_uuid_118ec95d>",
+                      "teetime": "2026-07-02T12:46:00.000Z"
+                    },
+                    {
+                      "playerId": "<player_uuid_d7c6f61a>",
+                      "teetime": "2026-07-02T12:57:00.000Z"
+                    },
+                    {
+                      "playerId": "<player_uuid_9e0a6fbc>",
+                      "teetime": "2026-07-02T12:57:00.000Z"
+                    },
+                    {
+                      "playerId": "<player_uuid_fe81ec9b>",
+                      "teetime": "2026-07-02T12:57:00.000Z"
+                    },
+                    {
+                      "playerId": "<player_uuid_95030dfa>",
+                      "teetime": "2026-07-02T12:57:00.000Z"
+                    },
+                    {
+                      "playerId": "<player_uuid_128066dd>",
+                      "teetime": "2026-07-02T12:57:00.000Z"
+                    },
+                    {
+                      "playerId": "<player_uuid_4e425727>",
+                      "teetime": "2026-07-02T12:57:00.000Z"
+                    },
+                    {
+                      "playerId": "<player_uuid_84374332>",
+                      "teetime": "2026-07-02T13:08:00.000Z"
+                    },
+                    {
+                      "playerId": "<player_uuid_a4f38f59>",
+                      "teetime": "2026-07-02T13:08:00.000Z"
+                    },
+                    {
+                      "playerId": "<player_uuid_f82b12bc>",
+                      "teetime": "2026-07-02T13:08:00.000Z"
+                    },
+                    {
+                      "playerId": "<player_uuid_6122b627>",
+                      "teetime": "2026-07-02T13:08:00.000Z"
+                    },
+                    {
+                      "playerId": "<player_uuid_f61fd5d7>",
+                      "teetime": "2026-07-02T13:08:00.000Z"
+                    },
+                    {
+                      "playerId": "<player_uuid_53f29f6b>",
+                      "teetime": "2026-07-02T13:08:00.000Z"
+                    },
+                    {
+                      "playerId": "<player_uuid_6ead9ca3>",
+                      "teetime": "2026-07-02T13:19:00.000Z"
+                    },
+                    {
+                      "playerId": "<player_uuid_3a91b9d9>",
+                      "teetime": "2026-07-02T13:19:00.000Z"
+                    },
+                    {
+                      "playerId": "<player_uuid_24740147>",
+                      "teetime": "2026-07-02T13:19:00.000Z"
+                    },
+                    {
+                      "playerId": "<player_uuid_16f5416d>",
+                      "teetime": "2026-07-02T13:19:00.000Z"
+                    },
+                    {
+                      "playerId": "<player_uuid_01212624>",
+                      "teetime": "2026-07-02T13:19:00.000Z"
+                    },
+                    {
+                      "playerId": "<player_uuid_6f08f064>",
+                      "teetime": "2026-07-02T13:19:00.000Z"
+                    },
+                    {
+                      "playerId": "<player_uuid_2e5b702e>",
+                      "teetime": "2026-07-02T13:30:00.000Z"
+                    },
+                    {
+                      "playerId": "<player_uuid_89649414>",
+                      "teetime": "2026-07-02T13:30:00.000Z"
+                    },
+                    {
+                      "playerId": "<player_uuid_40cca848>",
+                      "teetime": "2026-07-02T13:30:00.000Z"
+                    },
+                    {
+                      "playerId": "<player_uuid_4cfac0bf>",
+                      "teetime": "2026-07-02T13:30:00.000Z"
+                    },
+                    {
+                      "playerId": "<player_uuid_bd9c264b>",
+                      "teetime": "2026-07-02T13:30:00.000Z"
+                    },
+                    {
+                      "playerId": "<player_uuid_59f1f726>",
+                      "teetime": "2026-07-02T13:30:00.000Z"
+                    },
+                    {
+                      "playerId": "<player_uuid_f736cc98>",
+                      "teetime": "2026-07-02T13:41:00.000Z"
+                    },
+                    {
+                      "playerId": "<player_uuid_7cb09612>",
+                      "teetime": "2026-07-02T13:41:00.000Z"
+                    },
+                    {
+                      "playerId": "<player_uuid_c1b206c9>",
+                      "teetime": "2026-07-02T13:41:00.000Z"
+                    },
+                    {
+                      "playerId": "<player_uuid_dc9ee427>",
+                      "teetime": "2026-07-02T13:41:00.000Z"
+                    },
+                    {
+                      "playerId": "<player_uuid_2d204001>",
+                      "teetime": "2026-07-02T13:41:00.000Z"
+                    },
+                    {
+                      "playerId": "<player_uuid_3ae9cef4>",
+                      "teetime": "2026-07-02T13:41:00.000Z"
+                    },
+                    {
+                      "playerId": "<player_uuid_d79e9131>",
+                      "teetime": "2026-07-02T16:50:00.000Z"
+                    },
+                    {
+                      "playerId": "<player_uuid_e2b43e70>",
+                      "teetime": "2026-07-02T16:50:00.000Z"
+                    },
+                    {
+                      "playerId": "<player_uuid_29b5721a>",
+                      "teetime": "2026-07-02T16:50:00.000Z"
+                    },
+                    {
+                      "playerId": "<player_uuid_8396a209>",
+                      "teetime": "2026-07-02T16:50:00.000Z"
+                    },
+                    {
+                      "playerId": "<player_uuid_cca5f3d1>",
+                      "teetime": "2026-07-02T16:50:00.000Z"
+                    },
+                    {
+                      "playerId": "<player_uuid_89d72ccd>",
+                      "teetime": "2026-07-02T16:50:00.000Z"
+                    },
+                    {
+                      "playerId": "<player_uuid_5940db85>",
+                      "teetime": "2026-07-02T17:01:00.000Z"
+                    },
+                    {
+                      "playerId": "<player_uuid_17c56fa0>",
+                      "teetime": "2026-07-02T17:01:00.000Z"
+                    },
+                    {
+                      "playerId": "<player_uuid_843febe0>",
+                      "teetime": "2026-07-02T17:01:00.000Z"
+                    },
+                    {
+                      "playerId": "<player_uuid_3251e57a>",
+                      "teetime": "2026-07-02T17:01:00.000Z"
+                    },
+                    {
+                      "playerId": "<player_uuid_ef846909>",
+                      "teetime": "2026-07-02T17:01:00.000Z"
+                    },
+                    {
+                      "playerId": "<player_uuid_ccf8db3f>",
+                      "teetime": "2026-07-02T17:01:00.000Z"
+                    },
+                    {
+                      "playerId": "<player_uuid_da7eb12a>",
+                      "teetime": "2026-07-02T17:12:00.000Z"
+                    },
+                    {
+                      "playerId": "<player_uuid_13a61c67>",
+                      "teetime": "2026-07-02T17:12:00.000Z"
+                    },
+                    {
+                      "playerId": "<player_uuid_f7fba4e6>",
+                      "teetime": "2026-07-02T17:12:00.000Z"
+                    },
+                    {
+                      "playerId": "<player_uuid_43ba6378>",
+                      "teetime": "2026-07-02T17:12:00.000Z"
+                    },
+                    {
+                      "playerId": "<player_uuid_ca071947>",
+                      "teetime": "2026-07-02T17:12:00.000Z"
+                    },
+                    {
+                      "playerId": "<player_uuid_f107a483>",
+                      "teetime": "2026-07-02T17:12:00.000Z"
+                    },
+                    {
+                      "playerId": "<player_uuid_2eb05e62>",
+                      "teetime": "2026-07-02T17:23:00.000Z"
+                    },
+                    {
+                      "playerId": "<player_uuid_8a2d0c39>",
+                      "teetime": "2026-07-02T17:23:00.000Z"
+                    },
+                    {
+                      "playerId": "<player_uuid_d50ff8e0>",
+                      "teetime": "2026-07-02T17:23:00.000Z"
+                    },
+                    {
+                      "playerId": "<player_uuid_f87c9372>",
+                      "teetime": "2026-07-02T17:23:00.000Z"
+                    },
+                    {
+                      "playerId": "<player_uuid_c9c21397>",
+                      "teetime": "2026-07-02T17:23:00.000Z"
+                    },
+                    {
+                      "playerId": "<player_uuid_fa712ca2>",
+                      "teetime": "2026-07-02T17:23:00.000Z"
+                    },
+                    {
+                      "playerId": "<player_uuid_5bb802f4>",
+                      "teetime": "2026-07-02T17:34:00.000Z"
+                    },
+                    {
+                      "playerId": "<player_uuid_eb133f19>",
+                      "teetime": "2026-07-02T17:34:00.000Z"
+                    },
+                    {
+                      "playerId": "<player_uuid_3fc5837b>",
+                      "teetime": "2026-07-02T17:34:00.000Z"
+                    },
+                    {
+                      "playerId": "<player_uuid_6cb99fdb>",
+                      "teetime": "2026-07-02T17:34:00.000Z"
+                    },
+                    {
+                      "playerId": "<player_uuid_b37a86f0>",
+                      "teetime": "2026-07-02T17:34:00.000Z"
+                    },
+                    {
+                      "playerId": "<player_uuid_c397046f>",
+                      "teetime": "2026-07-02T17:34:00.000Z"
+                    },
+                    {
+                      "playerId": "<player_uuid_bea9963c>",
+                      "teetime": "2026-07-02T17:45:00.000Z"
+                    },
+                    {
+                      "playerId": "<player_uuid_d77db09a>",
+                      "teetime": "2026-07-02T17:45:00.000Z"
+                    },
+                    {
+                      "playerId": "<player_uuid_5b1fd429>",
+                      "teetime": "2026-07-02T17:45:00.000Z"
+                    },
+                    {
+                      "playerId": "<player_uuid_11bc51bc>",
+                      "teetime": "2026-07-02T17:45:00.000Z"
+                    },
+                    {
+                      "playerId": "<player_uuid_fe7fbccc>",
+                      "teetime": "2026-07-02T17:45:00.000Z"
+                    },
+                    {
+                      "playerId": "<player_uuid_e29010a6>",
+                      "teetime": "2026-07-02T17:45:00.000Z"
+                    },
+                    {
+                      "playerId": "<player_uuid_cfe003c4>",
+                      "teetime": "2026-07-02T17:56:00.000Z"
+                    },
+                    {
+                      "playerId": "<player_uuid_9b8dd206>",
+                      "teetime": "2026-07-02T17:56:00.000Z"
+                    },
+                    {
+                      "playerId": "<player_uuid_c5981358>",
+                      "teetime": "2026-07-02T17:56:00.000Z"
+                    },
+                    {
+                      "playerId": "<player_uuid_32c2d584>",
+                      "teetime": "2026-07-02T17:56:00.000Z"
+                    },
+                    {
+                      "playerId": "<player_uuid_b1eb9b0a>",
+                      "teetime": "2026-07-02T17:56:00.000Z"
+                    },
+                    {
+                      "playerId": "<player_uuid_982dde20>",
+                      "teetime": "2026-07-02T17:56:00.000Z"
+                    },
+                    {
+                      "playerId": "<player_uuid_f5b78550>",
+                      "teetime": "2026-07-02T18:07:00.000Z"
+                    },
+                    {
+                      "playerId": "<player_uuid_b6305830>",
+                      "teetime": "2026-07-02T18:07:00.000Z"
+                    },
+                    {
+                      "playerId": "<player_uuid_e3327d5d>",
+                      "teetime": "2026-07-02T18:07:00.000Z"
+                    },
+                    {
+                      "playerId": "<player_uuid_294f68d9>",
+                      "teetime": "2026-07-02T18:07:00.000Z"
+                    },
+                    {
+                      "playerId": "<player_uuid_f7cf3e3c>",
+                      "teetime": "2026-07-02T18:07:00.000Z"
+                    },
+                    {
+                      "playerId": "<player_uuid_ff72de05>",
+                      "teetime": "2026-07-02T18:07:00.000Z"
+                    },
+                    {
+                      "playerId": "<player_uuid_cdd8a161>",
+                      "teetime": "2026-07-02T18:18:00.000Z"
+                    },
+                    {
+                      "playerId": "<player_uuid_586bb4af>",
+                      "teetime": "2026-07-02T18:18:00.000Z"
+                    },
+                    {
+                      "playerId": "<player_uuid_5230bc0b>",
+                      "teetime": "2026-07-02T18:18:00.000Z"
+                    },
+                    {
+                      "playerId": "<player_uuid_1d373523>",
+                      "teetime": "2026-07-02T18:18:00.000Z"
+                    },
+                    {
+                      "playerId": "<player_uuid_37f4c454>",
+                      "teetime": "2026-07-02T18:18:00.000Z"
+                    },
+                    {
+                      "playerId": "<player_uuid_78a4be81>",
+                      "teetime": "2026-07-02T18:18:00.000Z"
+                    },
+                    {
+                      "playerId": "<player_uuid_703feb50>",
+                      "teetime": "2026-07-02T18:29:00.000Z"
+                    },
+                    {
+                      "playerId": "<player_uuid_369dac02>",
+                      "teetime": "2026-07-02T18:29:00.000Z"
+                    },
+                    {
+                      "playerId": "<player_uuid_0ad65e99>",
+                      "teetime": "2026-07-02T18:29:00.000Z"
+                    },
+                    {
+                      "playerId": "<player_uuid_ba05997e>",
+                      "teetime": "2026-07-02T18:29:00.000Z"
+                    },
+                    {
+                      "playerId": "<player_uuid_44810414>",
+                      "teetime": "2026-07-02T18:29:00.000Z"
+                    },
+                    {
+                      "playerId": "<player_uuid_9fb1570e>",
+                      "teetime": "2026-07-02T18:29:00.000Z"
+                    },
+                    {
+                      "playerId": "<player_uuid_954bd9b9>",
+                      "teetime": "2026-07-02T18:40:00.000Z"
+                    },
+                    {
+                      "playerId": "<player_uuid_f4cc08e5>",
+                      "teetime": "2026-07-02T18:40:00.000Z"
+                    },
+                    {
+                      "playerId": "<player_uuid_f7294bc1>",
+                      "teetime": "2026-07-02T18:40:00.000Z"
+                    },
+                    {
+                      "playerId": "<player_uuid_fa751cd2>",
+                      "teetime": "2026-07-02T18:40:00.000Z"
+                    },
+                    {
+                      "playerId": "<player_uuid_85931eba>",
+                      "teetime": "2026-07-02T18:40:00.000Z"
+                    },
+                    {
+                      "playerId": "<player_uuid_6fa652ed>",
+                      "teetime": "2026-07-02T18:40:00.000Z"
+                    },
+                    {
+                      "playerId": "<player_uuid_3aac0474>",
+                      "teetime": "2026-07-02T18:51:00.000Z"
+                    },
+                    {
+                      "playerId": "<player_uuid_9c41ef34>",
+                      "teetime": "2026-07-02T18:51:00.000Z"
+                    },
+                    {
+                      "playerId": "<player_uuid_dbf44af0>",
+                      "teetime": "2026-07-02T18:51:00.000Z"
+                    },
+                    {
+                      "playerId": "<player_uuid_4695a7d7>",
+                      "teetime": "2026-07-02T18:51:00.000Z"
+                    },
+                    {
+                      "playerId": "<player_uuid_d9e6dfc0>",
+                      "teetime": "2026-07-02T18:51:00.000Z"
+                    },
+                    {
+                      "playerId": "<player_uuid_ab980d07>",
+                      "teetime": "2026-07-02T18:51:00.000Z"
+                    }
+                  ]
+                },
+                {
+                  "number": 2,
+                  "status": "SCHEDULED",
+                  "first_teetime": "2026-07-03T11:40:00.000Z",
+                  "teetimes": [
+                    {
+                      "playerId": "<player_uuid_89d72ccd>",
+                      "teetime": "2026-07-03T11:40:00.000Z"
+                    },
+                    {
+                      "playerId": "<player_uuid_cca5f3d1>",
+                      "teetime": "2026-07-03T11:40:00.000Z"
+                    },
+                    {
+                      "playerId": "<player_uuid_8396a209>",
+                      "teetime": "2026-07-03T11:40:00.000Z"
+                    },
+                    {
+                      "playerId": "<player_uuid_29b5721a>",
+                      "teetime": "2026-07-03T11:40:00.000Z"
+                    },
+                    {
+                      "playerId": "<player_uuid_e2b43e70>",
+                      "teetime": "2026-07-03T11:40:00.000Z"
+                    },
+                    {
+                      "playerId": "<player_uuid_d79e9131>",
+                      "teetime": "2026-07-03T11:40:00.000Z"
+                    },
+                    {
+                      "playerId": "<player_uuid_843febe0>",
+                      "teetime": "2026-07-03T11:51:00.000Z"
+                    },
+                    {
+                      "playerId": "<player_uuid_17c56fa0>",
+                      "teetime": "2026-07-03T11:51:00.000Z"
+                    },
+                    {
+                      "playerId": "<player_uuid_5940db85>",
+                      "teetime": "2026-07-03T11:51:00.000Z"
+                    },
+                    {
+                      "playerId": "<player_uuid_ccf8db3f>",
+                      "teetime": "2026-07-03T11:51:00.000Z"
+                    },
+                    {
+                      "playerId": "<player_uuid_ef846909>",
+                      "teetime": "2026-07-03T11:51:00.000Z"
+                    },
+                    {
+                      "playerId": "<player_uuid_3251e57a>",
+                      "teetime": "2026-07-03T11:51:00.000Z"
+                    },
+                    {
+                      "playerId": "<player_uuid_f7fba4e6>",
+                      "teetime": "2026-07-03T12:02:00.000Z"
+                    },
+                    {
+                      "playerId": "<player_uuid_da7eb12a>",
+                      "teetime": "2026-07-03T12:02:00.000Z"
+                    },
+                    {
+                      "playerId": "<player_uuid_13a61c67>",
+                      "teetime": "2026-07-03T12:02:00.000Z"
+                    },
+                    {
+                      "playerId": "<player_uuid_f107a483>",
+                      "teetime": "2026-07-03T12:02:00.000Z"
+                    },
+                    {
+                      "playerId": "<player_uuid_ca071947>",
+                      "teetime": "2026-07-03T12:02:00.000Z"
+                    },
+                    {
+                      "playerId": "<player_uuid_43ba6378>",
+                      "teetime": "2026-07-03T12:02:00.000Z"
+                    },
+                    {
+                      "playerId": "<player_uuid_d50ff8e0>",
+                      "teetime": "2026-07-03T12:13:00.000Z"
+                    },
+                    {
+                      "playerId": "<player_uuid_8a2d0c39>",
+                      "teetime": "2026-07-03T12:13:00.000Z"
+                    },
+                    {
+                      "playerId": "<player_uuid_2eb05e62>",
+                      "teetime": "2026-07-03T12:13:00.000Z"
+                    },
+                    {
+                      "playerId": "<player_uuid_fa712ca2>",
+                      "teetime": "2026-07-03T12:13:00.000Z"
+                    },
+                    {
+                      "playerId": "<player_uuid_f87c9372>",
+                      "teetime": "2026-07-03T12:13:00.000Z"
+                    },
+                    {
+                      "playerId": "<player_uuid_c9c21397>",
+                      "teetime": "2026-07-03T12:13:00.000Z"
+                    },
+                    {
+                      "playerId": "<player_uuid_5bb802f4>",
+                      "teetime": "2026-07-03T12:24:00.000Z"
+                    },
+                    {
+                      "playerId": "<player_uuid_3fc5837b>",
+                      "teetime": "2026-07-03T12:24:00.000Z"
+                    },
+                    {
+                      "playerId": "<player_uuid_eb133f19>",
+                      "teetime": "2026-07-03T12:24:00.000Z"
+                    },
+                    {
+                      "playerId": "<player_uuid_c397046f>",
+                      "teetime": "2026-07-03T12:24:00.000Z"
+                    },
+                    {
+                      "playerId": "<player_uuid_b37a86f0>",
+                      "teetime": "2026-07-03T12:24:00.000Z"
+                    },
+                    {
+                      "playerId": "<player_uuid_6cb99fdb>",
+                      "teetime": "2026-07-03T12:24:00.000Z"
+                    },
+                    {
+                      "playerId": "<player_uuid_5b1fd429>",
+                      "teetime": "2026-07-03T12:35:00.000Z"
+                    },
+                    {
+                      "playerId": "<player_uuid_d77db09a>",
+                      "teetime": "2026-07-03T12:35:00.000Z"
+                    },
+                    {
+                      "playerId": "<player_uuid_bea9963c>",
+                      "teetime": "2026-07-03T12:35:00.000Z"
+                    },
+                    {
+                      "playerId": "<player_uuid_11bc51bc>",
+                      "teetime": "2026-07-03T12:35:00.000Z"
+                    },
+                    {
+                      "playerId": "<player_uuid_e29010a6>",
+                      "teetime": "2026-07-03T12:35:00.000Z"
+                    },
+                    {
+                      "playerId": "<player_uuid_fe7fbccc>",
+                      "teetime": "2026-07-03T12:35:00.000Z"
+                    },
+                    {
+                      "playerId": "<player_uuid_cfe003c4>",
+                      "teetime": "2026-07-03T12:46:00.000Z"
+                    },
+                    {
+                      "playerId": "<player_uuid_c5981358>",
+                      "teetime": "2026-07-03T12:46:00.000Z"
+                    },
+                    {
+                      "playerId": "<player_uuid_9b8dd206>",
+                      "teetime": "2026-07-03T12:46:00.000Z"
+                    },
+                    {
+                      "playerId": "<player_uuid_982dde20>",
+                      "teetime": "2026-07-03T12:46:00.000Z"
+                    },
+                    {
+                      "playerId": "<player_uuid_b1eb9b0a>",
+                      "teetime": "2026-07-03T12:46:00.000Z"
+                    },
+                    {
+                      "playerId": "<player_uuid_32c2d584>",
+                      "teetime": "2026-07-03T12:46:00.000Z"
+                    },
+                    {
+                      "playerId": "<player_uuid_294f68d9>",
+                      "teetime": "2026-07-03T12:57:00.000Z"
+                    },
+                    {
+                      "playerId": "<player_uuid_f7cf3e3c>",
+                      "teetime": "2026-07-03T12:57:00.000Z"
+                    },
+                    {
+                      "playerId": "<player_uuid_ff72de05>",
+                      "teetime": "2026-07-03T12:57:00.000Z"
+                    },
+                    {
+                      "playerId": "<player_uuid_e3327d5d>",
+                      "teetime": "2026-07-03T12:57:00.000Z"
+                    },
+                    {
+                      "playerId": "<player_uuid_f5b78550>",
+                      "teetime": "2026-07-03T12:57:00.000Z"
+                    },
+                    {
+                      "playerId": "<player_uuid_b6305830>",
+                      "teetime": "2026-07-03T12:57:00.000Z"
+                    },
+                    {
+                      "playerId": "<player_uuid_37f4c454>",
+                      "teetime": "2026-07-03T13:08:00.000Z"
+                    },
+                    {
+                      "playerId": "<player_uuid_78a4be81>",
+                      "teetime": "2026-07-03T13:08:00.000Z"
+                    },
+                    {
+                      "playerId": "<player_uuid_1d373523>",
+                      "teetime": "2026-07-03T13:08:00.000Z"
+                    },
+                    {
+                      "playerId": "<player_uuid_cdd8a161>",
+                      "teetime": "2026-07-03T13:08:00.000Z"
+                    },
+                    {
+                      "playerId": "<player_uuid_586bb4af>",
+                      "teetime": "2026-07-03T13:08:00.000Z"
+                    },
+                    {
+                      "playerId": "<player_uuid_5230bc0b>",
+                      "teetime": "2026-07-03T13:08:00.000Z"
+                    },
+                    {
+                      "playerId": "<player_uuid_44810414>",
+                      "teetime": "2026-07-03T13:19:00.000Z"
+                    },
+                    {
+                      "playerId": "<player_uuid_ba05997e>",
+                      "teetime": "2026-07-03T13:19:00.000Z"
+                    },
+                    {
+                      "playerId": "<player_uuid_9fb1570e>",
+                      "teetime": "2026-07-03T13:19:00.000Z"
+                    },
+                    {
+                      "playerId": "<player_uuid_703feb50>",
+                      "teetime": "2026-07-03T13:19:00.000Z"
+                    },
+                    {
+                      "playerId": "<player_uuid_369dac02>",
+                      "teetime": "2026-07-03T13:19:00.000Z"
+                    },
+                    {
+                      "playerId": "<player_uuid_0ad65e99>",
+                      "teetime": "2026-07-03T13:19:00.000Z"
+                    },
+                    {
+                      "playerId": "<player_uuid_fa751cd2>",
+                      "teetime": "2026-07-03T13:30:00.000Z"
+                    },
+                    {
+                      "playerId": "<player_uuid_85931eba>",
+                      "teetime": "2026-07-03T13:30:00.000Z"
+                    },
+                    {
+                      "playerId": "<player_uuid_6fa652ed>",
+                      "teetime": "2026-07-03T13:30:00.000Z"
+                    },
+                    {
+                      "playerId": "<player_uuid_954bd9b9>",
+                      "teetime": "2026-07-03T13:30:00.000Z"
+                    },
+                    {
+                      "playerId": "<player_uuid_f4cc08e5>",
+                      "teetime": "2026-07-03T13:30:00.000Z"
+                    },
+                    {
+                      "playerId": "<player_uuid_f7294bc1>",
+                      "teetime": "2026-07-03T13:30:00.000Z"
+                    },
+                    {
+                      "playerId": "<player_uuid_3aac0474>",
+                      "teetime": "2026-07-03T13:41:00.000Z"
+                    },
+                    {
+                      "playerId": "<player_uuid_9c41ef34>",
+                      "teetime": "2026-07-03T13:41:00.000Z"
+                    },
+                    {
+                      "playerId": "<player_uuid_dbf44af0>",
+                      "teetime": "2026-07-03T13:41:00.000Z"
+                    },
+                    {
+                      "playerId": "<player_uuid_ab980d07>",
+                      "teetime": "2026-07-03T13:41:00.000Z"
+                    },
+                    {
+                      "playerId": "<player_uuid_d9e6dfc0>",
+                      "teetime": "2026-07-03T13:41:00.000Z"
+                    },
+                    {
+                      "playerId": "<player_uuid_4695a7d7>",
+                      "teetime": "2026-07-03T13:41:00.000Z"
+                    },
+                    {
+                      "playerId": "<player_uuid_d2a59c83>",
+                      "teetime": "2026-07-03T16:50:00.000Z"
+                    },
+                    {
+                      "playerId": "<player_uuid_0de3ea88>",
+                      "teetime": "2026-07-03T16:50:00.000Z"
+                    },
+                    {
+                      "playerId": "<player_uuid_d38e7496>",
+                      "teetime": "2026-07-03T16:50:00.000Z"
+                    },
+                    {
+                      "playerId": "<player_uuid_3b30be56>",
+                      "teetime": "2026-07-03T16:50:00.000Z"
+                    },
+                    {
+                      "playerId": "<player_uuid_924b01e5>",
+                      "teetime": "2026-07-03T16:50:00.000Z"
+                    },
+                    {
+                      "playerId": "<player_uuid_ded88935>",
+                      "teetime": "2026-07-03T16:50:00.000Z"
+                    },
+                    {
+                      "playerId": "<player_uuid_4b0a7906>",
+                      "teetime": "2026-07-03T17:01:00.000Z"
+                    },
+                    {
+                      "playerId": "<player_uuid_50196a1a>",
+                      "teetime": "2026-07-03T17:01:00.000Z"
+                    },
+                    {
+                      "playerId": "<player_uuid_0bedaf3d>",
+                      "teetime": "2026-07-03T17:01:00.000Z"
+                    },
+                    {
+                      "playerId": "<player_uuid_abec2958>",
+                      "teetime": "2026-07-03T17:01:00.000Z"
+                    },
+                    {
+                      "playerId": "<player_uuid_ec48423d>",
+                      "teetime": "2026-07-03T17:01:00.000Z"
+                    },
+                    {
+                      "playerId": "<player_uuid_141ef9a7>",
+                      "teetime": "2026-07-03T17:01:00.000Z"
+                    },
+                    {
+                      "playerId": "<player_uuid_b34cdebd>",
+                      "teetime": "2026-07-03T17:12:00.000Z"
+                    },
+                    {
+                      "playerId": "<player_uuid_b2fe21ec>",
+                      "teetime": "2026-07-03T17:12:00.000Z"
+                    },
+                    {
+                      "playerId": "<player_uuid_4f8ff110>",
+                      "teetime": "2026-07-03T17:12:00.000Z"
+                    },
+                    {
+                      "playerId": "<player_uuid_57cde239>",
+                      "teetime": "2026-07-03T17:12:00.000Z"
+                    },
+                    {
+                      "playerId": "<player_uuid_e25c2bdd>",
+                      "teetime": "2026-07-03T17:12:00.000Z"
+                    },
+                    {
+                      "playerId": "<player_uuid_198ec4bd>",
+                      "teetime": "2026-07-03T17:12:00.000Z"
+                    },
+                    {
+                      "playerId": "<player_uuid_23a2971a>",
+                      "teetime": "2026-07-03T17:23:00.000Z"
+                    },
+                    {
+                      "playerId": "<player_uuid_4470cdbb>",
+                      "teetime": "2026-07-03T17:23:00.000Z"
+                    },
+                    {
+                      "playerId": "<player_uuid_c7db13e0>",
+                      "teetime": "2026-07-03T17:23:00.000Z"
+                    },
+                    {
+                      "playerId": "<player_uuid_aad89847>",
+                      "teetime": "2026-07-03T17:23:00.000Z"
+                    },
+                    {
+                      "playerId": "<player_uuid_f36b1523>",
+                      "teetime": "2026-07-03T17:23:00.000Z"
+                    },
+                    {
+                      "playerId": "<player_uuid_d37e6745>",
+                      "teetime": "2026-07-03T17:23:00.000Z"
+                    },
+                    {
+                      "playerId": "<player_uuid_e93e20c6>",
+                      "teetime": "2026-07-03T17:34:00.000Z"
+                    },
+                    {
+                      "playerId": "<player_uuid_87b2b539>",
+                      "teetime": "2026-07-03T17:34:00.000Z"
+                    },
+                    {
+                      "playerId": "<player_uuid_8612274c>",
+                      "teetime": "2026-07-03T17:34:00.000Z"
+                    },
+                    {
+                      "playerId": "<player_uuid_447dad0e>",
+                      "teetime": "2026-07-03T17:34:00.000Z"
+                    },
+                    {
+                      "playerId": "<player_uuid_38d41062>",
+                      "teetime": "2026-07-03T17:34:00.000Z"
+                    },
+                    {
+                      "playerId": "<player_uuid_3616f302>",
+                      "teetime": "2026-07-03T17:34:00.000Z"
+                    },
+                    {
+                      "playerId": "<player_uuid_3c82d0f5>",
+                      "teetime": "2026-07-03T17:45:00.000Z"
+                    },
+                    {
+                      "playerId": "<player_uuid_7ff03fa3>",
+                      "teetime": "2026-07-03T17:45:00.000Z"
+                    },
+                    {
+                      "playerId": "<player_uuid_924fd44c>",
+                      "teetime": "2026-07-03T17:45:00.000Z"
+                    },
+                    {
+                      "playerId": "<player_uuid_d245f168>",
+                      "teetime": "2026-07-03T17:45:00.000Z"
+                    },
+                    {
+                      "playerId": "<player_uuid_0ad57584>",
+                      "teetime": "2026-07-03T17:45:00.000Z"
+                    },
+                    {
+                      "playerId": "<player_uuid_16eba24e>",
+                      "teetime": "2026-07-03T17:45:00.000Z"
+                    },
+                    {
+                      "playerId": "<player_uuid_5f2adca1>",
+                      "teetime": "2026-07-03T17:56:00.000Z"
+                    },
+                    {
+                      "playerId": "<player_uuid_df1d57bd>",
+                      "teetime": "2026-07-03T17:56:00.000Z"
+                    },
+                    {
+                      "playerId": "<player_uuid_dcc83887>",
+                      "teetime": "2026-07-03T17:56:00.000Z"
+                    },
+                    {
+                      "playerId": "<player_uuid_7d7ac0a8>",
+                      "teetime": "2026-07-03T17:56:00.000Z"
+                    },
+                    {
+                      "playerId": "<player_uuid_118ec95d>",
+                      "teetime": "2026-07-03T17:56:00.000Z"
+                    },
+                    {
+                      "playerId": "<player_uuid_e32f6f1f>",
+                      "teetime": "2026-07-03T17:56:00.000Z"
+                    },
+                    {
+                      "playerId": "<player_uuid_4e425727>",
+                      "teetime": "2026-07-03T18:07:00.000Z"
+                    },
+                    {
+                      "playerId": "<player_uuid_95030dfa>",
+                      "teetime": "2026-07-03T18:07:00.000Z"
+                    },
+                    {
+                      "playerId": "<player_uuid_128066dd>",
+                      "teetime": "2026-07-03T18:07:00.000Z"
+                    },
+                    {
+                      "playerId": "<player_uuid_9e0a6fbc>",
+                      "teetime": "2026-07-03T18:07:00.000Z"
+                    },
+                    {
+                      "playerId": "<player_uuid_d7c6f61a>",
+                      "teetime": "2026-07-03T18:07:00.000Z"
+                    },
+                    {
+                      "playerId": "<player_uuid_fe81ec9b>",
+                      "teetime": "2026-07-03T18:07:00.000Z"
+                    },
+                    {
+                      "playerId": "<player_uuid_84374332>",
+                      "teetime": "2026-07-03T18:18:00.000Z"
+                    },
+                    {
+                      "playerId": "<player_uuid_f82b12bc>",
+                      "teetime": "2026-07-03T18:18:00.000Z"
+                    },
+                    {
+                      "playerId": "<player_uuid_a4f38f59>",
+                      "teetime": "2026-07-03T18:18:00.000Z"
+                    },
+                    {
+                      "playerId": "<player_uuid_53f29f6b>",
+                      "teetime": "2026-07-03T18:18:00.000Z"
+                    },
+                    {
+                      "playerId": "<player_uuid_6122b627>",
+                      "teetime": "2026-07-03T18:18:00.000Z"
+                    },
+                    {
+                      "playerId": "<player_uuid_f61fd5d7>",
+                      "teetime": "2026-07-03T18:18:00.000Z"
+                    },
+                    {
+                      "playerId": "<player_uuid_6f08f064>",
+                      "teetime": "2026-07-03T18:29:00.000Z"
+                    },
+                    {
+                      "playerId": "<player_uuid_16f5416d>",
+                      "teetime": "2026-07-03T18:29:00.000Z"
+                    },
+                    {
+                      "playerId": "<player_uuid_01212624>",
+                      "teetime": "2026-07-03T18:29:00.000Z"
+                    },
+                    {
+                      "playerId": "<player_uuid_24740147>",
+                      "teetime": "2026-07-03T18:29:00.000Z"
+                    },
+                    {
+                      "playerId": "<player_uuid_3a91b9d9>",
+                      "teetime": "2026-07-03T18:29:00.000Z"
+                    },
+                    {
+                      "playerId": "<player_uuid_6ead9ca3>",
+                      "teetime": "2026-07-03T18:29:00.000Z"
+                    },
+                    {
+                      "playerId": "<player_uuid_2e5b702e>",
+                      "teetime": "2026-07-03T18:40:00.000Z"
+                    },
+                    {
+                      "playerId": "<player_uuid_40cca848>",
+                      "teetime": "2026-07-03T18:40:00.000Z"
+                    },
+                    {
+                      "playerId": "<player_uuid_89649414>",
+                      "teetime": "2026-07-03T18:40:00.000Z"
+                    },
+                    {
+                      "playerId": "<player_uuid_bd9c264b>",
+                      "teetime": "2026-07-03T18:40:00.000Z"
+                    },
+                    {
+                      "playerId": "<player_uuid_4cfac0bf>",
+                      "teetime": "2026-07-03T18:40:00.000Z"
+                    },
+                    {
+                      "playerId": "<player_uuid_59f1f726>",
+                      "teetime": "2026-07-03T18:40:00.000Z"
+                    },
+                    {
+                      "playerId": "<player_uuid_7cb09612>",
+                      "teetime": "2026-07-03T18:51:00.000Z"
+                    },
+                    {
+                      "playerId": "<player_uuid_c1b206c9>",
+                      "teetime": "2026-07-03T18:51:00.000Z"
+                    },
+                    {
+                      "playerId": "<player_uuid_f736cc98>",
+                      "teetime": "2026-07-03T18:51:00.000Z"
+                    },
+                    {
+                      "playerId": "<player_uuid_dc9ee427>",
+                      "teetime": "2026-07-03T18:51:00.000Z"
+                    },
+                    {
+                      "playerId": "<player_uuid_2d204001>",
+                      "teetime": "2026-07-03T18:51:00.000Z"
+                    },
+                    {
+                      "playerId": "<player_uuid_3ae9cef4>",
+                      "teetime": "2026-07-03T18:51:00.000Z"
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        ],
+        "generatesRosterAt": "2026-06-29T21:00:00.000Z",
+        "generated": true,
+        "purse": {
+          "current": 8800000
+        },
+        "isPicksheetAvailable": true
+      }
+    ],
+    "contest_start_date": "2026-07-02T11:40:00.000Z",
+    "banner_url": "<redacted_url>",
+    "is_allowed_in_location": true,
+    "restricted_to_countries": [
+      "us",
+      "ca"
+    ],
+    "final_slate_id": null,
+    "is_after_first_late_swap_deadline": false,
+    "make_listed_at": "2026-06-26T00:15:32.000Z",
+    "beginnersOnly": false,
+    "following": 0,
+    "followed": 0,
+    "is_free_roll": false,
+    "is_entry_deadline_pending": false,
+    "slateCount": 1,
+    "gameCount": 1,
+    "alerts": {
+      "values": []
+    },
+    "buybackPrizePool": null
+  },
+  "notes": "Long tee-time arrays trimmed to the first two rounds; payout_settings omitted for fixture compactness."
+}

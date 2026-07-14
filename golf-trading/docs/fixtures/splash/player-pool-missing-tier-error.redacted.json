@@ -1,0 +1,28 @@
+{
+  "fixture_version": 1,
+  "captured_at": "2026-07-01T15:57:30Z",
+  "method": "GET",
+  "url": "https://api.splashsports.com/contests-service/api/contests/<public_contest_uuid>/slates/<slate_uuid>/player-pool?offset=0&limit=5",
+  "request_headers": {
+    "Accept": "application/json",
+    "Content-Type": "application/json",
+    "X-App-Platform": "web",
+    "X-App-Version": "1.251.0"
+  },
+  "request_body": null,
+  "response_status": "HTTP/2 400",
+  "response_headers": {
+    "content-type": "application/json; charset=utf-8",
+    "content-length": "192",
+    "date": "Wed, 01 Jul 2026 15:50:12 GMT",
+    "etag": "W/\"c0-RmhpTPpqNmEgX2jGGhYzQgkWG5k\"",
+    "vary": "Origin"
+  },
+  "response_body": {
+    "id": "<id_uuid_eefb61c6>",
+    "statusCode": 400,
+    "message": "tierId must not be less than 1,tierId must be an integer number,rosterCategoryId must be a UUID",
+    "error": "Bad Request"
+  },
+  "notes": "Captured validation/error shape showing tierId or rosterCategoryId is required."
+}

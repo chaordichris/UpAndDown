@@ -33,6 +33,20 @@
       "danger": true
     },
     {
+      "id": "splash-preflight",
+      "label": "Splash preflight gate",
+      "description": "Validate this week's Splash fixtures before generating portfolios. Fails closed with remediation hints.",
+      "cwd": "../golf-trading",
+      "argv": [
+        "python3", "scripts/splash_preflight.py",
+        "--contest-fixture", "artifacts/splash-capture/rungood-contest-detail.json",
+        "--player-pools-fixture", "artifacts/splash-capture/rungood-player-pools-by-tier.json",
+        "--datagolf-ranks-fixture", "artifacts/splash-capture/rungood-datagolf-player-ranks.json",
+        "--score-anchors-fixture", "artifacts/splash-capture/rungood-datagolf-score-anchors-enriched.json"
+      ],
+      "danger": false
+    },
+    {
       "id": "phase-gate-check",
       "label": "Phase 3 gate check",
       "description": "Recompute phase-gate evidence artifacts.",

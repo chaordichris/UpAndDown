@@ -83,3 +83,38 @@ shadow_live:
   per_bet_cap_dollars: 25.0
   # Hard cap on cumulative shadow-live stakes in one tournament week.
   per_tournament_cap_dollars: 100.0
+
+splash:
+  # Splash DFS pod — one-command weekly run (SP-2).
+  # Stage parameters live here, not in argparse defaults. CLI flags on
+  # run_splash_week.py act as overrides and are logged as overrides in the
+  # week manifest. This is the minimal SP-2 slice of the fuller SP-4 block.
+  # Directory (repo-relative) where each week's stage artifacts + manifest land.
+  artifact_dir: artifacts/splash-week
+  # Read-only Splash contests API base (discover/capture stages).
+  api_base_url: https://api.splashsports.com/contests-service/api
+  # DataGolf feeds base (enrichment stage).
+  datagolf_base_url: https://feeds.datagolf.com
+  # Player tiers to capture and roster.
+  tiers: [1, 2, 3, 4, 5, 6]
+  # Max players fetched per tier during capture.
+  player_pool_limit: 50
+  # Total DFS bankroll in dollars (drives the report/Kelly sizing).
+  bankroll_dollars: 10000.0
+  # Which optimized portfolio the lineup card is cut from.
+  portfolio_name: conservative
+  # Portfolio generator (portfolios stage).
+  simulations: 1000
+  seed: 20260701
+  max_candidates: 2000
+  candidate_generation: projected   # deterministic | projected
+  lineup_id_prefix: rungood
+  # Sensitivity sweep (sensitivity stage; kept small — widen for a live week).
+  sensitivity_simulations: 250
+  sensitivity_seeds: [20260701, 20260708]
+  sensitivity_candidate_caps: [250, 500]
+  sensitivity_ownership_concentrations: [0.75, 1.0, 1.25]
+  # Preflight integrity gate (SP-1) thresholds.
+  max_fixture_age_hours: 72.0
+  min_depth_multiple: 2.0
+

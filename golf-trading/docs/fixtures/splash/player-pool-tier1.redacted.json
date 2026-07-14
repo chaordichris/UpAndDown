@@ -1,0 +1,158 @@
+{
+  "fixture_version": 1,
+  "captured_at": "2026-07-01T15:57:30Z",
+  "method": "GET",
+  "url": "https://api.splashsports.com/contests-service/api/contests/<public_contest_uuid>/slates/<slate_uuid>/player-pool?tierId=1&offset=0&limit=5",
+  "request_headers": {
+    "Accept": "application/json",
+    "Content-Type": "application/json",
+    "X-App-Platform": "web",
+    "X-App-Version": "1.251.0"
+  },
+  "request_body": null,
+  "response_status": "HTTP/2 200",
+  "response_headers": {
+    "content-type": "application/json; charset=utf-8",
+    "content-length": "5641",
+    "date": "Wed, 01 Jul 2026 15:55:02 GMT",
+    "etag": "W/\"1609-Mlshr4lKYYLwR18rFC4k/n3N+W0\"",
+    "vary": "Origin"
+  },
+  "response_body": {
+    "data": [
+      {
+        "id": "<id_uuid_7e11a6ab>",
+        "contestTemplateId": "<contestTemplateId_uuid_7d59deeb>",
+        "playerId": "<player_uuid_7ff03fa3>",
+        "slateId": "<slate_uuid>",
+        "attributes": {
+          "cuts": 4,
+          "points": 918,
+          "top_10": 3,
+          "top_25": 7,
+          "country": "UNITED STATES",
+          "gir_pct": 65.37,
+          "earnings": 3370326,
+          "putt_avg": 1.742,
+          "cuts_made": 14,
+          "drive_acc": 61.27,
+          "drive_avg": 303.9,
+          "last_name": "Griffin",
+          "countryAbb": "US",
+          "first_name": "Ben",
+          "world_rank": 18,
+          "first_place": 0,
+          "points_rank": 34,
+          "scoring_avg": 70.415,
+          "third_place": 2,
+          "withdrawals": 0,
+          "second_place": 0,
+          "datagolf_rank": 18,
+          "earnings_rank": 32,
+          "events_played": 18,
+          "total_driving": 145,
+          "sand_saves_pct": 65.79,
+          "scrambling_pct": 63.37,
+          "strokes_gained": 0.368,
+          "holes_per_eagle": 180,
+          "abbreviated_name": "B.Griffin",
+          "birdies_per_round": 3.7,
+          "all_around_ranking": 39,
+          "hole_proximity_avg": "40' 9\"",
+          "strokes_gained_total": 0.587,
+          "strokes_gained_tee_green": 0.22,
+          "isInSlate": true,
+          "gameStartDateTime": "2026-07-02T11:40:00.000Z",
+          "gameStatus": "SCHEDULED",
+          "finished": false
+        },
+        "shortAttributes": {
+          "icons": {
+            "country": "UNITED STATES"
+          },
+          "stats": {
+            "world_rank": 18,
+            "scoring_avg": 70.415,
+            "top_25": 7
+          }
+        },
+        "name": "Ben Griffin",
+        "isDnp": null,
+        "score": null,
+        "alternate": false,
+        "isPlayerSelectable": true
+      },
+      {
+        "id": "<id_uuid_b58ca809>",
+        "contestTemplateId": "<contestTemplateId_uuid_7d59deeb>",
+        "playerId": "<player_uuid_11bc51bc>",
+        "slateId": "<slate_uuid>",
+        "attributes": {
+          "cuts": 1,
+          "points": 1605,
+          "top_10": 4,
+          "top_25": 9,
+          "country": "UNITED STATES",
+          "gir_pct": 67.24,
+          "earnings": 5702344,
+          "putt_avg": 1.736,
+          "cuts_made": 14,
+          "drive_acc": 52.72,
+          "drive_avg": 323,
+          "last_name": "Gotterup",
+          "countryAbb": "US",
+          "first_name": "Chris",
+          "world_rank": 13,
+          "first_place": 2,
+          "points_rank": 12,
+          "scoring_avg": 70.11,
+          "third_place": 0,
+          "withdrawals": 0,
+          "second_place": 0,
+          "datagolf_rank": 19,
+          "earnings_rank": 13,
+          "events_played": 15,
+          "total_driving": 143,
+          "sand_saves_pct": 54.95,
+          "scrambling_pct": 60.23,
+          "strokes_gained": 0.29,
+          "holes_per_eagle": 104.4,
+          "abbreviated_name": "C.Gotterup",
+          "birdies_per_round": 3.97,
+          "all_around_ranking": 9,
+          "hole_proximity_avg": "38' 8\"",
+          "strokes_gained_total": 1.099,
+          "strokes_gained_tee_green": 0.809,
+          "isInSlate": true,
+          "gameStartDateTime": "2026-07-02T11:40:00.000Z",
+          "gameStatus": "SCHEDULED",
+          "finished": false
+        },
+        "shortAttributes": {
+          "icons": {
+            "country": "UNITED STATES"
+          },
+          "stats": {
+            "world_rank": 13,
+            "scoring_avg": 70.11,
+            "top_25": 9
+          }
+        },
+        "name": "Chris Gotterup",
+        "isDnp": null,
+        "score": null,
+        "alternate": false,
+        "isPlayerSelectable": true
+      }
+    ],
+    "total": 10,
+    "limit": 5,
+    "offset": 0,
+    "canMakePicks": true,
+    "metadata": {
+      "hasAutoPicks": false,
+      "canMakePicks": true
+    }
+  },
+  "notes": "Response data trimmed from 5 to 2 players; total/limit/offset preserved. Player ids redacted; player names and sports stats retained as public sports data."
+}

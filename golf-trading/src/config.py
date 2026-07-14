@@ -141,6 +141,36 @@ class ShadowLiveConfig:
         self.per_tournament_cap_dollars: float = d.get("per_tournament_cap_dollars", 100.0)
 
 
+class SplashConfig:
+    """Splash DFS weekly-run parameters (SP-2). See config/settings.yaml."""
+
+    def __init__(self, d: dict[str, Any]) -> None:
+        self.artifact_dir: str = d.get("artifact_dir", "artifacts/splash-week")
+        self.api_base_url: str = d["api_base_url"]
+        self.datagolf_base_url: str = d["datagolf_base_url"]
+        self.tiers: tuple[int, ...] = tuple(d.get("tiers", [1, 2, 3, 4, 5, 6]))
+        self.player_pool_limit: int = d.get("player_pool_limit", 50)
+        self.bankroll_dollars: float = d["bankroll_dollars"]
+        self.portfolio_name: str = d.get("portfolio_name", "conservative")
+        self.simulations: int = d.get("simulations", 1000)
+        self.seed: int = d.get("seed", 20260701)
+        self.max_candidates: int = d.get("max_candidates", 2000)
+        self.candidate_generation: str = d.get("candidate_generation", "projected")
+        self.lineup_id_prefix: str = d.get("lineup_id_prefix", "rungood")
+        self.sensitivity_simulations: int = d.get("sensitivity_simulations", 250)
+        self.sensitivity_seeds: tuple[int, ...] = tuple(
+            d.get("sensitivity_seeds", [20260701, 20260708])
+        )
+        self.sensitivity_candidate_caps: tuple[int, ...] = tuple(
+            d.get("sensitivity_candidate_caps", [250, 500])
+        )
+        self.sensitivity_ownership_concentrations: tuple[float, ...] = tuple(
+            d.get("sensitivity_ownership_concentrations", [0.75, 1.0, 1.25])
+        )
+        self.max_fixture_age_hours: float = d.get("max_fixture_age_hours", 72.0)
+        self.min_depth_multiple: float = d.get("min_depth_multiple", 2.0)
+
+
 class Settings:
     """Full settings object combining secrets + YAML config."""
 
@@ -155,6 +185,7 @@ class Settings:
         self.ror = RiskOfRuinConfig(yaml_data["ror"])
         self.vig_removal = VigRemovalConfig(yaml_data["vig_removal"])
         self.shadow_live = ShadowLiveConfig(yaml_data.get("shadow_live", {}))
+        self.splash = SplashConfig(yaml_data["splash"])
 
         # Convenience pass-throughs from secrets
         self.database_url: str = secrets.database_url
