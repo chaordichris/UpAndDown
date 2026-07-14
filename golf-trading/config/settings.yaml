@@ -83,3 +83,34 @@ shadow_live:
   per_bet_cap_dollars: 25.0
   # Hard cap on cumulative shadow-live stakes in one tournament week.
   per_tournament_cap_dollars: 100.0
+
+marketmaking:
+  # Prediction-market market-making pod (WS-9). Simulator-only scaffold.
+  # See docs/prediction-market-mm-spec.md. Stays disabled until the MM-2
+  # phase gate passes. Loaded by src/marketmaking/config.py.
+  enabled: false
+  # Posterior trust in DataGolf per market type (effective sample size).
+  ess_by_market_type:
+    make_cut: 400
+    top_20: 300
+    top_10: 250
+    top_5: 200
+    outright_win: 150
+  # Width of the credible interval behind quoted spreads (0.5/0.8/0.9/0.95).
+  credible_interval: 0.80
+  # Never quote tighter than this half-spread (dollars per contract).
+  min_half_spread: 0.02
+  # Half-spread must cover at least this multiple of posterior half-width.
+  uncertainty_spread_mult: 1.0
+  # No-quote default: stand down when posterior half-width exceeds this.
+  max_quotable_half_width: 0.06
+  # Mid shift per unit of inventory utilization, in posterior half-widths.
+  inventory_skew_intensity: 1.0
+  # Contracts per side at zero inventory.
+  base_quote_size: 10
+  # Hard vetoes (risk engine; cannot be overridden by quoting).
+  max_position_per_market: 50
+  max_notional_per_tournament: 200.0
+  daily_loss_kill_switch: 100.0
+  # Venue fee per contract; set from the venue schedule at MM-1.
+  fee_per_contract: 0.0
