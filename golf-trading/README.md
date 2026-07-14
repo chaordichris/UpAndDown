@@ -1,9 +1,21 @@
 # UpAndDown
 
-A systematic golf betting framework for PGA Tour pre-tournament markets.
+A systematic golf edge-discovery and strategy-validation framework for PGA Tour
+pre-tournament markets.
 
-**Status:** Phase 2 baseline complete; Phase 3 paper trading underway  
+**Status:** Phase 2 baseline complete; Phase 3 edge UI/backtest/paper validation underway  
 **Philosophy:** Survival first. DataGolf as pricing anchor. Matchups as core edge engine.
+
+## Product focus
+
+UpAndDown should excel at three jobs:
+
+1. Calculate daily DataGolf-anchored edges and make them easy to inspect in a UI.
+2. Calculate and visualize backtest results for the current strategy.
+3. Track a bounded paper-bet sample long enough to justify or reject the strategy.
+
+It is not intended to replace dedicated bet-tracking apps. Long-term real bet
+history can be imported later for analysis and visualization.
 
 ## Quick start
 
@@ -58,7 +70,7 @@ golf-trading/
 | 0 | ✅ Complete | Foundation: repo, config, storage, tests |
 | 1 | ✅ Complete | Ingestion + normalization |
 | 2 | ✅ Complete | Pricing + baseline risk engine |
-| 3 | In progress | Paper trading |
+| 3 | In progress | Daily edge UI, backtest visualization, and paper validation |
 | 4 | ⏳ | Shadow live |
 | 5 | ⏳ | Capital deployment |
 | 6 | ⏳ | Iteration + expansion |
@@ -70,6 +82,8 @@ golf-trading/
 - [agent.md](agent.md) — Shared project charter
 - [AGENTS.md](AGENTS.md) — Codex-local repo instructions
 - [Agent execution plan](docs/agent-execution-plan.md) — Current workstream backlog and handoff rules
+- [Daily betting runbook](docs/daily-betting-runbook.html) — Basic operator checklist for running, placing, and recording bets
+- [Forecast-backed market expansion spec](docs/forecast-backed-market-expansion-spec.md) — Top-N/outright market plan and expansion path
 - [Backtest artifact runbook](docs/backtest-artifact-runbook.md) — Manual WS-7 replay, review, and phase-gate artifact chain
 - [ADRs](docs/adr/) — Architecture decisions
 - [Shared skills](../skills/README.md) — Tool-agnostic skill source
