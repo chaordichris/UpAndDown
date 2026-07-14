@@ -18,11 +18,16 @@ def _candidate(
     edge_sd: float | None = None,
     p_value: float | None = None,
     passes_fdr: bool = True,
-) -> tuple[BetCandidate, Player, Player]:
+    with_opponent: bool = True,
+) -> tuple[BetCandidate, Player, Player | None]:
     tournament = Tournament(name="The Players Championship", tour="pga")
     player = Player(datagolf_player_id=datagolf_id, name_canonical=datagolf_id.title())
-    opponent = Player(datagolf_player_id=f"{datagolf_id}-opp", name_canonical=f"{datagolf_id.title()} Opp")
-    db_session.add_all([tournament, player, opponent])
+    opponent = (
+        Player(datagolf_player_id=f"{datagolf_id}-opp", name_canonical=f"{datagolf_id.title()} Opp")
+        if with_opponent
+        else None
+    )
+    db_session.add_all([row for row in [tournament, player, opponent] if row is not None])
     db_session.flush()
 
     candidate = BetCandidate(
@@ -30,7 +35,7 @@ def _candidate(
         market_type=market_type,
         side=datagolf_id,
         player_id_1=player.player_id,
-        player_id_2=opponent.player_id,
+        player_id_2=opponent.player_id if opponent is not None else None,
         book="dk",
         fair_prob=0.56,
         book_prob=0.56 - edge_pct,
@@ -158,6 +163,39 @@ def test_build_ticket_from_convex_candidate_uses_fixed_unit(db_session) -> None:
     assert ticket.sleeve == "convex"
     assert ticket.sizing_method == "fixed_unit"
     assert ticket.recommended_stake == 12.5
+
+
+def test_build_ticket_from_outright_candidate_without_opponent_uses_fixed_unit(db_session) -> None:
+    candidate, player, opponent = _candidate(
+        db_session,
+        market_type="outright_win",
+        edge_pct=0.09,
+        with_opponent=False,
+    )
+
+    ticket = _build_ticket(candidate, player, opponent, book_odds=2500)
+
+    assert ticket.approved
+    assert ticket.sleeve == "convex"
+    assert ticket.opponent_id is None
+    assert ticket.sizing_method == "fixed_unit"
+    assert ticket.recommended_stake == 12.5
+
+
+def test_build_ticket_from_top20_candidate_without_opponent(db_session) -> None:
+    candidate, player, opponent = _candidate(
+        db_session,
+        market_type="top_20",
+        edge_pct=0.05,
+        with_opponent=False,
+    )
+
+    ticket = _build_ticket(candidate, player, opponent)
+
+    assert ticket.approved
+    assert ticket.sleeve == "core"
+    assert ticket.opponent_id is None
+    assert ticket.recommended_stake > 0
 
 
 def test_ticket_unticketed_candidates_skips_existing_ticket(db_session) -> None:

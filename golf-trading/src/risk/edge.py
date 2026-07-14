@@ -18,10 +18,9 @@ Workflow:
   6. Return an EdgeResult.
 
 For two-way matchups (2-ball), vig removal requires both sides' implied probs.
-For outrights/top-N, the book's single-player probability is used directly
-against a vig-removed field — but since DG gives us our fair price already
-in no-vig terms and the book's per-player probability is a standalone market,
-we apply vig removal per-matchup (two-side) and per-outright-market (multi-side).
+For one-sided finishing-position rows, use ``compute_one_sided_edge`` to compare
+DataGolf's fair probability against the raw book implied probability. That is
+conservative until a paired no price or market-specific de-vig path exists.
 """
 
 from __future__ import annotations
@@ -175,6 +174,39 @@ def compute_two_way_edges(
         book_american_odds=book_odds_p2,
     )
     return edge_p1, edge_p2
+
+
+def compute_one_sided_edge(
+    fair: FairPriceResult,
+    book_american_odds: int,
+    book_id: str,
+    min_edge_core: float,
+    min_edge_convex: float,
+) -> EdgeResult:
+    """Compute edge for a one-sided yes market without vig removal.
+
+    Top-N betting-tools rows expose the "yes" side but not the paired "no"
+    side. Until we have yes/no pairs or a top-N-specific de-vig method, use the
+    raw book implied probability as a conservative stand-in for no-vig
+    probability.
+    """
+    sleeve = "convex" if fair.market_type in _CONVEX_MARKETS else "core"
+    threshold = min_edge_convex if sleeve == "convex" else min_edge_core
+    book_prob = decimal_to_implied(american_to_decimal(book_american_odds))
+    edge = fair.fair_prob - book_prob
+
+    return EdgeResult(
+        datagolf_id=fair.datagolf_id,
+        opponent_id=fair.opponent_id,
+        market_type=fair.market_type,
+        book_id=book_id,
+        fair_prob=fair.fair_prob,
+        book_no_vig_prob=book_prob,
+        edge=edge,
+        sleeve=sleeve,
+        passes_threshold=edge >= threshold,
+        book_american_odds=book_american_odds,
+    )
 
 
 def apply_fdr_control(

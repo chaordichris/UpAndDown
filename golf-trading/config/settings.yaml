@@ -27,7 +27,7 @@ sizing:
   # Fixed unit for convex bets as fraction of convex sleeve
   convex_unit_fraction: 0.005
   # Minimum bet size in dollars
-  min_bet_dollars: 5.0
+  min_bet_dollars: 1.0
   # Hard ceiling: max single bet as fraction of total capital
   max_bet_fraction: 0.02
 
@@ -78,7 +78,7 @@ shadow_live:
   # All placement is still manual; no automation is added.
   enabled: false
   # Total real bankroll allocated to shadow-live learning.
-  starting_bankroll_dollars: 500.0
+  starting_bankroll_dollars: 1000.0
   # Hard cap per individual shadow-live bet (enforced before write).
   per_bet_cap_dollars: 25.0
   # Hard cap on cumulative shadow-live stakes in one tournament week.

@@ -16,7 +16,13 @@ from datetime import UTC, datetime
 import pytest
 
 from src.pricing.fair_price import METHOD_HARVILLE, FairPriceResult
-from src.risk.edge import EdgeResult, apply_fdr_control, compute_edge, compute_two_way_edges
+from src.risk.edge import (
+    EdgeResult,
+    apply_fdr_control,
+    compute_edge,
+    compute_one_sided_edge,
+    compute_two_way_edges,
+)
 
 NOW = datetime(2024, 3, 11, 14, 0, 0, tzinfo=UTC)
 TOL = 1e-5
@@ -137,6 +143,60 @@ def test_edge_book_american_odds_preserved() -> None:
     )
     assert result.book_american_odds == -145
     assert result.book_id == "fanduel"
+
+
+def test_one_sided_top20_edge_uses_raw_book_probability() -> None:
+    fair = _fair("scheffler", 0.35, market_type="top_20")
+
+    result = compute_one_sided_edge(
+        fair=fair,
+        book_american_odds=300,
+        book_id="draftkings",
+        min_edge_core=0.03,
+        min_edge_convex=0.08,
+    )
+
+    assert result.market_type == "top_20"
+    assert result.sleeve == "core"
+    assert result.book_no_vig_prob == pytest.approx(0.25)
+    assert result.edge == pytest.approx(0.10)
+    assert result.passes_threshold is True
+
+
+def test_one_sided_make_cut_edge_uses_raw_book_probability_and_core_threshold() -> None:
+    fair = _fair("scheffler", 0.75, market_type="make_cut")
+
+    result = compute_one_sided_edge(
+        fair=fair,
+        book_american_odds=-150,
+        book_id="draftkings",
+        min_edge_core=0.03,
+        min_edge_convex=0.08,
+    )
+
+    assert result.market_type == "make_cut"
+    assert result.sleeve == "core"
+    assert result.book_no_vig_prob == pytest.approx(0.60)
+    assert result.edge == pytest.approx(0.15)
+    assert result.passes_threshold is True
+
+
+def test_one_sided_outright_edge_uses_raw_book_probability_and_convex_threshold() -> None:
+    fair = _fair("scheffler", 0.14, market_type="outright_win")
+
+    result = compute_one_sided_edge(
+        fair=fair,
+        book_american_odds=1900,
+        book_id="draftkings",
+        min_edge_core=0.03,
+        min_edge_convex=0.08,
+    )
+
+    assert result.market_type == "outright_win"
+    assert result.sleeve == "convex"
+    assert result.book_no_vig_prob == pytest.approx(0.05)
+    assert result.edge == pytest.approx(0.09)
+    assert result.passes_threshold is True
 
 
 def test_edge_uncertainty_fields_default_to_legacy_behavior() -> None:
