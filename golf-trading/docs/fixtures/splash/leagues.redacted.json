@@ -1,0 +1,48 @@
+{
+  "fixture_version": 1,
+  "captured_at": "2026-07-01T15:57:30Z",
+  "method": "GET",
+  "url": "https://api.splashsports.com/games-service/api/v1/leagues",
+  "request_headers": {
+    "Accept": "application/json",
+    "Content-Type": "application/json",
+    "X-App-Platform": "web",
+    "X-App-Version": "1.251.0"
+  },
+  "request_body": null,
+  "response_status": "HTTP/2 200",
+  "response_headers": {
+    "content-type": "application/json; charset=utf-8",
+    "content-length": "1851",
+    "date": "Wed, 01 Jul 2026 15:46:54 GMT",
+    "etag": "W/\"73b-rPQD+A4IPHwtJ+TY0IgbeZlFVvI\"",
+    "vary": "Origin"
+  },
+  "response_body": [
+    {
+      "id": "<pga_league_uuid>",
+      "alias": "pga",
+      "name": "PGA",
+      "sport": "golf",
+      "isActive": true,
+      "icon": "<redacted_url>"
+    },
+    {
+      "id": "<id_uuid_d46f8686>",
+      "alias": "mlb",
+      "name": "MLB",
+      "sport": "baseball",
+      "isActive": true,
+      "icon": "<redacted_url>"
+    },
+    {
+      "id": "<id_uuid_839e10dc>",
+      "alias": "wc",
+      "name": "World Cup",
+      "sport": "soccer",
+      "isActive": true,
+      "icon": "<redacted_url>"
+    }
+  ],
+  "notes": "Trimmed to active/relevant leagues; auth not supplied."
+}

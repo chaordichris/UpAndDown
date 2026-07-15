@@ -1,0 +1,32 @@
+[
+  {
+    "player_id": "dg_ben_griffin",
+    "player_name": "Ben Griffin",
+    "datagolf_rank": 18
+  },
+  {
+    "player_id": "dg_chris_gotterup",
+    "player_name": "Chris Gotterup",
+    "datagolf_rank": 19
+  },
+  {
+    "player_id": "dg_akshay_bhatia",
+    "player_name": "Akshay Bhatia",
+    "datagolf_rank": 20
+  },
+  {
+    "player_id": "dg_keith_mitchell",
+    "player_name": "Keith Mitchell",
+    "datagolf_rank": 21
+  },
+  {
+    "player_id": "dg_jt_poston",
+    "player_name": "J.T. Poston",
+    "datagolf_rank": 22
+  },
+  {
+    "player_id": "dg_rank_mismatch",
+    "player_name": "Rank Mismatch",
+    "datagolf_rank": 44
+  }
+]

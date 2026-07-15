@@ -1,0 +1,148 @@
+{
+  "1": {
+    "response_body": {
+      "data": [
+        {
+          "id": "<tier1_row_ben_griffin>",
+          "playerId": "<splash_player_ben_griffin>",
+          "slateId": "<slate_uuid>",
+          "attributes": {
+            "country": "UNITED STATES",
+            "datagolf_rank": 18,
+            "world_rank": 18,
+            "scoring_avg": 70.415
+          },
+          "name": "Ben Griffin",
+          "isPlayerSelectable": true
+        },
+        {
+          "id": "<tier1_row_chris_gotterup>",
+          "playerId": "<splash_player_chris_gotterup>",
+          "slateId": "<slate_uuid>",
+          "attributes": {
+            "country": "UNITED STATES",
+            "datagolf_rank": 19,
+            "world_rank": 13,
+            "scoring_avg": 70.11
+          },
+          "name": "Chris Gotterup",
+          "isPlayerSelectable": true
+        }
+      ],
+      "total": 2,
+      "limit": 50,
+      "offset": 0
+    }
+  },
+  "2": {
+    "response_body": {
+      "data": [
+        {
+          "id": "<tier2_row_akshay_bhatia>",
+          "playerId": "<splash_player_akshay_bhatia>",
+          "slateId": "<slate_uuid>",
+          "attributes": {
+            "country": "UNITED STATES",
+            "datagolf_rank": 20,
+            "world_rank": 36,
+            "scoring_avg": 70.65
+          },
+          "name": "Akshay Bhatia",
+          "isPlayerSelectable": true
+        }
+      ],
+      "total": 1,
+      "limit": 50,
+      "offset": 0
+    }
+  },
+  "3": {
+    "response_body": {
+      "data": [
+        {
+          "id": "<tier3_row_keith_mitchell>",
+          "playerId": "<splash_player_keith_mitchell>",
+          "slateId": "<slate_uuid>",
+          "attributes": {
+            "country": "UNITED STATES",
+            "datagolf_rank": 21,
+            "world_rank": 46,
+            "scoring_avg": 70.83
+          },
+          "name": "Keith Mitchell",
+          "isPlayerSelectable": true
+        }
+      ],
+      "total": 1,
+      "limit": 50,
+      "offset": 0
+    }
+  },
+  "4": {
+    "response_body": {
+      "data": [
+        {
+          "id": "<tier4_row_jt_poston>",
+          "playerId": "<splash_player_jt_poston>",
+          "slateId": "<slate_uuid>",
+          "attributes": {
+            "country": "UNITED STATES",
+            "datagolf_rank": 22,
+            "world_rank": 51,
+            "scoring_avg": 70.91
+          },
+          "name": "J.T. Poston",
+          "isPlayerSelectable": true
+        }
+      ],
+      "total": 1,
+      "limit": 50,
+      "offset": 0
+    }
+  },
+  "5": {
+    "response_body": {
+      "data": [
+        {
+          "id": "<tier5_row_rank_mismatch>",
+          "playerId": "<splash_player_rank_mismatch>",
+          "slateId": "<slate_uuid>",
+          "attributes": {
+            "country": "UNITED STATES",
+            "datagolf_rank": 45,
+            "world_rank": 90,
+            "scoring_avg": 71.75
+          },
+          "name": "Rank Mismatch",
+          "isPlayerSelectable": true
+        }
+      ],
+      "total": 1,
+      "limit": 50,
+      "offset": 0
+    }
+  },
+  "6": {
+    "response_body": {
+      "data": [
+        {
+          "id": "<tier6_row_unmapped>",
+          "playerId": "<splash_player_unmapped>",
+          "slateId": "<slate_uuid>",
+          "attributes": {
+            "country": "UNITED STATES",
+            "datagolf_rank": 63,
+            "world_rank": 120,
+            "scoring_avg": 72.2
+          },
+          "name": "Unmapped Player",
+          "isPlayerSelectable": true
+        }
+      ],
+      "total": 1,
+      "limit": 50,
+      "offset": 0
+    }
+  }
+}
+

@@ -1,0 +1,22 @@
+[
+  {
+    "player_id": "dg_ben_griffin",
+    "player_name": "Ben Griffin",
+    "datagolf_rank": 18,
+    "make_cut_probability": 0.82,
+    "made_cut_score_mean": -8.2,
+    "made_cut_score_sd": 4.1,
+    "cut_rounds_score_mean": 1.4,
+    "cut_rounds_score_sd": 3.2
+  },
+  {
+    "player_id": "dg_chris_gotterup",
+    "player_name": "Chris Gotterup",
+    "datagolf_rank": 19,
+    "make_cut_probability": 0.78,
+    "made_cut_score_mean": -7.6,
+    "made_cut_score_sd": 4.4,
+    "cut_rounds_score_mean": 1.9,
+    "cut_rounds_score_sd": 3.4
+  }
+]

@@ -1,0 +1,73 @@
+{
+  "fixture_version": 1,
+  "captured_at": "2026-07-01T15:57:30Z",
+  "method": "GET",
+  "url": "https://api.splashsports.com/contests-service/api/contests/<public_contest_uuid>/entries?limit=3&offset=0",
+  "request_headers": {
+    "Accept": "application/json",
+    "Content-Type": "application/json",
+    "X-App-Platform": "web",
+    "X-App-Version": "1.251.0"
+  },
+  "request_body": null,
+  "response_status": "HTTP/2 200",
+  "response_headers": {
+    "content-type": "application/json; charset=utf-8",
+    "content-length": "1203",
+    "date": "Wed, 01 Jul 2026 15:48:07 GMT",
+    "etag": "W/\"4b3-3edgRmEhRX1lRy2Sdjo0lX6jNpE\"",
+    "vary": "Origin"
+  },
+  "response_body": {
+    "data": [
+      {
+        "id": "<id_uuid_3053f19b>",
+        "createdAt": "2026-07-01T15:46:35.815Z",
+        "status": "PAID",
+        "livesRemaining": 1,
+        "name": "<redacted_entry_name>",
+        "entryOrder": 2,
+        "user": {
+          "id": "<user_uuid_b191b0d9>",
+          "username": "<redacted_username>",
+          "experienceLevel": "experienced",
+          "avatarUrl": "<redacted_url>",
+          "handle": "<redacted_handle>"
+        }
+      },
+      {
+        "id": "<id_uuid_79c1ca51>",
+        "createdAt": "2026-07-01T15:46:15.114Z",
+        "status": "PAID",
+        "livesRemaining": 1,
+        "name": "<redacted_entry_name>",
+        "entryOrder": 1,
+        "user": {
+          "id": "<user_uuid_b191b0d9>",
+          "username": "<redacted_username>",
+          "experienceLevel": "experienced",
+          "avatarUrl": "<redacted_url>",
+          "handle": "<redacted_handle>"
+        }
+      },
+      {
+        "id": "<id_uuid_2365db43>",
+        "createdAt": "2026-07-01T15:42:43.579Z",
+        "status": "PAID",
+        "livesRemaining": 1,
+        "name": "<redacted_entry_name>",
+        "entryOrder": 1,
+        "user": {
+          "id": "<user_uuid_c51c4eef>",
+          "username": "<redacted_username>",
+          "experienceLevel": "beginner",
+          "handle": "<redacted_handle>"
+        }
+      }
+    ],
+    "total": 625,
+    "limit": 3,
+    "offset": 0
+  },
+  "notes": "Entrant usernames, entry names, user ids, and avatars redacted even though endpoint is public."
+}

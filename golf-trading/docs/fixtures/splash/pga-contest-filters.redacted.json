@@ -1,0 +1,125 @@
+{
+  "fixture_version": 1,
+  "captured_at": "2026-07-01T15:57:30Z",
+  "method": "GET",
+  "url": "https://api.splashsports.com/contests-service/api/contests/filters?leagueId=<pga_league_uuid>",
+  "request_headers": {
+    "Accept": "application/json",
+    "Content-Type": "application/json",
+    "X-App-Platform": "web",
+    "X-App-Version": "1.251.0"
+  },
+  "request_body": null,
+  "response_status": "HTTP/2 200",
+  "response_headers": {
+    "content-type": "application/json; charset=utf-8",
+    "content-length": "1523",
+    "date": "Wed, 01 Jul 2026 15:48:08 GMT",
+    "etag": "W/\"5f3-3hUpEZwwbCVuSdT6akXdAI2ajRc\"",
+    "vary": "Origin"
+  },
+  "response_body": {
+    "sort": [
+      {
+        "title": "Recommended",
+        "sort": "default",
+        "dir": "desc"
+      },
+      {
+        "title": "Starting soonest",
+        "sort": "startDate",
+        "dir": "desc"
+      },
+      {
+        "title": "Highest entry fee",
+        "sort": "entryFee",
+        "dir": "desc"
+      },
+      {
+        "title": "Lowest entry fee",
+        "sort": "entryFee",
+        "dir": "asc"
+      },
+      {
+        "title": "Highest entries",
+        "sort": "entriesRemaining",
+        "dir": "desc"
+      },
+      {
+        "title": "Lowest entries",
+        "sort": "entriesRemaining",
+        "dir": "asc"
+      },
+      {
+        "title": "Highest total prizes",
+        "sort": "totalPrizes",
+        "dir": "desc"
+      },
+      {
+        "title": "Lowest total prizes",
+        "sort": "totalPrizes",
+        "dir": "asc"
+      }
+    ],
+    "filters": [
+      {
+        "title": "Payout Formats",
+        "type": "multiselect",
+        "requestKey": "payoutFormats",
+        "options": [
+          {
+            "title": "Top X",
+            "value": "TOP_X",
+            "description": "The top X people on the leaderboard receive a payout."
+          },
+          {
+            "title": "Multiplier",
+            "value": "MULTIPLIER",
+            "description": "Entries get a multiple of the entry fee. The amount of winners depends on how many entries there are."
+          }
+        ]
+      },
+      {
+        "title": "Entry Types",
+        "type": "multiselect",
+        "requestKey": "entryTypes",
+        "options": [
+          {
+            "title": "Multientry",
+            "value": "multientry",
+            "description": "You can submit one or more entries to the contest."
+          },
+          {
+            "title": "Single entry",
+            "value": "singleentry",
+            "description": "You can submit only one entry to the contest."
+          }
+        ]
+      },
+      {
+        "title": "Entry Fee",
+        "type": "currency-range",
+        "requestKey": "entryFee",
+        "options": {
+          "min": {
+            "title": "Minimum",
+            "requestKey": "min",
+            "value": 0,
+            "description": "Minimum entry fee (inclusive)"
+          },
+          "max": {
+            "title": "Maximum",
+            "requestKey": "max",
+            "value": 10000000,
+            "description": "Maximum entry fee (inclusive)"
+          }
+        }
+      }
+    ],
+    "contestTypes": [
+      "player_one_and_done",
+      "player_tier"
+    ]
+  },
+  "notes": "Correct base service is contests-service/api; same path under games-service/api returned 404 during discovery."
+}

@@ -33,6 +33,7 @@ def test_init_db_creates_tables(test_database_url):
         "bet_outcomes",
         "clv_snapshots",
         "bankroll_history",
+        "splash_raw_snapshots",
     }
     assert expected_tables.issubset(tables), (
         f"Missing tables: {expected_tables - tables}"

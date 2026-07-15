@@ -19,6 +19,7 @@ Table overview:
   clv_snapshots     — closing line value calculations per placed bet
   bet_attribution   — model/execution/sizing/variance P&L decomposition
   bankroll_history  — daily bankroll state snapshot
+  splash_raw_snapshots — immutable Splash public API captures
 """
 
 from __future__ import annotations
@@ -121,6 +122,24 @@ class RawSnapshot(Base):
     inputs_hash: Mapped[str] = mapped_column(String(64), nullable=False, default="")
 
     tournament: Mapped[Optional["Tournament"]] = relationship(back_populates="raw_snapshots")
+
+
+class SplashRawSnapshot(Base):
+    """Complete, unmodified Splash public API response stored append-only."""
+    __tablename__ = "splash_raw_snapshots"
+
+    snapshot_id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    endpoint: Mapped[str] = mapped_column(String(200), nullable=False)
+    method: Mapped[str] = mapped_column(String(20), nullable=False)
+    url: Mapped[Optional[str]] = mapped_column(Text)
+    request_body: Mapped[Optional[str]] = mapped_column(Text)
+    request_headers: Mapped[Optional[str]] = mapped_column(Text)
+    response_body: Mapped[str] = mapped_column(Text, nullable=False)
+    response_headers: Mapped[Optional[str]] = mapped_column(Text)
+    response_status: Mapped[int] = mapped_column(Integer, nullable=False)
+    captured_at: Mapped[datetime] = mapped_column(DateTime, nullable=False)
+    inputs_hash: Mapped[str] = mapped_column(String(64), nullable=False)
+    created_at: Mapped[datetime] = mapped_column(DateTime, nullable=False, default=datetime.utcnow)
 
 
 # ---------------------------------------------------------------------------

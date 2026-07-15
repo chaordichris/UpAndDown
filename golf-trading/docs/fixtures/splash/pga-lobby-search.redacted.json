@@ -1,0 +1,226 @@
+{
+  "fixture_version": 1,
+  "captured_at": "2026-07-01T15:57:30Z",
+  "method": "POST",
+  "url": "https://api.splashsports.com/contests-service/api/contests/search",
+  "request_headers": {
+    "Accept": "application/json",
+    "Content-Type": "application/json",
+    "X-App-Platform": "web",
+    "X-App-Version": "1.251.0"
+  },
+  "request_body": {
+    "filter": {
+      "leagueId": "<pga_league_uuid>"
+    },
+    "includeFull": false,
+    "hideUnlisted": true,
+    "limit": 5,
+    "offset": 0
+  },
+  "response_status": "HTTP/2 200",
+  "response_headers": {
+    "content-type": "application/json; charset=utf-8",
+    "content-length": "10913",
+    "date": "Wed, 01 Jul 2026 15:47:19 GMT",
+    "etag": "W/\"2aa1-pksT7V1BQzUBYcmr/JxmvudTaa0\"",
+    "vary": "Origin"
+  },
+  "response_body": {
+    "data": [
+      {
+        "id": "<public_contest_uuid>",
+        "contest_type": "player_tier",
+        "contest_type_alt_text": "Tiers",
+        "contest_template_id": "<contest-template-id_uuid_7d59deeb>",
+        "schedule_id": "<schedule-id_uuid_85dcfdb4>",
+        "name": "RunGood $25K John Deere Classic - Total Strokes",
+        "source": "SPLASH",
+        "commissioner": {
+          "username": "<redacted_username>",
+          "id": "<user_uuid_93167775>",
+          "handle": "<redacted_handle>",
+          "avatarUrl": "<redacted_url>"
+        },
+        "entries": {
+          "filled": 625,
+          "max": 1112,
+          "max_per_user": 33,
+          "is_unlimited_entries": false
+        },
+        "entry_fee": 2500,
+        "entry_fee_in_dollars": 25,
+        "tags": [
+          "golf",
+          "multientry",
+          "topx"
+        ],
+        "prize_pool": 2502000,
+        "prize_pool_in_dollars": 25020,
+        "start_date": "2026-07-02T11:40:00.000Z",
+        "end_date": "2026-07-02T12:00:00.000Z",
+        "created_at": "2026-06-24T14:24:54.183Z",
+        "created_by_admin": false,
+        "resizing_mode": "GUARANTEED",
+        "status": "SCHEDULED",
+        "settings": {
+          "scoreType": "golf_score",
+          "entryLives": 1,
+          "slateLabel": "Tournament",
+          "dropWorstCount": 1,
+          "expectedPicksCount": 6
+        },
+        "league": {
+          "id": "<pga_league_uuid>",
+          "alias": "pga",
+          "name": "PGA",
+          "sport": "golf",
+          "settings": {
+            "players": {
+              "relevantAttributes": [
+                {
+                  "key": "datagolf_rank",
+                  "label": "Datagolf rank",
+                  "sortOrder": "ASC"
+                },
+                {
+                  "key": "world_rank",
+                  "label": "World rank",
+                  "sortOrder": "ASC"
+                }
+              ]
+            },
+            "playerPool": {
+              "removeAfterGeneration": false,
+              "gameStartAttributes": {
+                "competing_status": "WD",
+                "penalized_rounds": 4
+              },
+              "markRemovedPlayersAsDnp": true,
+              "statusBackup": "WD",
+              "statusLocation": "competing_status",
+              "statusNotificationMessage": [
+                "player_name",
+                "\" has withdrawn from the upcoming PGA tournament. Adjust your picks before lock!\""
+              ]
+            }
+          },
+          "isActive": true,
+          "visible": true,
+          "cloudinaryVersion": "1776191445",
+          "sortOrder": 20,
+          "icon": "<redacted_url>"
+        },
+        "banner_url": "<redacted_url>",
+        "is_allowed_in_location": true,
+        "is_after_first_late_swap_deadline": false,
+        "paid_out_at": null,
+        "beginnersOnly": false,
+        "following": 0,
+        "followed": 0,
+        "is_entry_deadline_pending": false,
+        "alerts": {
+          "values": []
+        }
+      },
+      {
+        "id": "<id_uuid_f1065306>",
+        "contest_type": "player_tier",
+        "contest_type_alt_text": "Tiers",
+        "contest_template_id": "<contest-template-id_uuid_9f9adf59>",
+        "schedule_id": "<schedule-id_uuid_85dcfdb4>",
+        "name": "Splash $5K John Deere Classic - Dollar Winnings",
+        "source": "SPLASH",
+        "commissioner": {
+          "username": "<redacted_username>",
+          "id": "<user_uuid_57f28754>",
+          "handle": "<redacted_handle>",
+          "avatarUrl": "<redacted_url>"
+        },
+        "entries": {
+          "filled": 33,
+          "max": 56,
+          "max_per_user": 3,
+          "is_unlimited_entries": false
+        },
+        "entry_fee": 10000,
+        "entry_fee_in_dollars": 100,
+        "tags": [
+          "golf",
+          "multientry",
+          "topx"
+        ],
+        "prize_pool": 504000,
+        "prize_pool_in_dollars": 5040,
+        "start_date": "2026-07-02T11:40:00.000Z",
+        "end_date": "2026-07-02T12:00:00.000Z",
+        "created_at": "2026-06-24T14:31:10.461Z",
+        "created_by_admin": true,
+        "resizing_mode": "GUARANTEED",
+        "status": "SCHEDULED",
+        "settings": {
+          "scoreType": "dollars",
+          "entryLives": 1,
+          "slateLabel": "Tournament",
+          "expectedPicksCount": 6
+        },
+        "league": {
+          "id": "<pga_league_uuid>",
+          "alias": "pga",
+          "name": "PGA",
+          "sport": "golf",
+          "settings": {
+            "players": {
+              "relevantAttributes": [
+                {
+                  "key": "datagolf_rank",
+                  "label": "Datagolf rank",
+                  "sortOrder": "ASC"
+                },
+                {
+                  "key": "world_rank",
+                  "label": "World rank",
+                  "sortOrder": "ASC"
+                }
+              ]
+            },
+            "playerPool": {
+              "removeAfterGeneration": false,
+              "gameStartAttributes": {
+                "competing_status": "WD",
+                "penalized_rounds": 4
+              },
+              "markRemovedPlayersAsDnp": true,
+              "statusBackup": "WD",
+              "statusLocation": "competing_status",
+              "statusNotificationMessage": [
+                "player_name",
+                "\" has withdrawn from the upcoming PGA tournament. Adjust your picks before lock!\""
+              ]
+            }
+          },
+          "isActive": true,
+          "visible": true,
+          "cloudinaryVersion": "1776191445",
+          "sortOrder": 20,
+          "icon": "<redacted_url>"
+        },
+        "banner_url": "<redacted_url>",
+        "is_allowed_in_location": true,
+        "is_after_first_late_swap_deadline": false,
+        "paid_out_at": null,
+        "beginnersOnly": false,
+        "following": 0,
+        "followed": 0,
+        "is_entry_deadline_pending": false,
+        "alerts": {
+          "values": []
+        }
+      }
+    ],
+    "total": 40,
+    "limit": 5,
+    "offset": 0
+  },
+  "notes": "Response data trimmed from 5 to 2 contests; total/limit/offset preserved."
+}
