@@ -34,6 +34,7 @@ import hashlib
 import json
 import os
 import sys
+import time
 from dataclasses import dataclass, replace
 from datetime import datetime, timezone
 from pathlib import Path
@@ -74,6 +75,7 @@ class SplashRunConfig:
     sensitivity_ownership_concentrations: tuple[float, ...] = (0.75, 1.0, 1.25)
     max_fixture_age_hours: float = 72.0
     min_depth_multiple: float = 2.0
+    series: str = "rungood"
 
     @property
     def bankroll_cents(self) -> int:
@@ -104,6 +106,7 @@ def config_from_settings(overrides: dict[str, Any] | None = None) -> SplashRunCo
         sensitivity_ownership_concentrations=tuple(splash.sensitivity_ownership_concentrations),
         max_fixture_age_hours=splash.max_fixture_age_hours,
         min_depth_multiple=splash.min_depth_multiple,
+        series=splash.series,
     )
     return replace(base, **overrides) if overrides else base
 
@@ -140,6 +143,12 @@ class Stage:
 
 def upstream_path(ctx: StageContext, stage: str, label: str) -> Path:
     return Path(ctx.upstream[stage][label])
+
+
+def _fixture_age_hours(path: Path) -> float:
+    """Mirrors scripts/splash_preflight.py's freshness check so the orchestrated
+    pipeline can't silently skip a hard-veto category the manual CLI enforces."""
+    return (time.time() - path.stat().st_mtime) / 3600.0
 
 
 # ---------------------------------------------------------------------------
@@ -234,11 +243,19 @@ def _stage_preflight(ctx: StageContext) -> StageResult:
         datagolf_score_anchor_from_row(row)
         for row in _load_json(upstream_path(ctx, "anchors", "score_anchors"))
     )
-    # Freshness is skipped: seeded/replayed fixtures carry archival mtimes.
+    fixture_ages_hours = {
+        label: _fixture_age_hours(upstream_path(ctx, stage, label))
+        for stage, label in (
+            ("capture", "contest"),
+            ("capture", "player_pools"),
+            ("capture", "datagolf_ranks"),
+            ("anchors", "score_anchors"),
+        )
+    }
     report = run_preflight(
         player_pool,
         anchors,
-        None,
+        fixture_ages_hours,
         max_fixture_age_hours=ctx.config.max_fixture_age_hours,
         min_depth_multiple=ctx.config.min_depth_multiple,
     )
@@ -259,7 +276,7 @@ def _stage_portfolios(ctx: StageContext) -> StageResult:
 
     artifact = generate_portfolios(
         root=PROJECT_ROOT,
-        series=get_series("rungood"),
+        series=get_series(ctx.config.series),
         contest_fixture=upstream_path(ctx, "capture", "contest"),
         player_pools_fixture=upstream_path(ctx, "capture", "player_pools"),
         datagolf_ranks_fixture=upstream_path(ctx, "capture", "datagolf_ranks"),
@@ -473,6 +490,18 @@ def _seed_stage(stage: Stage, output_paths: dict[str, Path]) -> dict[str, Any]:
         raise FileNotFoundError(
             f"--start-stage requires seeded outputs for '{stage.name}'; missing: {missing}"
         )
+    if stage.name == "preflight":
+        # Seeding "on disk exists" is not the same as "passed" — a
+        # --start-stage past a previously BLOCKED preflight report must not
+        # silently resume into portfolio generation.
+        report = _load_json(output_paths["preflight_report"])
+        if not report.get("passed", False):
+            raise ValueError(
+                "--start-stage seeds a preflight report that did not pass "
+                f"(blocking_failure_count={report.get('blocking_failure_count')}). "
+                "Re-run preflight and resolve the blocking failures before resuming "
+                "from a later stage."
+            )
     return {
         "name": stage.name,
         "status": "seeded",

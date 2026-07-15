@@ -14,6 +14,11 @@ from typing import Any
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(PROJECT_ROOT))
 
+from src.fantasy.splash.io_utils import (  # noqa: E402
+    fixture_path as _fixture_path,
+    load_json as _load_json,
+    write_json as _write_json,
+)
 from src.storage.hashing import stable_hash  # noqa: E402
 
 Runner = Callable[[list[str]], None]
@@ -352,11 +357,6 @@ def _float_label(value: float) -> str:
     return str(value).replace(".", "p").replace("-", "neg")
 
 
-def _fixture_path(root: Path, value: str) -> Path:
-    path = Path(value)
-    return path if path.is_absolute() else root / path
-
-
 def _path_for_command(path: Path) -> str:
     try:
         return str(path.relative_to(PROJECT_ROOT))
@@ -366,16 +366,6 @@ def _path_for_command(path: Path) -> str:
 
 def _run_command(command: list[str]) -> None:
     subprocess.run(command, cwd=PROJECT_ROOT, check=True)
-
-
-def _load_json(path: Path) -> Any:
-    with path.open() as file:
-        return json.load(file)
-
-
-def _write_json(path: Path, payload: Any) -> None:
-    path.parent.mkdir(parents=True, exist_ok=True)
-    path.write_text(json.dumps(payload, indent=2, sort_keys=True) + "\n")
 
 
 if __name__ == "__main__":

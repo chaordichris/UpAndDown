@@ -225,7 +225,13 @@ def _no_play_reasons(
         reasons.append("no_qualified_lineups")
     if portfolio.expected_profit_cents <= config.minimum_portfolio_ev_cents:
         reasons.append("negative_or_insufficient_edge")
-    if ev_to_sd_ratio is not None and ev_to_sd_ratio < config.minimum_ev_to_sd_ratio:
+    if ev_to_sd_ratio is None:
+        # A degenerate zero-variance portfolio with real entries is a red
+        # flag, not a pass — fail closed instead of silently skipping the
+        # volatility gate (an empty portfolio is separately caught above).
+        if portfolio.entries:
+            reasons.append("too_uncertain:no_variance_signal")
+    elif ev_to_sd_ratio < config.minimum_ev_to_sd_ratio:
         reasons.append("too_uncertain:ev_to_sd_below_threshold")
     if ror_estimate["paper_only_probability"] > config.max_ror_probability:
         reasons.append("too_uncertain:ror_above_threshold")

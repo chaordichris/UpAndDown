@@ -15,6 +15,11 @@ from dotenv import load_dotenv
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(PROJECT_ROOT))
 
+from src.fantasy.splash.io_utils import (  # noqa: E402
+    fixture_path as _fixture_path,
+    load_json as _load_json,
+    write_json as _write_json,
+)
 from src.fantasy.splash.parser import parse_player_pool  # noqa: E402
 from src.storage.hashing import stable_hash  # noqa: E402
 
@@ -188,21 +193,6 @@ def _datagolf_display_name(name: str) -> str:
 
 def _name_key(name: str) -> str:
     return " ".join(name.casefold().split())
-
-
-def _fixture_path(root: Path, value: str) -> Path:
-    path = Path(value)
-    return path if path.is_absolute() else root / path
-
-
-def _load_json(path: Path) -> Any:
-    with path.open() as file:
-        return json.load(file)
-
-
-def _write_json(path: Path, payload: Any) -> None:
-    path.parent.mkdir(parents=True, exist_ok=True)
-    path.write_text(json.dumps(payload, indent=2, sort_keys=True) + "\n")
 
 
 if __name__ == "__main__":

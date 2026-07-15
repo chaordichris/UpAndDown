@@ -98,6 +98,8 @@ def check_tier_anchor_coverage(
     anchored_ids = _anchored_splash_ids(player_pool, anchors)
     coverage: dict[str, dict[str, int]] = {}
     failing: list[str] = []
+    if not player_pool.tiers:
+        failing.append("no tiers found in player pool")
     for tier in player_pool.tiers:
         anchored = sum(1 for p in tier.players if p.splash_player_id in anchored_ids)
         coverage[str(tier.tier_id)] = {
@@ -164,6 +166,49 @@ def check_unresolved_mappings(player_pool: SplashContestPlayerPool) -> Integrity
         detail="; ".join(details) if details else "all mappings resolved",
         remediation=_REMEDIATION_MAPPINGS if unresolved else "",
         data={"unresolved_count": len(unresolved)},
+    )
+
+
+def check_tier_exclusion_coverage(player_pool: SplashContestPlayerPool) -> IntegrityCheck:
+    """Block when a tier lost so many players to missing-rank exclusion that
+    its reported anchor coverage is no longer a meaningful signal.
+
+    check_tier_anchor_coverage only counts players who survived mapping — a
+    tier can show full coverage from a handful of survivors while most of
+    its real pool was silently dropped for lacking a Splash-declared
+    DataGolf rank (mapping.py excludes them before check_unresolved_mappings
+    or check_missing_anchors ever see them; check_unranked_players flags
+    them, but only as a WARN). This targets that specific failure mode —
+    not general scarcity, which check_tier_pool_depth already warns on — as
+    a data-quality block: losing half a tier's pool to exclusion means the
+    remaining "coverage" has no real depth behind it.
+    """
+    missing_rank_ids = {
+        item.splash_player_id
+        for item in player_pool.review_items
+        if item.reason == "missing_splash_datagolf_rank"
+    }
+    failing: list[str] = []
+    for tier in player_pool.tiers:
+        pool_size = len(tier.players)
+        if pool_size == 0:
+            continue
+        excluded = sum(1 for p in tier.players if p.splash_player_id in missing_rank_ids)
+        if excluded * 2 >= pool_size:
+            failing.append(
+                f"tier {tier.tier_id}: {excluded} of {pool_size} players excluded "
+                "for missing a Splash-declared DataGolf rank"
+            )
+    return IntegrityCheck(
+        check_id="tier_exclusion_coverage",
+        severity=SEVERITY_BLOCK,
+        passed=not failing,
+        detail=(
+            "; ".join(failing)
+            if failing
+            else "no tier lost half its pool to missing-rank exclusion"
+        ),
+        remediation=_REMEDIATION_MAPPINGS if failing else "",
     )
 
 
@@ -278,6 +323,7 @@ def run_preflight(
         check_tier_anchor_coverage(player_pool, anchors),
         check_tier_pool_depth(player_pool, anchors, min_depth_multiple),
         check_unresolved_mappings(player_pool),
+        check_tier_exclusion_coverage(player_pool),
         check_missing_anchors(player_pool, anchors),
         check_unranked_players(player_pool),
         check_anchor_sanity(anchors),

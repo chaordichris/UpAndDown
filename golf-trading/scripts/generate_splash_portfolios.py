@@ -26,6 +26,10 @@ from src.fantasy.splash import (  # noqa: E402
     simulate_player_score_distributions,
     splash_scoring_config_from_rules,
 )
+from src.fantasy.splash.io_utils import (  # noqa: E402
+    fixture_path as _fixture_path,
+    load_json as _load_json,
+)
 from src.fantasy.splash.models import (  # noqa: E402
     SplashLineupPortfolio,
     SplashOpponentLineupAssumptions,
@@ -374,11 +378,6 @@ def _external_ownership_by_player_id(
     }
 
 
-def _fixture_path(root: Path, value: str) -> Path:
-    path = Path(value)
-    return path if path.is_absolute() else root / path
-
-
 def _eligible_mappings(player_pool, anchors) -> tuple:
     anchor_ids = {anchor.datagolf_player_id for anchor in anchors}
     return tuple(
@@ -515,10 +514,6 @@ def _report_record(report) -> dict[str, Any]:
         "assumption_log": report.assumption_log,
         "inputs_hash": report.inputs_hash,
     }
-
-
-def _load_json(path: Path) -> Any:
-    return json.loads(path.read_text())
 
 
 def _jsonable(value: Any) -> Any:

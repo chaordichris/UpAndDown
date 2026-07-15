@@ -33,9 +33,18 @@ def parse_contest_detail(payload: dict[str, Any]) -> SplashContest:
     tier_settings = body.get("tier_rules_settings") or {}
     entries = body.get("entries") or {}
 
+    number_of_tiers_raw = tier_settings.get("numberOfTiers")
+    if not number_of_tiers_raw or int(number_of_tiers_raw) <= 0:
+        raise ValueError(
+            "Splash contest payload is missing or has a non-positive "
+            f"tier_rules_settings.numberOfTiers (got {number_of_tiers_raw!r}) — "
+            "cannot determine contest tier structure. A response-shape drift "
+            "would otherwise silently produce a zero-tier contest here."
+        )
+
     roster_rule = SplashRosterRule(
         expected_picks_count=int(settings.get("expectedPicksCount") or 0),
-        number_of_tiers=int(tier_settings.get("numberOfTiers") or 0),
+        number_of_tiers=int(number_of_tiers_raw),
         number_per_tier=int(tier_settings.get("numberPerTier") or 0),
         drop_worst_count=int(settings.get("dropWorstCount") or 0),
         metric_name=tier_settings.get("metricName"),

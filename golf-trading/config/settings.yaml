@@ -117,4 +117,8 @@ splash:
   # Preflight integrity gate (SP-1) thresholds.
   max_fixture_age_hours: 72.0
   min_depth_multiple: 2.0
+  # Contest-series risk-parameter preset (src/fantasy/splash/series.py's
+  # SERIES_PRESETS). Only "rungood" exists today; add a preset there before
+  # pointing this at anything else.
+  series: rungood
 

@@ -175,18 +175,23 @@ class SplashReadOnlyClient:
             body = result.response_body
             if first_body is None:
                 first_body = dict(body)
+                # Pin total from the first page only. A later page silently
+                # re-reporting a missing/zero total must not truncate an
+                # in-progress fetch by making the loop-continuation check
+                # pass prematurely.
+                page_total = body.get("total")
+                total = int(page_total) if page_total else None
             page_rows = body.get("data") or []
             if not isinstance(page_rows, list):
                 raise TypeError("Splash player-pool response data must be a list")
             rows.extend(page_rows)
-            total = int(body.get("total") or len(rows))
             if not page_rows:
                 break
             offset += limit
 
         merged = dict(first_body or {})
         merged["data"] = rows
-        merged["total"] = total or len(rows)
+        merged["total"] = total if total is not None else len(rows)
         merged["limit"] = limit
         merged["offset"] = 0
         return merged

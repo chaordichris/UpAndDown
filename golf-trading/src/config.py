@@ -169,6 +169,7 @@ class SplashConfig:
         )
         self.max_fixture_age_hours: float = d.get("max_fixture_age_hours", 72.0)
         self.min_depth_multiple: float = d.get("min_depth_multiple", 2.0)
+        self.series: str = d.get("series", "rungood")
 
 
 class Settings:
