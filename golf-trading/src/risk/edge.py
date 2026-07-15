@@ -45,14 +45,50 @@ class EdgeResult:
     market_type: str
     book_id: str
     fair_prob: float         # from FairPriceResult
-    book_no_vig_prob: float  # after vig removal
+    book_no_vig_prob: float  # book's implied probability; see vig_removed
     edge: float              # fair_prob - book_no_vig_prob
     sleeve: str              # "core" | "convex"
     passes_threshold: bool   # True if edge ≥ min threshold for this sleeve
     book_american_odds: int  # raw book odds (for display / bet placement)
+    vig_removed: bool = True  # False when book_no_vig_prob is still vig-inclusive
     edge_sd: float | None = None  # uncertainty around edge estimate, once available
     p_value: float | None = None  # candidate-level edge p-value, once available
     passes_fdr: bool = True       # default preserves pre-FDR behavior
+
+
+def _sleeve_and_threshold(
+    market_type: str, min_edge_core: float, min_edge_convex: float
+) -> tuple[str, float]:
+    sleeve = "convex" if market_type in _CONVEX_MARKETS else "core"
+    threshold = min_edge_convex if sleeve == "convex" else min_edge_core
+    return sleeve, threshold
+
+
+def _build_edge_result(
+    fair: FairPriceResult,
+    *,
+    book_id: str,
+    book_no_vig_prob: float,
+    book_american_odds: int,
+    min_edge_core: float,
+    min_edge_convex: float,
+    vig_removed: bool,
+) -> EdgeResult:
+    sleeve, threshold = _sleeve_and_threshold(fair.market_type, min_edge_core, min_edge_convex)
+    edge = fair.fair_prob - book_no_vig_prob
+    return EdgeResult(
+        datagolf_id=fair.datagolf_id,
+        opponent_id=fair.opponent_id,
+        market_type=fair.market_type,
+        book_id=book_id,
+        fair_prob=fair.fair_prob,
+        book_no_vig_prob=book_no_vig_prob,
+        edge=edge,
+        sleeve=sleeve,
+        passes_threshold=edge >= threshold,
+        book_american_odds=book_american_odds,
+        vig_removed=vig_removed,
+    )
 
 
 def compute_edge(
@@ -83,9 +119,6 @@ def compute_edge(
     Raises:
         ValueError: If market_implied_probs is empty or contains non-positive values.
     """
-    sleeve = "convex" if fair.market_type in _CONVEX_MARKETS else "core"
-    threshold = min_edge_convex if sleeve == "convex" else min_edge_core
-
     # The book's raw implied prob for this side
     book_implied = decimal_to_implied(american_to_decimal(book_american_odds))
 
@@ -98,19 +131,14 @@ def compute_edge(
     vig_result = remove_vig(market_implied_probs, method=vig_method)
     book_no_vig_prob = vig_result.no_vig_probs[this_side_index]
 
-    edge = fair.fair_prob - book_no_vig_prob
-
-    return EdgeResult(
-        datagolf_id=fair.datagolf_id,
-        opponent_id=fair.opponent_id,
-        market_type=fair.market_type,
+    return _build_edge_result(
+        fair,
         book_id=book_id,
-        fair_prob=fair.fair_prob,
         book_no_vig_prob=book_no_vig_prob,
-        edge=edge,
-        sleeve=sleeve,
-        passes_threshold=edge >= threshold,
         book_american_odds=book_american_odds,
+        min_edge_core=min_edge_core,
+        min_edge_convex=min_edge_convex,
+        vig_removed=True,
     )
 
 
@@ -146,32 +174,23 @@ def compute_two_way_edges(
     vig_result = remove_vig(market_probs, method=vig_method)
     no_vig_p1, no_vig_p2 = vig_result.no_vig_probs
 
-    sleeve = "convex" if fair_p1.market_type in _CONVEX_MARKETS else "core"
-    threshold = min_edge_convex if sleeve == "convex" else min_edge_core
-
-    edge_p1 = EdgeResult(
-        datagolf_id=fair_p1.datagolf_id,
-        opponent_id=fair_p1.opponent_id,
-        market_type=fair_p1.market_type,
+    edge_p1 = _build_edge_result(
+        fair_p1,
         book_id=book_id,
-        fair_prob=fair_p1.fair_prob,
         book_no_vig_prob=no_vig_p1,
-        edge=fair_p1.fair_prob - no_vig_p1,
-        sleeve=sleeve,
-        passes_threshold=(fair_p1.fair_prob - no_vig_p1) >= threshold,
         book_american_odds=book_odds_p1,
+        min_edge_core=min_edge_core,
+        min_edge_convex=min_edge_convex,
+        vig_removed=True,
     )
-    edge_p2 = EdgeResult(
-        datagolf_id=fair_p2.datagolf_id,
-        opponent_id=fair_p2.opponent_id,
-        market_type=fair_p2.market_type,
+    edge_p2 = _build_edge_result(
+        fair_p2,
         book_id=book_id,
-        fair_prob=fair_p2.fair_prob,
         book_no_vig_prob=no_vig_p2,
-        edge=fair_p2.fair_prob - no_vig_p2,
-        sleeve=sleeve,
-        passes_threshold=(fair_p2.fair_prob - no_vig_p2) >= threshold,
         book_american_odds=book_odds_p2,
+        min_edge_core=min_edge_core,
+        min_edge_convex=min_edge_convex,
+        vig_removed=True,
     )
     return edge_p1, edge_p2
 
@@ -190,22 +209,15 @@ def compute_one_sided_edge(
     raw book implied probability as a conservative stand-in for no-vig
     probability.
     """
-    sleeve = "convex" if fair.market_type in _CONVEX_MARKETS else "core"
-    threshold = min_edge_convex if sleeve == "convex" else min_edge_core
     book_prob = decimal_to_implied(american_to_decimal(book_american_odds))
-    edge = fair.fair_prob - book_prob
-
-    return EdgeResult(
-        datagolf_id=fair.datagolf_id,
-        opponent_id=fair.opponent_id,
-        market_type=fair.market_type,
+    return _build_edge_result(
+        fair,
         book_id=book_id,
-        fair_prob=fair.fair_prob,
         book_no_vig_prob=book_prob,
-        edge=edge,
-        sleeve=sleeve,
-        passes_threshold=edge >= threshold,
         book_american_odds=book_american_odds,
+        min_edge_core=min_edge_core,
+        min_edge_convex=min_edge_convex,
+        vig_removed=False,
     )
 
 

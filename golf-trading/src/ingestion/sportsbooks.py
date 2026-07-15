@@ -257,6 +257,7 @@ def available_books_in_matchups(raw: dict[str, Any]) -> list[str]:
             books.update(k for k in entry["odds"] if k != "datagolf")
         else:
             books.update(k for k in entry if k not in _MATCHUP_META_KEYS)
+    _warn_on_unrecognized_books(books)
     return sorted(books)
 
 
@@ -271,7 +272,25 @@ def available_books_in_outrights(raw: dict[str, Any]) -> list[str]:
             k for k in entry
             if k not in _OUTRIGHT_META_KEYS and k != "datagolf"
         )
+    _warn_on_unrecognized_books(books)
     return sorted(books)
+
+
+def _warn_on_unrecognized_books(books: set[str]) -> None:
+    """Flag keys the blocklist treated as books but the allowlist doesn't recognize.
+
+    Doesn't change what's returned — this is a visibility signal for a response
+    shape drift (a new non-book metadata field) vs. a genuinely new book DataGolf
+    added (in which case DATAGOLF_BOOK_IDS needs updating).
+    """
+    unrecognized = books - set(DATAGOLF_BOOK_IDS)
+    if unrecognized:
+        logger.warning(
+            "Response contains keys not in DATAGOLF_BOOK_IDS, treated as books: %s. "
+            "Update DATAGOLF_BOOK_IDS if these are real books, or the meta-key sets "
+            "if they're new non-book fields.",
+            sorted(unrecognized),
+        )
 
 
 # ---------------------------------------------------------------------------
@@ -356,7 +375,7 @@ def _outright_entries(raw: dict[str, Any]) -> list[dict[str, Any]]:
     entries = raw.get("player_list")
     if entries is None:
         entries = raw.get("odds", [])
-    return entries
+    return entries if isinstance(entries, list) else []
 
 
 def _outright_datagolf_id(entry: dict[str, Any]) -> str:

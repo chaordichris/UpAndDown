@@ -131,10 +131,10 @@ def test_backtest_artifact_workflow_writes_review_bundle(tmp_path: Path) -> None
         "manifest_hash"
     ]
     assert make_cut_manifest["manifest_hash"] == (
-        "4caa7c77d656c43405899433915e6ca12e09074f1ac56554b788075340795db4"
+        "f4351a0b6506462c964435060ccf98abe4e38b4b7ba2ab7093367a46be2e4a2f"
     )
     assert top5_outright_manifest["manifest_hash"] == (
-        "280bc28325af23e50ec641fd5c774f905f2a6a65d7d41d8279eb4d6f59d97c59"
+        "f3ea4f2bd9ef57b7456eee93d20f1a70308f8e64794901de94ad63bd2dd24e2b"
     )
 
 

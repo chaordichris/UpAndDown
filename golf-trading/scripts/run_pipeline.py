@@ -43,7 +43,12 @@ from typing import Any
 
 from src.config import get_settings
 from src.ingestion.datagolf import DataGolfClient
-from src.ingestion.sportsbooks import available_books_in_matchups, available_books_in_outrights
+from src.ingestion.sportsbooks import (
+    _outright_datagolf_id,
+    _outright_entries,
+    available_books_in_matchups,
+    available_books_in_outrights,
+)
 from src.normalization.odds import american_to_decimal, decimal_to_implied
 from src.pricing.fair_price import METHOD_DATAGOLF_DIRECT, FairPriceResult
 from src.pricing.matchups import price_matchup_from_datagolf
@@ -145,6 +150,84 @@ def _ensure_players_from_outrights(session, player_entries: list[dict]) -> dict[
     return player_map
 
 
+def _resolve_requested_books(books: list[str], available: list[str]) -> list[str]:
+    """Cross-reference requested books against what's actually in the response.
+
+    Warns on any requested book that's missing, and exits if none are available
+    at all — shared by both the matchup and forecast-backed outright pipelines.
+    """
+    requested_and_available = [book for book in books if book in available]
+    missing = [book for book in books if book not in available]
+    if missing:
+        print(f"WARNING: requested books not in response: {', '.join(missing)}")
+    if not requested_and_available:
+        print("ERROR: none of the requested books have odds in this response.")
+        sys.exit(1)
+    return requested_and_available
+
+
+def _persist_candidates_and_report(
+    *,
+    dry_run: bool,
+    passing: list[EdgeResult],
+    all_edges: list[EdgeResult],
+    database_url: str | None,
+    event_name: str,
+    tour: str,
+    ensure_players,
+    player_source_entries: list[dict],
+    settings,
+    as_of: datetime,
+) -> list[EdgeResult]:
+    """Persist passing candidates and print the operator next-steps epilogue.
+
+    Shared tail of the matchup and forecast-backed outright pipelines — the
+    only thing that varies between markets is how player rows get ensured.
+    """
+    if dry_run:
+        print("\n[dry-run] No candidates persisted.")
+        return all_edges
+
+    if not passing:
+        print("\nNo candidates to persist.")
+        return all_edges
+
+    print(f"\nPersisting {len(passing)} candidates to {database_url}...")
+    with get_session(database_url) as session:
+        tournament = _get_or_create_tournament(session, event_name, tour)
+        player_map = ensure_players(session, player_source_entries)
+
+        candidates = build_bet_candidates_from_edges(
+            passing,
+            tournament_id=tournament.tournament_id,
+            player_id_by_datagolf_id=player_map,
+            fdr_enabled=settings.edge.fdr_enabled,
+            fdr_q_core=settings.edge.fdr_q_core,
+            fdr_q_convex=settings.edge.fdr_q_convex,
+            staleness_flag=False,
+            created_at=as_of,
+        )
+
+        for candidate in candidates:
+            session.add(candidate)
+        session.flush()
+
+        print(f"Persisted {len(candidates)} candidates for tournament_id={tournament.tournament_id}")
+        for candidate in candidates:
+            print(
+                f"  candidate_id={candidate.candidate_id}  {candidate.side:<22} "
+                f"market={candidate.market_type:<8} book={candidate.book:<12} "
+                f"edge={candidate.edge_pct:>5.1%}"
+            )
+
+    print("\nDone. Next steps:")
+    print(f"  1. Review candidates:  paper_trade.py list-candidates --database-url {database_url}")
+    print(f"  2. Generate tickets:   paper_trade.py ticket-candidates --database-url {database_url} --total-bankroll <AMOUNT>")
+    print(f"  3. Or use the console: operator_console.py --database-url {database_url}")
+
+    return all_edges
+
+
 def _extract_book_odds_for_matchup(
     entry: dict,
     book_id: str,
@@ -177,17 +260,6 @@ def _extract_book_odds_for_matchup(
         return None
 
 
-def _outright_entries(raw: dict) -> list[dict]:
-    entries = raw.get("player_list")
-    if entries is None:
-        entries = raw.get("odds", [])
-    return entries if isinstance(entries, list) else []
-
-
-def _outright_datagolf_id(entry: dict) -> str:
-    return str(entry.get("datagolf_id", entry.get("dg_id", "")))
-
-
 def _extract_book_odds_for_outright(entry: dict, book_id: str) -> int | None:
     return _parse_american_odds(entry.get(book_id))
 
@@ -208,7 +280,7 @@ def _parse_american_odds(value) -> int | None:
     if value is None:
         return None
     try:
-        return int(float(str(value).strip()))
+        return round(float(str(value).strip()))
     except (TypeError, ValueError):
         return None
 
@@ -305,9 +377,11 @@ def _edge_artifact_payload(
         "book_id": edge.book_id,
         "fair_prob": edge.fair_prob,
         "book_prob": edge.book_no_vig_prob,
+        "vig_removed": edge.vig_removed,
         "edge": edge.edge,
         "threshold": threshold,
-        "gap_to_threshold": threshold - edge.edge,
+        # Positive: cleared the threshold by this much. Negative: still short by this much.
+        "margin_to_threshold": edge.edge - threshold,
         "sleeve": edge.sleeve,
         "passes_threshold": edge.passes_threshold,
         "book_american_odds": edge.book_american_odds,
@@ -330,6 +404,13 @@ def _run_forecast_backed_outright_pipeline(
     near_miss_limit: int,
 ) -> list[EdgeResult]:
     """Execute the live DataGolf outrights fetch → edge → persist pipeline."""
+    if settings.edge.fdr_enabled:
+        raise SystemExit(
+            "edge.fdr_enabled is true, but one-sided forecast markets "
+            f"({market}) don't yet populate edge_sd, which FDR control requires. "
+            "Set edge.fdr_enabled: false in config/settings.yaml before running "
+            "this market, or wait for FDR support to land for one-sided edges."
+        )
     if datagolf_market == market:
         print(f"Fetching {market} odds from DataGolf (tour={tour})...")
     else:
@@ -362,13 +443,8 @@ def _run_forecast_backed_outright_pipeline(
     available = available_books_in_outrights(raw)
     print(f"Books with odds: {', '.join(available) if available else 'none'}")
 
-    requested_and_available = [book for book in books if book in available]
+    requested_and_available = _resolve_requested_books(books, available)
     missing = [book for book in books if book not in available]
-    if missing:
-        print(f"WARNING: requested books not in response: {', '.join(missing)}")
-    if not requested_and_available:
-        print("ERROR: none of the requested books have odds in this response.")
-        sys.exit(1)
 
     print(f"\nPricing {len(player_entries)} {market} rows via DataGolf baseline...")
     as_of = datetime.now(UTC)
@@ -459,48 +535,18 @@ def _run_forecast_backed_outright_pipeline(
         ),
     )
 
-    if dry_run:
-        print("\n[dry-run] No candidates persisted.")
-        return all_edges
-
-    if not passing:
-        print("\nNo candidates to persist.")
-        return all_edges
-
-    print(f"\nPersisting {len(passing)} candidates to {database_url}...")
-    with get_session(database_url) as session:
-        tournament = _get_or_create_tournament(session, event_name, tour)
-        player_map = _ensure_players_from_outrights(session, player_entries)
-
-        candidates = build_bet_candidates_from_edges(
-            passing,
-            tournament_id=tournament.tournament_id,
-            player_id_by_datagolf_id=player_map,
-            fdr_enabled=settings.edge.fdr_enabled,
-            fdr_q_core=settings.edge.fdr_q_core,
-            fdr_q_convex=settings.edge.fdr_q_convex,
-            staleness_flag=False,
-            created_at=as_of,
-        )
-
-        for candidate in candidates:
-            session.add(candidate)
-        session.flush()
-
-        print(f"Persisted {len(candidates)} candidates for tournament_id={tournament.tournament_id}")
-        for candidate in candidates:
-            print(
-                f"  candidate_id={candidate.candidate_id}  {candidate.side:<22} "
-                f"market={candidate.market_type:<8} book={candidate.book:<12} "
-                f"edge={candidate.edge_pct:>5.1%}"
-            )
-
-    print("\nDone. Next steps:")
-    print(f"  1. Review candidates:  paper_trade.py list-candidates --database-url {database_url}")
-    print(f"  2. Generate tickets:   paper_trade.py ticket-candidates --database-url {database_url} --total-bankroll <AMOUNT>")
-    print(f"  3. Or use the console: operator_console.py --database-url {database_url}")
-
-    return all_edges
+    return _persist_candidates_and_report(
+        dry_run=dry_run,
+        passing=passing,
+        all_edges=all_edges,
+        database_url=database_url,
+        event_name=event_name,
+        tour=tour,
+        ensure_players=_ensure_players_from_outrights,
+        player_source_entries=player_entries,
+        settings=settings,
+        as_of=as_of,
+    )
 
 
 # ---------------------------------------------------------------------------
@@ -577,13 +623,8 @@ def run_pipeline(
     available = available_books_in_matchups(raw)
     print(f"Books with odds: {', '.join(available) if available else 'none'}")
 
-    requested_and_available = [b for b in books if b in available]
+    requested_and_available = _resolve_requested_books(books, available)
     missing = [b for b in books if b not in available]
-    if missing:
-        print(f"WARNING: requested books not in response: {', '.join(missing)}")
-    if not requested_and_available:
-        print("ERROR: none of the requested books have odds in this response.")
-        sys.exit(1)
 
     # -- 2. Price every matchup using DG baseline --------------------------
     print(f"\nPricing {len(match_list)} matchups via DataGolf baseline...")
@@ -677,47 +718,19 @@ def run_pipeline(
         ),
     )
 
-    if dry_run:
-        print("\n[dry-run] No candidates persisted.")
-        return all_edges
-
-    if not passing:
-        print("\nNo candidates to persist.")
-        return all_edges
-
     # -- 5. Persist candidates to DB ---------------------------------------
-    print(f"\nPersisting {len(passing)} candidates to {database_url}...")
-
-    with get_session(database_url) as session:
-        tournament = _get_or_create_tournament(session, event_name, tour)
-        player_map = _ensure_players_from_matchups(session, match_list)
-
-        candidates = build_bet_candidates_from_edges(
-            passing,
-            tournament_id=tournament.tournament_id,
-            player_id_by_datagolf_id=player_map,
-            fdr_enabled=settings.edge.fdr_enabled,
-            fdr_q_core=settings.edge.fdr_q_core,
-            fdr_q_convex=settings.edge.fdr_q_convex,
-            staleness_flag=False,
-            created_at=as_of,
-        )
-
-        for c in candidates:
-            session.add(c)
-        session.flush()
-
-        print(f"Persisted {len(candidates)} candidates for tournament_id={tournament.tournament_id}")
-        for c in candidates:
-            print(
-                f"  candidate_id={c.candidate_id}  {c.side:<22} "
-                f"book={c.book:<12} edge={c.edge_pct:>5.1%}"
-            )
-
-    print("\nDone. Next steps:")
-    print(f"  1. Review candidates:  paper_trade.py list-candidates --database-url {database_url}")
-    print(f"  2. Generate tickets:   paper_trade.py ticket-candidates --database-url {database_url} --total-bankroll <AMOUNT>")
-    print(f"  3. Or use the console: operator_console.py --database-url {database_url}")
+    return _persist_candidates_and_report(
+        dry_run=dry_run,
+        passing=passing,
+        all_edges=all_edges,
+        database_url=database_url,
+        event_name=event_name,
+        tour=tour,
+        ensure_players=_ensure_players_from_matchups,
+        player_source_entries=match_list,
+        settings=settings,
+        as_of=as_of,
+    )
 
     return all_edges
 
