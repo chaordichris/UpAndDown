@@ -67,6 +67,7 @@ def build_ticket_from_candidate(
         sleeve=sleeve,
         passes_threshold=candidate.edge_pct >= threshold and not candidate.staleness_flag,
         book_american_odds=resolved_book_odds,
+        vig_removed=candidate.vig_removed,
         edge_sd=candidate.edge_sd,
         p_value=candidate.p_value,
         passes_fdr=candidate.passes_fdr if fdr_enabled else True,

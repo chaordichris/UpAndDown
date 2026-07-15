@@ -150,10 +150,10 @@
   },
   "expected_hashes": {
     "forecast_batch_hash": "286ecb59cf84bf5cc53741ebf5ee2edbb61b892ff074c69ae7e714b907cc92c9",
-    "candidate_batch_hash": "b3f176ff7b8b0223d40bbff37f094c9d589ecd52f5658b38b553a39327a5773e",
-    "ticket_batch_hash": "2429f9634152b739372c363ca66d30a2ff3266e2190d62532c41d7378d4e4e17",
-    "settlement_batch_hash": "0c6fd3cd997f396f200dcb310cf48478828cc16ac0641f2e116637f2b4e9a1eb",
+    "candidate_batch_hash": "10fb89d4793a90a09fb19c010fab9cef1262a4319748e426973caf918fc8d49f",
+    "ticket_batch_hash": "12b8557adfc8ad431b8174b856c46bb7fdc79b762becab3821dc470c8609c0a5",
+    "settlement_batch_hash": "602d6a68cb682b89ee12b05e2351996ac2612c6bd351749cdf1368ec1e0b34c6",
     "report_hash": "2a006cea1ca7aa4695bf9b07914a54221fce6f2760749ba6076783ad021c27bd",
-    "manifest_hash": "280bc28325af23e50ec641fd5c774f905f2a6a65d7d41d8279eb4d6f59d97c59"
+    "manifest_hash": "f3ea4f2bd9ef57b7456eee93d20f1a70308f8e64794901de94ad63bd2dd24e2b"
   }
 }

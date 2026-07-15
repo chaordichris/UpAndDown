@@ -210,8 +210,12 @@ class BetCandidate(Base):
     player_id_3: Mapped[Optional[int]] = mapped_column(Integer, ForeignKey("players.player_id"))
     book: Mapped[str] = mapped_column(String(50), nullable=False)
     fair_prob: Mapped[float] = mapped_column(Float, nullable=False)
-    # No-vig book probability
+    # Book probability. See vig_removed — one-sided markets store the raw
+    # vig-inclusive implied probability here, not a true no-vig price.
     book_prob: Mapped[float] = mapped_column(Float, nullable=False)
+    # False when book_prob is still vig-inclusive (one-sided markets with no
+    # paired "no" side to de-vig against).
+    vig_removed: Mapped[bool] = mapped_column(Boolean, nullable=False, default=True)
     # Raw book American odds for the candidate side at decision time
     book_american_odds: Mapped[Optional[int]] = mapped_column(Integer)
     # Edge = fair_prob - book_prob (positive = we have the edge)

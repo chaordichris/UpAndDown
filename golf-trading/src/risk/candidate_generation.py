@@ -96,6 +96,7 @@ def build_bet_candidate_from_edge(
         "book": edge.book_id,
         "fair_prob": edge.fair_prob,
         "book_prob": edge.book_no_vig_prob,
+        "vig_removed": edge.vig_removed,
         "book_american_odds": edge.book_american_odds,
         "edge_pct": edge.edge,
         "edge_sd": edge.edge_sd,

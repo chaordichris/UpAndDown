@@ -24,6 +24,7 @@ class BetTicketDraft:
     side: str
     fair_prob: float
     book_no_vig_prob: float
+    vig_removed: bool
     edge: float
     recommended_american_odds: int
     recommended_stake: float
@@ -70,6 +71,7 @@ def generate_ticket(
         side=resolved_side,
         fair_prob=edge.fair_prob,
         book_no_vig_prob=edge.book_no_vig_prob,
+        vig_removed=edge.vig_removed,
         edge=edge.edge,
         recommended_american_odds=edge.book_american_odds,
         recommended_stake=sizing.stake,
@@ -94,7 +96,11 @@ def render_ticket(ticket: BetTicketDraft) -> str:
             f"Book: {ticket.book_id}",
             f"Side: {ticket.side} {ticket.recommended_american_odds:+d}",
             f"Fair probability: {ticket.fair_prob:.3f}",
-            f"Book no-vig probability: {ticket.book_no_vig_prob:.3f}",
+            (
+                f"Book no-vig probability: {ticket.book_no_vig_prob:.3f}"
+                if ticket.vig_removed
+                else f"Book implied probability (vig NOT removed): {ticket.book_no_vig_prob:.3f}"
+            ),
             f"Edge: {ticket.edge:.3f}",
             f"Stake: ${ticket.recommended_stake:.2f}",
             f"Sleeve: {ticket.sleeve}",

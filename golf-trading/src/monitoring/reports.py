@@ -452,7 +452,11 @@ def render_ticket_detail(session: Session, ticket_id: int) -> str:
         f"Side: {candidate.side} {ticket.proposed_american_odds:+d}",
         f"Stake: ${ticket.proposed_stake:.2f}",
         f"Fair probability: {candidate.fair_prob:.3f}",
-        f"Book no-vig probability: {candidate.book_prob:.3f}",
+        (
+            f"Book no-vig probability: {candidate.book_prob:.3f}"
+            if candidate.vig_removed
+            else f"Book implied probability (vig NOT removed): {candidate.book_prob:.3f}"
+        ),
         f"Edge: {candidate.edge_pct:.2%}",
         f"Sleeve: {ticket.sleeve}",
         f"Sizing: {ticket.sizing_method}",
@@ -492,6 +496,7 @@ def export_tickets_csv(
             "stake",
             "fair_prob",
             "book_prob",
+            "vig_removed",
             "edge_pct",
             "sleeve",
             "sizing_method",
@@ -520,6 +525,7 @@ def export_tickets_csv(
                 "stake": f"{ticket.proposed_stake:.2f}",
                 "fair_prob": f"{candidate.fair_prob:.6f}",
                 "book_prob": f"{candidate.book_prob:.6f}",
+                "vig_removed": candidate.vig_removed,
                 "edge_pct": f"{candidate.edge_pct:.6f}",
                 "sleeve": ticket.sleeve,
                 "sizing_method": ticket.sizing_method,
