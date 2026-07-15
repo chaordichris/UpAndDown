@@ -7,7 +7,15 @@ proposes; this module disposes. All limits come from MMConfig.
 from __future__ import annotations
 
 from .config import MMConfig
-from .types import InventoryState, Quote, QuoteProposal, RiskDecision, Side
+from .types import (
+    InventoryState,
+    Quote,
+    QuoteProposal,
+    RiskDecision,
+    Side,
+    worst_case_settlement_loss,
+    would_breach_position_limit,
+)
 
 
 class RiskEngine:
@@ -44,16 +52,19 @@ class RiskEngine:
         approved: list[Quote] = []
         vetoed: list[tuple[Quote, str]] = []
         for quote in proposal.quotes:
-            sign = 1 if quote.side == Side.BID else -1
-            projected = inventory.position + sign * quote.size
-            if abs(projected) > self._config.max_position_per_market:
+            if would_breach_position_limit(
+                inventory.position, quote.side, quote.size, self._config.max_position_per_market
+            ):
+                sign = 1 if quote.side == Side.BID else -1
+                projected = inventory.position + sign * quote.size
                 vetoed.append(
                     (quote, f"position limit: |{projected}| > "
                             f"{self._config.max_position_per_market}")
                 )
                 continue
-            worst_case = quote.price * quote.size if quote.side == Side.BID \
-                else (1.0 - quote.price) * quote.size
+            worst_case = worst_case_settlement_loss(
+                quote.side == Side.BID, quote.size, quote.price
+            )
             if tournament_notional + worst_case > self._config.max_notional_per_tournament:
                 vetoed.append(
                     (quote, f"tournament notional limit: "

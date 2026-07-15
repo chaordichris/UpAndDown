@@ -8,9 +8,12 @@ pod ships disabled. Fold into ``src/config.py`` when MM-2 gate passes.
 
 from __future__ import annotations
 
+import logging
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
+
+logger = logging.getLogger(__name__)
 
 _PROJECT_ROOT = Path(__file__).resolve().parents[2]
 _SETTINGS_PATH = _PROJECT_ROOT / "config" / "settings.yaml"
@@ -29,6 +32,7 @@ class MMConfig:
         ("outright_win", 150.0),
     )
     credible_interval: float = 0.80  # width of the posterior band
+    fair_lag_steps: int = 3  # ticks our fair value lags the truth — the adverse-selection tax
 
     # Quoting
     min_half_spread: float = 0.02          # never quote tighter than 2c half-spread
@@ -62,7 +66,12 @@ def load_mm_config(settings_path: Path = _SETTINGS_PATH) -> MMConfig:
             data = yaml.safe_load(settings_path.read_text()) or {}
             raw = data.get("marketmaking") or {}
         except ImportError:
-            raw = {}
+            logger.warning(
+                "PyYAML not installed; falling back to MMConfig defaults instead of "
+                "%s's marketmaking: block. Settings.yaml overrides (including risk "
+                "limits) will be silently ignored until PyYAML is available.",
+                settings_path,
+            )
     known = {f for f in MMConfig.__dataclass_fields__ if f != "ess_by_market_type"}
     kwargs = {k: v for k, v in raw.items() if k in known}
     if "ess_by_market_type" in raw:

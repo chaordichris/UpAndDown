@@ -70,6 +70,30 @@ class Fill:
     timestep: int
 
 
+def worst_case_settlement_loss(is_long: bool, quantity: int, price: float) -> float:
+    """Worst-case loss if ``quantity`` YES contracts near ``price`` settle against the holder.
+
+    Shared by position-limit checks (a hypothetical quote, at its quoted
+    price) and mark-to-market position risk (the existing position, at
+    current fair value) — same settlement-loss shape, different price input.
+    """
+    return quantity * price if is_long else quantity * (1.0 - price)
+
+
+def position_headroom(position: int, side: Side, max_position_per_market: int) -> int:
+    """Max additional contracts this side could fill without breaching the limit."""
+    sign = 1 if side == Side.BID else -1
+    return max_position_per_market - sign * position
+
+
+def would_breach_position_limit(
+    position: int, side: Side, size: int, max_position_per_market: int
+) -> bool:
+    sign = 1 if side == Side.BID else -1
+    projected = position + sign * size
+    return abs(projected) > max_position_per_market
+
+
 @dataclass
 class InventoryState:
     """Mutable per-market book state. Positive position = long YES contracts."""
@@ -81,9 +105,7 @@ class InventoryState:
 
     def notional_at_risk(self, fair: float) -> float:
         """Worst-case loss of current position at settlement."""
-        if self.position > 0:
-            return self.position * fair  # YES settles 0
-        return -self.position * (1.0 - fair)  # YES settles 1
+        return worst_case_settlement_loss(self.position > 0, abs(self.position), fair)
 
 
 @dataclass(frozen=True)

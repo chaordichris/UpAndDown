@@ -98,6 +98,9 @@ marketmaking:
     outright_win: 150
   # Width of the credible interval behind quoted spreads (0.5/0.8/0.9/0.95).
   credible_interval: 0.80
+  # Simulated ticks our fair value lags the truth — the adverse-selection tax
+  # this pod exists to measure. Not an accident; tune deliberately.
+  fair_lag_steps: 3
   # Never quote tighter than this half-spread (dollars per contract).
   min_half_spread: 0.02
   # Half-spread must cover at least this multiple of posterior half-width.

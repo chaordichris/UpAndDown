@@ -15,7 +15,15 @@ Rules, in order:
 from __future__ import annotations
 
 from .config import MMConfig
-from .types import FairValueBand, InventoryState, MarketDef, Quote, QuoteProposal, Side
+from .types import (
+    FairValueBand,
+    InventoryState,
+    MarketDef,
+    Quote,
+    QuoteProposal,
+    Side,
+    position_headroom,
+)
 
 
 def _round_to_tick(price: float, market: MarketDef) -> float:
@@ -56,7 +64,7 @@ def generate_quotes(
         sign = 1 if side == Side.BID else -1  # bid fills make us longer
         side_utilization = max(0.0, sign * utilization)
         size = int(round(config.base_quote_size * (1.0 - side_utilization)))
-        headroom = config.max_position_per_market - sign * inventory.position
+        headroom = position_headroom(inventory.position, side, config.max_position_per_market)
         size = min(size, max(0, headroom))
         if size <= 0:
             reasons.append(f"{side.value} withheld: position limit utilization")

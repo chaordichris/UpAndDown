@@ -11,16 +11,17 @@ it is a first-class parameter, not an accident.
 
 from __future__ import annotations
 
-import hashlib
-import json
 from dataclasses import asdict, dataclass
+
+from src.storage.hashing import stable_hash
 
 from .config import MMConfig
 from .fair_value import fair_value_band
 from .inventory import PnLAttribution, apply_fill, attribute_pnl
 from .quoting import generate_quotes
 from .risk import RiskEngine
-from .types import InventoryState, MarketDef
+from .types import InventoryState, MarketDef, QuoteProposal
+from .venues.base import VenueAdapter
 from .venues.sim import SimParams, SimVenue
 
 
@@ -50,11 +51,46 @@ class SimulationReport:
     episode_results: tuple[EpisodeResult, ...]
 
 
+def submit_quotes(
+    proposal: QuoteProposal,
+    *,
+    venue: VenueAdapter,
+    risk: RiskEngine,
+    inventory: InventoryState,
+    fair_mean: float,
+    timestep: int,
+) -> tuple[int, list]:
+    """Risk-review a proposal and post only the approved quotes to the venue.
+
+    The one and only path from a QuoteProposal to a venue call — a future
+    live-venue integration should call this rather than posting quotes
+    directly, so risk review can't be accidentally skipped by copy-pasting
+    the loop without the review step.
+    """
+    decision = risk.review(
+        proposal, inventory, tournament_notional=inventory.notional_at_risk(fair_mean)
+    )
+    fills = venue.post_quotes(decision.approved, timestep) if decision.approved else []
+    return len(decision.vetoed), fills
+
+
 def run_episode(
     config: MMConfig,
     params: SimParams,
-    fair_lag_steps: int = 3,
+    risk: RiskEngine,
+    fair_lag_steps: int | None = None,
 ) -> EpisodeResult:
+    """Run one episode against a shared, caller-owned RiskEngine.
+
+    ``fair_lag_steps`` defaults to ``config.fair_lag_steps`` (settings.yaml's
+    ``marketmaking:`` block) — pass it explicitly only to override for a
+    single call (e.g. a test probing a specific lag).
+
+    The engine is shared (not created per episode) so the daily-loss kill
+    switch actually accumulates across episodes within one run_simulation
+    call — see run_simulation, which owns the engine's lifetime and treats
+    one call as one trading day's risk budget.
+    """
     market = MarketDef(
         market_id=f"sim-{params.seed}",
         description="simulated outright",
@@ -64,7 +100,7 @@ def run_episode(
     )
     venue = SimVenue(market.market_id, params)
     inventory = InventoryState(market_id=market.market_id)
-    risk = RiskEngine(config)
+    lag = fair_lag_steps if fair_lag_steps is not None else config.fair_lag_steps
 
     fair_at_fill: dict[int, float] = {}
     vetoed = 0
@@ -74,7 +110,7 @@ def run_episode(
     for t in range(params.steps):
         venue.step_world()
         # Our fair value sees the truth with a lag — the adverse-selection tax.
-        lagged_prob = venue.true_prob_path[max(0, len(venue.true_prob_path) - 1 - fair_lag_steps)]
+        lagged_prob = venue.true_prob_path[max(0, len(venue.true_prob_path) - 1 - lag)]
         fair = fair_value_band(lagged_prob, market.market_type, config)
         last_fair = fair.mean
 
@@ -82,19 +118,26 @@ def run_episode(
         if not proposal.quotes:
             stood_down += 1
             continue
-        decision = risk.review(
-            proposal, inventory, tournament_notional=inventory.notional_at_risk(fair.mean)
+        newly_vetoed, fills = submit_quotes(
+            proposal,
+            venue=venue,
+            risk=risk,
+            inventory=inventory,
+            fair_mean=fair.mean,
+            timestep=t,
         )
-        vetoed += len(decision.vetoed)
-        if not decision.approved:
-            continue
+        vetoed += newly_vetoed
 
-        for fill in venue.post_quotes(decision.approved, t):
+        for fill in fills:
             apply_fill(inventory, fill)
             fair_at_fill[fill.timestep] = fair.mean
 
     settlement = venue.settle(market.market_id)
     attribution = attribute_pnl(inventory, fair_at_fill, last_fair, settlement)
+    # Realize this episode's P&L into the shared engine so the kill switch
+    # sees it on the NEXT episode's quoting decisions (a still-open episode's
+    # unrealized P&L can't retroactively veto its own already-posted quotes).
+    risk.record_pnl(attribution.total)
     return EpisodeResult(
         market_id=market.market_id,
         seed=params.seed,
@@ -117,12 +160,12 @@ def run_simulation(
     params: SimParams | None = None,
 ) -> SimulationReport:
     base = params or SimParams()
+    base_kwargs = asdict(base)
+    risk = RiskEngine(config)
     results = []
     for i in range(episodes):
-        episode_params = SimParams(
-            **{**asdict(base), "seed": base_seed + i},
-        )
-        results.append(run_episode(config, episode_params))
+        episode_params = SimParams(**{**base_kwargs, "seed": base_seed + i})
+        results.append(run_episode(config, episode_params, risk))
 
     spread = sum(r.spread_capture for r in results)
     adverse = sum(r.adverse_selection for r in results)
@@ -133,7 +176,7 @@ def run_simulation(
         spread_capture=round(spread, 4),
         adverse_selection=round(adverse, 4),
         inventory_settlement=round(settle, 4),
-        adverse_to_spread_ratio=round(abs(adverse) / spread, 4) if spread > 0 else None,
+        adverse_to_spread_ratio=round(abs(adverse) / abs(spread), 4) if spread != 0 else None,
         episode_results=tuple(results),
     )
 
@@ -153,6 +196,5 @@ def report_artifact(report: SimulationReport, config: MMConfig) -> dict:
         },
         "episodes": [asdict(r) for r in report.episode_results],
     }
-    canonical = json.dumps(payload, sort_keys=True, default=str)
-    payload["inputs_hash"] = hashlib.sha256(canonical.encode("utf-8")).hexdigest()
+    payload["inputs_hash"] = stable_hash(payload)
     return payload
