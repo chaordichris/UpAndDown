@@ -69,6 +69,17 @@ def main() -> None:
         default="deterministic",
     )
     parser.add_argument("--series", default="rungood")
+    parser.add_argument(
+        "--acknowledge-exclusion",
+        dest="acknowledged_exclusions",
+        action="append",
+        metavar="SPLASH_PLAYER_ID",
+        help=(
+            "Splash player ID to exclude from the hard-review gate. Only for "
+            "players you've manually confirmed are genuinely absent from "
+            "DataGolf's coverage, not a name-formatting bug. Repeatable."
+        ),
+    )
     args = parser.parse_args()
 
     root = Path(__file__).resolve().parents[1]
@@ -100,6 +111,7 @@ def main() -> None:
         ownership_concentration=args.ownership_concentration,
         ownership_uncertainty_sd=args.ownership_uncertainty_sd,
         candidate_generation=args.candidate_generation,
+        acknowledged_exclusions=frozenset(args.acknowledged_exclusions or ()),
     )
     output_path = write_portfolio_artifact(artifact, root / args.output)
     print(output_path)
@@ -123,6 +135,7 @@ def generate_portfolios(
     ownership_concentration: float,
     ownership_uncertainty_sd: float,
     candidate_generation: str,
+    acknowledged_exclusions: frozenset[str] = frozenset(),
 ) -> dict[str, Any]:
     contest = parse_contest_detail(_load_json(contest_fixture))
     player_pool = parse_contest_player_pool(
@@ -142,7 +155,7 @@ def generate_portfolios(
     )
     players_by_tier = _eligible_players_by_tier(player_pool, eligible_mappings)
     exclusion_summary = _ineligible_player_summary(player_pool, eligible_mappings)
-    hard_review_items = _hard_review_items(player_pool, anchors)
+    hard_review_items = _hard_review_items(player_pool, anchors, acknowledged_exclusions)
     max_entries = min(series.max_entries_cap, contest.max_entries_per_user or series.max_entries_cap)
     conservative_config = portfolio_config(
         portfolio_name="conservative",
@@ -337,11 +350,14 @@ def _resolve_relative_path(root: Path, path: Path) -> str:
         return str(path)
 
 
-def _hard_review_items(player_pool, anchors) -> list[str]:
+def _hard_review_items(
+    player_pool, anchors, acknowledged_exclusions: frozenset[str] = frozenset()
+) -> list[str]:
     items = [
         f"unresolved_mapping:{item.splash_player_name}:{item.reason}"
         for item in player_pool.review_items
         if item.reason != "missing_splash_datagolf_rank"
+        and item.splash_player_id not in acknowledged_exclusions
     ]
     anchored_splash_ids = {
         mapping.splash_player_id

@@ -147,12 +147,24 @@ def check_tier_pool_depth(
     )
 
 
-def check_unresolved_mappings(player_pool: SplashContestPlayerPool) -> IntegrityCheck:
-    """Splash→DataGolf mapping problems (rank mismatches, unmatched names)."""
+def check_unresolved_mappings(
+    player_pool: SplashContestPlayerPool,
+    acknowledged_exclusions: frozenset[str] = frozenset(),
+) -> IntegrityCheck:
+    """Splash→DataGolf mapping problems (rank mismatches, unmatched names).
+
+    ``acknowledged_exclusions`` is an explicit, operator-supplied set of
+    splash_player_ids to exclude from blocking — for players an operator has
+    manually confirmed are genuinely absent from DataGolf's coverage (e.g. a
+    local qualifier), not a name-formatting bug worth chasing. Excluding a
+    player here never happens silently or by default: it requires the exact
+    splash_player_id, named explicitly by the caller.
+    """
     unresolved = [
         item
         for item in player_pool.review_items
         if item.reason != "missing_splash_datagolf_rank"
+        and item.splash_player_id not in acknowledged_exclusions
     ]
     details = [
         f"{item.splash_player_name}: {item.reason}"
@@ -165,7 +177,10 @@ def check_unresolved_mappings(player_pool: SplashContestPlayerPool) -> Integrity
         passed=not unresolved,
         detail="; ".join(details) if details else "all mappings resolved",
         remediation=_REMEDIATION_MAPPINGS if unresolved else "",
-        data={"unresolved_count": len(unresolved)},
+        data={
+            "unresolved_count": len(unresolved),
+            "acknowledged_excluded_count": len(acknowledged_exclusions),
+        },
     )
 
 
@@ -318,11 +333,12 @@ def run_preflight(
     *,
     max_fixture_age_hours: float = 72.0,
     min_depth_multiple: float = 2.0,
+    acknowledged_exclusions: frozenset[str] = frozenset(),
 ) -> SplashPreflightReport:
     checks: list[IntegrityCheck] = [
         check_tier_anchor_coverage(player_pool, anchors),
         check_tier_pool_depth(player_pool, anchors, min_depth_multiple),
-        check_unresolved_mappings(player_pool),
+        check_unresolved_mappings(player_pool, acknowledged_exclusions),
         check_tier_exclusion_coverage(player_pool),
         check_missing_anchors(player_pool, anchors),
         check_unranked_players(player_pool),
@@ -339,6 +355,7 @@ def run_preflight(
                 "anchors": [a.inputs_hash for a in anchors],
                 "max_fixture_age_hours": max_fixture_age_hours,
                 "min_depth_multiple": min_depth_multiple,
+                "acknowledged_exclusions": sorted(acknowledged_exclusions),
             }
         ),
     )

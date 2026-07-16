@@ -107,6 +107,7 @@ def run_sensitivity_matrix(
     evaluation_batch_size: int,
     candidate_generation: str,
     runner: Runner | None = None,
+    acknowledged_exclusions: frozenset[str] = frozenset(),
 ) -> dict[str, Any]:
     if simulations <= 0:
         raise ValueError("simulations must be positive")
@@ -144,6 +145,7 @@ def run_sensitivity_matrix(
                     simulations=simulations,
                     evaluation_batch_size=evaluation_batch_size,
                     candidate_generation=candidate_generation,
+                    acknowledged_exclusions=acknowledged_exclusions,
                 )
                 runner(command)
                 artifact = _load_json(output_path)
@@ -205,6 +207,7 @@ def _scenario_command(
     simulations: int,
     evaluation_batch_size: int,
     candidate_generation: str,
+    acknowledged_exclusions: frozenset[str] = frozenset(),
 ) -> list[str]:
     command = [
         sys.executable,
@@ -242,6 +245,8 @@ def _scenario_command(
         str(ownership_uncertainty_sd),
         ]
     )
+    for splash_player_id in sorted(acknowledged_exclusions):
+        command.extend(["--acknowledge-exclusion", splash_player_id])
     return command
 
 

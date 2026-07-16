@@ -30,7 +30,13 @@ def main() -> None:
         help="Raw Splash contest UUID or full Splash contest URL. Lobby URLs are rejected.",
     )
     parser.add_argument("--slate-id")
-    parser.add_argument("--tiers", nargs="+", type=int, default=[1, 2, 3, 4, 5, 6])
+    parser.add_argument(
+        "--tiers",
+        nargs="+",
+        type=int,
+        default=None,
+        help="Explicit tier IDs to capture. Default: auto-detect from the contest's own roster rules.",
+    )
     parser.add_argument("--limit", type=int, default=50)
     parser.add_argument("--contest-output")
     parser.add_argument("--player-pools-output")
@@ -41,7 +47,7 @@ def main() -> None:
         artifact = capture_splash_contest(
             contest_id=args.contest_id,
             slate_id=args.slate_id,
-            tiers=tuple(args.tiers),
+            tiers=tuple(args.tiers) if args.tiers is not None else None,
             limit=args.limit,
             contest_output=Path(args.contest_output) if args.contest_output else None,
             player_pools_output=Path(args.player_pools_output) if args.player_pools_output else None,
@@ -56,27 +62,37 @@ def capture_splash_contest(
     *,
     contest_id: str,
     slate_id: str | None,
-    tiers: tuple[int, ...],
+    tiers: tuple[int, ...] | None,
     limit: int,
     contest_output: Path | None,
     player_pools_output: Path | None,
     base_url: str,
 ) -> dict[str, Any]:
-    """Capture fixture JSON and return a small audit manifest."""
+    """Capture fixture JSON and return a small audit manifest.
+
+    ``tiers=None`` (the default) auto-detects the tier range from the
+    contest's own roster rules rather than trusting a caller-supplied guess
+    — different Splash contests have different tier counts (a major's
+    deeper field can mean 7-8 tiers instead of the common 6), so a fixed
+    default silently under-captures for any contest that doesn't match it.
+    """
     resolved_contest_id = contest_id_from_ref(contest_id)
     client = SplashReadOnlyClient(base_url=base_url)
     contest_fixture = client.contest_detail_fixture(resolved_contest_id)
     contest = parse_contest_detail(contest_fixture)
+    resolved_tiers = tiers if tiers is not None else tuple(
+        range(1, contest.roster_rule.number_of_tiers + 1)
+    )
     resolved_slate_id = slate_id or slate_id_from_contest_detail(contest_fixture)
     pools_fixture = client.capture_tier_player_pools(
         contest_id=resolved_contest_id,
         slate_id=resolved_slate_id,
-        tier_ids=tiers,
+        tier_ids=resolved_tiers,
         limit=limit,
     )
     parsed_tiers = {
         tier_id: parse_player_pool(pools_fixture[str(tier_id)], tier_id=tier_id)
-        for tier_id in tiers
+        for tier_id in resolved_tiers
     }
 
     if contest_output is not None:

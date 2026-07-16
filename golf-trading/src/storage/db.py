@@ -44,6 +44,20 @@ def _ensure_sqlite_dir(url: str) -> None:
         Path(db_path).parent.mkdir(parents=True, exist_ok=True)
 
 
+def _is_memory_sqlite(url: str) -> bool:
+    """True for pure in-memory SQLite URLs, where each new Engine gets its own
+    isolated database — unlike a file path or a real server, which persist
+    state across separate Engine instances pointed at the same URL."""
+    return url in ("sqlite://", "sqlite:///:memory:") or ":memory:" in url
+
+
+# In-memory SQLite engines are cached by URL so that, e.g., a dry-run's
+# init_db(url) and a later get_session(url) share the same actual database
+# instead of each silently getting its own empty one (real file/server URLs
+# don't need this — the file/server itself is the shared state).
+_memory_engines_by_url: dict[str, Engine] = {}
+
+
 def get_engine(database_url: str | None = None) -> Engine:
     """
     Create a SQLAlchemy engine.
@@ -53,6 +67,9 @@ def get_engine(database_url: str | None = None) -> Engine:
     """
     url = database_url or _get_database_url()
     _ensure_sqlite_dir(url)
+
+    if _is_memory_sqlite(url) and url in _memory_engines_by_url:
+        return _memory_engines_by_url[url]
 
     engine = create_engine(
         url,
@@ -69,6 +86,9 @@ def get_engine(database_url: str | None = None) -> Engine:
             cursor.execute("PRAGMA journal_mode=WAL")
             cursor.execute("PRAGMA foreign_keys=ON")
             cursor.close()
+
+    if _is_memory_sqlite(url):
+        _memory_engines_by_url[url] = engine
 
     return engine
 

@@ -76,6 +76,11 @@ class SplashRunConfig:
     max_fixture_age_hours: float = 72.0
     min_depth_multiple: float = 2.0
     series: str = "rungood"
+    # Splash player IDs an operator has explicitly reviewed and confirmed are
+    # genuinely absent from DataGolf's coverage (not a name-formatting bug) —
+    # excludes them from check_unresolved_mappings' BLOCK. Never populated by
+    # default; only ever set via --acknowledge-exclusion.
+    acknowledged_exclusions: tuple[str, ...] = ()
 
     @property
     def bankroll_cents(self) -> int:
@@ -169,7 +174,10 @@ def _stage_capture(ctx: StageContext) -> StageResult:
     capture_splash_contest(
         contest_id=ctx.contest_ref,
         slate_id=None,
-        tiers=ctx.config.tiers,
+        # Auto-detect from the contest's own roster rules — different
+        # contests have different tier counts (see capture_splash_contest's
+        # docstring), so a fixed config default silently under-captures.
+        tiers=None,
         limit=ctx.config.player_pool_limit,
         contest_output=ctx.output_paths["contest"],
         player_pools_output=ctx.output_paths["player_pools"],
@@ -258,6 +266,7 @@ def _stage_preflight(ctx: StageContext) -> StageResult:
         fixture_ages_hours,
         max_fixture_age_hours=ctx.config.max_fixture_age_hours,
         min_depth_multiple=ctx.config.min_depth_multiple,
+        acknowledged_exclusions=frozenset(ctx.config.acknowledged_exclusions),
     )
     artifact = report_to_artifact(report)
     artifact["generated_at"] = _now_iso()
@@ -291,6 +300,7 @@ def _stage_portfolios(ctx: StageContext) -> StageResult:
         ownership_concentration=1.0,
         ownership_uncertainty_sd=0.25,
         candidate_generation=ctx.config.candidate_generation,
+        acknowledged_exclusions=frozenset(ctx.config.acknowledged_exclusions),
     )
     write_portfolio_artifact(artifact, ctx.output_paths["portfolios"])
     return StageResult()
@@ -317,6 +327,7 @@ def _stage_sensitivity(ctx: StageContext) -> StageResult:
         simulations=ctx.config.sensitivity_simulations,
         evaluation_batch_size=50,
         candidate_generation=ctx.config.candidate_generation,
+        acknowledged_exclusions=frozenset(ctx.config.acknowledged_exclusions),
     )
     return StageResult()
 
@@ -639,12 +650,27 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--bankroll-dollars", type=float)
     parser.add_argument("--simulations", type=int)
     parser.add_argument("--portfolio-name")
+    parser.add_argument(
+        "--acknowledge-exclusion",
+        dest="acknowledged_exclusions",
+        action="append",
+        metavar="SPLASH_PLAYER_ID",
+        help=(
+            "Splash player ID to exclude from the unresolved_mappings BLOCK "
+            "check. Only for players you've manually confirmed are genuinely "
+            "absent from DataGolf's coverage, not a name-formatting bug. "
+            "Repeatable."
+        ),
+    )
     return parser
 
 
 def _overrides_from_args(args: argparse.Namespace) -> dict[str, Any]:
     keys = ("bankroll_dollars", "simulations", "portfolio_name")
-    return {k: getattr(args, k) for k in keys if getattr(args, k) is not None}
+    overrides = {k: getattr(args, k) for k in keys if getattr(args, k) is not None}
+    if args.acknowledged_exclusions:
+        overrides["acknowledged_exclusions"] = tuple(args.acknowledged_exclusions)
+    return overrides
 
 
 def main() -> int:
