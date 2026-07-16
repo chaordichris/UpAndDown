@@ -47,6 +47,75 @@ def test_init_db_idempotent(test_database_url):
     init_db(test_database_url)  # should not raise
 
 
+def test_init_db_retrofits_missing_column_on_existing_table(tmp_path):
+    """A model gaining a column shouldn't break a database file created
+    before the change — init_db should add the missing column instead of
+    every subsequent query raising 'no such column'."""
+    import sqlalchemy as sa
+
+    from src.storage.db import get_engine, get_session, init_db
+    from src.storage.models import BetCandidate
+
+    # A dedicated, isolated file — the session-scoped test_database_url
+    # fixture is shared across the whole test run and would already have a
+    # full-shape bet_candidates table from earlier tests' init_db() calls.
+    test_database_url = f"sqlite:///{tmp_path / 'retrofit-test.db'}"
+    engine = get_engine(test_database_url)
+    # Build bet_candidates without vig_removed — the shape it had before that
+    # column existed — to simulate a database file from before the change.
+    with engine.begin() as conn:
+        conn.execute(
+            sa.text(
+                """
+                CREATE TABLE bet_candidates (
+                    candidate_id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    tournament_id INTEGER NOT NULL,
+                    market_type VARCHAR(50) NOT NULL,
+                    side VARCHAR(50) NOT NULL,
+                    player_id_1 INTEGER NOT NULL,
+                    book VARCHAR(50) NOT NULL,
+                    fair_prob FLOAT NOT NULL,
+                    book_prob FLOAT NOT NULL,
+                    edge_pct FLOAT NOT NULL,
+                    passes_fdr BOOLEAN NOT NULL,
+                    confidence_score FLOAT NOT NULL,
+                    staleness_flag BOOLEAN NOT NULL,
+                    inputs_hash VARCHAR(64) NOT NULL,
+                    created_at DATETIME NOT NULL
+                )
+                """
+            )
+        )
+        conn.execute(
+            sa.text(
+                """
+                INSERT INTO bet_candidates
+                    (tournament_id, market_type, side, player_id_1, book,
+                     fair_prob, book_prob, edge_pct, passes_fdr,
+                     confidence_score, staleness_flag, inputs_hash, created_at)
+                VALUES (1, 'make_cut', '123', 1, 'draftkings', 0.5, 0.4, 0.1,
+                        1, 1.0, 0, 'abc', '2026-01-01')
+                """
+            )
+        )
+
+    init_db(test_database_url)  # should retrofit vig_removed, not raise
+
+    with get_session(test_database_url) as session:
+        pre_existing = session.query(BetCandidate).filter_by(inputs_hash="abc").one()
+        assert pre_existing.vig_removed is None  # honest "unknown" for old rows
+
+        new_row = BetCandidate(
+            tournament_id=1, market_type="make_cut", side="456", player_id_1=1,
+            book="fanduel", fair_prob=0.6, book_prob=0.5, edge_pct=0.1,
+            passes_fdr=True, confidence_score=1.0, staleness_flag=False,
+            inputs_hash="def",
+        )
+        session.add(new_row)
+        session.flush()
+        assert new_row.vig_removed is True  # ORM default applies going forward
+
+
 def test_create_tournament(db_session):
     """Can insert and retrieve a Tournament row."""
     from src.storage.models import Tournament

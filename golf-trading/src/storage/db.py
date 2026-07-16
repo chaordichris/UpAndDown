@@ -14,16 +14,19 @@ Usage:
 
 from __future__ import annotations
 
+import logging
 import os
+from collections.abc import Generator
 from contextlib import contextmanager
 from pathlib import Path
-from typing import Generator
 
-from sqlalchemy import create_engine, event, text
+from sqlalchemy import create_engine, event, inspect, text
 from sqlalchemy.engine import Engine
 from sqlalchemy.orm import Session, sessionmaker
 
 from .models import Base
+
+logger = logging.getLogger(__name__)
 
 
 def _get_database_url() -> str:
@@ -148,9 +151,52 @@ def get_session(database_url: str | None = None) -> Generator[Session, None, Non
 def init_db(database_url: str | None = None) -> None:
     """
     Create all tables. Safe to call multiple times (idempotent via CREATE IF NOT EXISTS).
+
+    Also retrofits any columns present in the ORM models but missing from an
+    already-existing table (e.g. a model gained a column after a database
+    file was created) — create_all() only creates missing TABLES, it never
+    alters an existing one, so a schema change would otherwise silently
+    break every query against a pre-existing database file (a long-running
+    paper-trading DB, say) until someone notices and manually migrates it.
     """
     engine = get_engine(database_url) if database_url else _get_or_create_engine()
     Base.metadata.create_all(bind=engine)
+    _add_missing_columns(engine)
+
+
+def _add_missing_columns(engine: Engine) -> None:
+    """Add ORM columns missing from already-existing tables.
+
+    Only ever ADDs columns (additive, non-destructive) — never drops,
+    renames, or alters an existing one, and this project has no migration
+    tool (no Alembic) to do anything heavier. New columns are always added
+    nullable, regardless of the model's own nullable setting: SQLite can't
+    add a NOT NULL column to a non-empty table without a backfill value for
+    existing rows, and guessing that value is worse than leaving it NULL —
+    callers should treat NULL as "unknown," which is the honest answer for
+    historical rows that predate the column. This is a lightweight stopgap,
+    not a real migration tool: it can't handle renames, type changes, or
+    drops, and won't help across genuinely incompatible schema changes.
+    """
+    inspector = inspect(engine)
+    existing_tables = set(inspector.get_table_names())
+    with engine.begin() as conn:
+        for table in Base.metadata.sorted_tables:
+            if table.name not in existing_tables:
+                continue  # brand new table — create_all() already built it in full
+            existing_columns = {col["name"] for col in inspector.get_columns(table.name)}
+            for column in table.columns:
+                if column.name in existing_columns:
+                    continue
+                col_type = column.type.compile(dialect=engine.dialect)
+                conn.execute(
+                    text(f'ALTER TABLE "{table.name}" ADD COLUMN "{column.name}" {col_type}')
+                )
+                logger.warning(
+                    "Retrofitted missing column %s.%s (%s) onto an existing database at "
+                    "%s. Existing rows have NULL for this column.",
+                    table.name, column.name, col_type, engine.url,
+                )
 
 
 def drop_all(database_url: str | None = None) -> None:
