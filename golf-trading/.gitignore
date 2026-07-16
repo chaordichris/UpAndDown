@@ -5,6 +5,7 @@
 data/raw/
 data/db/
 data/reports/
+artifacts/
 
 # Python
 __pycache__/
