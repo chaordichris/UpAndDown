@@ -207,13 +207,93 @@ def build_sportsbook_status(artifact_dir: Path) -> dict[str, Any]:
 # splash-dfs
 # ---------------------------------------------------------------------------
 
+def _splash_week_dirs(artifact_dir: Path) -> list[Path]:
+    """Every weekly run_splash_week.py directory, oldest to newest."""
+    root = artifact_dir / "splash-week"
+    if not root.exists():
+        return []
+    return sorted(p for p in root.iterdir() if p.is_dir())
+
+
+def _latest_splash_portfolio_file(artifact_dir: Path) -> Path | None:
+    """Most recent portfolio artifact: prefer the latest weekly run
+    directory (the run_splash_week.py convention), falling back to the flat
+    legacy path a direct generate_splash_portfolios.py invocation writes to.
+    """
+    week_dirs = _splash_week_dirs(artifact_dir)
+    if week_dirs:
+        candidate = week_dirs[-1] / "rungood-splash-portfolios.json"
+        if candidate.exists():
+            return candidate
+    legacy = artifact_dir / "rungood-splash-portfolios.json"
+    return legacy if legacy.exists() else None
+
+
+def _splash_open_positions(artifact_dir: Path) -> tuple[list[dict[str, Any]], float, list[str]]:
+    """Open (unsettled) Splash lineup entries and total stake at risk.
+
+    Aggregates every weekly run's results ledger (plus the flat legacy
+    path), since an older week's entries can still be open while a newer
+    week has already started. A lineup entry counts as settled once its
+    contest_id appears in any ledger's ``results`` — Splash contests pay
+    out at the contest level, not per lineup, so ``results`` doesn't
+    reference individual entries.
+    """
+    ledger_paths = [d / "splash-results-ledger.json" for d in _splash_week_dirs(artifact_dir)]
+    legacy = artifact_dir / "splash-capture" / "splash-results-ledger.json"
+    if legacy.exists():
+        ledger_paths.append(legacy)
+
+    notes: list[str] = []
+    ledgers: list[dict[str, Any]] = []
+    for path in ledger_paths:
+        if not path.exists():
+            continue
+        try:
+            ledgers.append(json.loads(path.read_text()))
+        except (json.JSONDecodeError, OSError):
+            notes.append(f"unparseable ledger: {path.name}")
+
+    settled_contest_ids = {
+        str(result.get("contest_id"))
+        for ledger in ledgers
+        for result in ledger.get("results", [])
+    }
+
+    positions: list[dict[str, Any]] = []
+    total_at_risk = 0.0
+    for ledger in ledgers:
+        for entry in ledger.get("lineup_entries", []):
+            if str(entry.get("contest_id")) in settled_contest_ids:
+                continue
+            stake = float(entry.get("entry_fee_dollars", 0.0))
+            positions.append(
+                {
+                    "id": str(entry.get("entry_id", "splash-entry")),
+                    "description": (
+                        f"{entry.get('contest_name', 'contest')}: "
+                        f"{entry.get('lineup_id', 'lineup')} (${stake:.0f})"
+                    ),
+                    "stake": stake,
+                    "placed_at": entry.get("entered_at"),
+                    "status": "open",
+                    "detail": {
+                        "market": "splash_contest",
+                        "contest_id": entry.get("contest_id"),
+                    },
+                }
+            )
+            total_at_risk += stake
+    return positions, round(total_at_risk, 2), notes
+
+
 def build_splash_status(artifact_dir: Path) -> dict[str, Any]:
-    portfolio_file = artifact_dir / "rungood-splash-portfolios.json"
+    portfolio_file = _latest_splash_portfolio_file(artifact_dir)
     opportunities: list[dict[str, Any]] = []
     notes: list[str] = []
     payload: dict[str, Any] = {}
 
-    if portfolio_file.exists():
+    if portfolio_file is not None:
         payload = json.loads(portfolio_file.read_text())
         contest = payload.get("contest", {})
         entry_fee = contest.get("entry_fee_cents", 0) / 100.0
@@ -245,28 +325,8 @@ def build_splash_status(artifact_dir: Path) -> dict[str, Any]:
     else:
         notes.append("no splash portfolio artifact; run scripts/run_splash_workflow.py")
 
-    ledger_file = artifact_dir / "splash-capture" / "splash-results-ledger.json"
-    positions: list[dict[str, Any]] = []
-    total_at_risk = 0.0
-    if ledger_file.exists():
-        try:
-            for entry in json.loads(ledger_file.read_text()).get("entries", []):
-                if entry.get("status", "open") != "open":
-                    continue
-                stake = float(entry.get("entry_cost_dollars", 0.0))
-                positions.append(
-                    {
-                        "id": str(entry.get("id", "splash-entry")),
-                        "description": entry.get("description", "splash entry"),
-                        "stake": stake,
-                        "placed_at": entry.get("placed_at"),
-                        "status": "open",
-                        "detail": {"market": "splash_contest"},
-                    }
-                )
-                total_at_risk += stake
-        except (json.JSONDecodeError, TypeError, ValueError):
-            notes.append(f"unparseable ledger: {ledger_file.name}")
+    positions, total_at_risk, ledger_notes = _splash_open_positions(artifact_dir)
+    notes.extend(ledger_notes)
 
     return {
         "contract_version": CONTRACT_VERSION,
@@ -275,7 +335,7 @@ def build_splash_status(artifact_dir: Path) -> dict[str, Any]:
         "sleeve": "dfs",
         "generated_at": _now_iso(),
         "inputs_hash": _inputs_hash(payload.get("artifact_hash", "")),
-        "health": {"status": "ok" if portfolio_file.exists() else "error", "notes": notes},
+        "health": {"status": "ok" if portfolio_file is not None else "error", "notes": notes},
         "opportunities": opportunities,
         "positions": positions,
         "exposures": {"total_at_risk": round(total_at_risk, 2)},
