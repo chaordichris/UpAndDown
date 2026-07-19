@@ -14,10 +14,14 @@
 - `../upanddown-build-plan.md`
 - `../upanddown-build-plan-v0.2-addendum.md`
 
-## Skill Sources
+## Shared Skills
 
-- Use `../skills/karpathy-coding/SKILL.md` for coding behavior and change discipline.
-- Use `../skills/github-best-practices/SKILL.md` for git, branch, and review hygiene.
+- `../skills/` is the tool-agnostic source for shared skills.
+- `../.codex/skills/` is the Codex mirror.
+- `../.claude/skills/` is the Claude mirror.
+- Root `../*.skill` files are packaged import artifacts for agents that load skills as archives.
+- See `../skills/README.md` for the full skill catalog and provenance.
+- When editing a shared skill, update the tool-agnostic source, both mirrors, and the corresponding root `.skill` package in the same change.
 
 ## Required Conventions
 

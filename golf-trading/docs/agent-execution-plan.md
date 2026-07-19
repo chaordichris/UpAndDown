@@ -1,6 +1,23 @@
 # UpAndDown Agent Execution Plan
 
-**Purpose:** turn the current Phase 2 baseline into a paper-trading system with quant-grade auditability, without blowing up the MVP with premature complexity.
+**Purpose:** turn the current Phase 2 baseline into an edge-discovery and
+strategy-validation product with quant-grade auditability, without blowing up
+the MVP with premature complexity.
+
+## 0. Product objective reset
+
+The product should not try to win by being a better general-purpose bet tracker.
+Dedicated apps already handle long-term betting ledgers well enough. UpAndDown
+should win on three surfaces:
+
+1. Daily DataGolf-anchored edge calculation that is easy to inspect in a UI.
+2. Backtest calculation and visualization for the current strategy.
+3. A bounded paper-bet proof period that justifies whether the strategy is good
+   enough to risk real capital.
+
+Manual placement, settlement, CLV, and attribution records still matter, but
+only as validation evidence and audit trail. Long-term real betting history is a
+future import/analysis surface, not the core MVP product.
 
 ## 1. Current repo reality
 
@@ -11,9 +28,12 @@
 | WS-3 Normalization | Complete | `src/normalization/odds.py`, `src/normalization/vig.py`, `src/normalization/players.py` | Core math exists and is tested. |
 | WS-4 Pricing + Edge | Complete | `src/pricing/`, `src/risk/edge.py`, `tests/unit/test_pricing.py`, `tests/unit/test_edge.py` | Matchup, top-N, and outright baseline pricing exists. |
 | WS-5 Risk baseline | Complete | `src/risk/sizing.py`, `src/risk/exposure.py`, `src/risk/drawdown.py` | Good MVP baseline, but not yet v0.2 quant-grade. |
-| WS-6 Execution + Logging | In progress | `src/execution/tickets.py`, `src/execution/persistence.py`, `scripts/paper_trade.py`, `tests/integration/test_execution_persistence.py` | Ticket generation, manual placement logging, settlement helpers, and operator CLI commands exist. Continue with replay contracts and execution diagnostics. |
-| WS-7 Backtesting | In progress | `src/backtest/leakage_guard.py`, `src/backtest/replay.py`, `src/backtest/summary.py`, `tests/replay/test_backtest_forecast_candidate_replay.py` | Initial leakage-checked replay spine exists for DataGolf forecast rows → candidate/ticket generation → settlement/CLV/reporting → multi-tournament summary. Broader historical data coverage remains open. |
-| WS-8 Monitoring + Reporting | In progress | `src/monitoring/clv.py`, `src/monitoring/attribution.py`, `src/monitoring/reports.py`, `tests/integration/test_stored_report.py`, `tests/replay/test_phase3_paper_trade_replay.py` | CLV capture, stored paper-trade reporting, ticket detail, export, open-action views, first pinned replay contract, initial P&L attribution, and promo P&L separation exist. Phase-gate reporting remains deferred. |
+| WS-6 Execution + Logging | In progress | `src/execution/tickets.py`, `src/execution/persistence.py`, `scripts/paper_trade.py`, `tests/integration/test_execution_persistence.py` | Ticket generation, minimal manual paper placement/settlement, and operator CLI commands exist. Keep this focused on validation evidence, not full betting-history ownership. |
+| WS-7 Backtesting | In progress | `src/backtest/leakage_guard.py`, `src/backtest/replay.py`, `src/backtest/summary.py`, `tests/replay/test_backtest_forecast_candidate_replay.py` | Initial leakage-checked replay spine exists for DataGolf forecast rows → candidate/ticket generation → settlement/CLV/reporting → multi-tournament summary. Broader historical coverage and visualization are now top-priority product work. |
+| WS-8 Monitoring + Reporting | In progress | `src/monitoring/clv.py`, `src/monitoring/attribution.py`, `src/monitoring/reports.py`, `tests/integration/test_stored_report.py`, `tests/replay/test_phase3_paper_trade_replay.py` | CLV capture, stored paper-trade reporting, ticket detail, export, open-action views, first pinned replay contract, initial P&L attribution, and promo P&L separation exist. Daily edge UI and backtest visualization should be prioritized before richer ledger features. |
+| WS-9 Prediction-market MM | Scaffold (MM-0) | `src/marketmaking/`, `scripts/mm_simulate.py`, `tests/unit/test_marketmaking.py`, `docs/prediction-market-mm-spec.md` | Simulator-only market-making pod: Bayesian fair-value bands, posterior-driven quoting, inventory skew, hard-veto risk engine, seeded P&L-attributed simulation. `marketmaking.enabled` stays false; live venue work is gated by the spec's MM-0→MM-3 gates. |
+| WS-10 Control plane | v0.1 built | `../control-plane/`, `scripts/export_control_plane_status.py`, `../control-plane/CONTRACT.md` | Workspace-level daily desk: aggregates per-pod status files (contract v1.0), renders trades/positions/exposure, runs whitelisted commands. Renders only — never computes edges, sizes, or risk. |
+| WS-11 Splash bulletproofing | SP-1 done; SP-2 skeleton + generator/card/sensitivity consolidation done | `docs/splash-bulletproof-plan.md`, `src/fantasy/splash/integrity.py`, `src/fantasy/splash/series.py`, `scripts/splash_preflight.py`, `scripts/run_splash_week.py`, `scripts/generate_splash_portfolios.py`, `scripts/build_splash_lineup_card.py`, `scripts/run_splash_sensitivity.py`, `config/settings.yaml` (`splash:` block), `src/config.py` (`SplashConfig`), `tests/unit/test_splash_integrity.py`, `tests/unit/test_run_splash_week.py` | SP-1 preflight gate implemented. SP-2 runner skeleton implemented: resumable, manifest-driven `run_splash_week.py` (inputs_hash chaining, `--force-from`, `--start-stage` seeding, preflight hard gate), params sourced from the new `splash:` config block, stages reuse existing scripts (no forked logic). Generator/card/sensitivity consolidation done this slice: `src/fantasy/splash/series.py` (`ContestSeriesConfig` + `RUNGOOD_SERIES` preset) plus canonical `scripts/generate_splash_portfolios.py`, `scripts/build_splash_lineup_card.py`, `scripts/run_splash_sensitivity.py`; the rungood-named scripts are now thin back-compat shims, and `run_splash_week.py`'s portfolios stage calls the shared `generate_portfolios(...)` in-process instead of via argv/`importlib`. Open in SP-2: full config block, end-to-end live discover/capture/enrich wiring. Remaining: SP-3 results/calibration loop, SP-4 config/risk hardening, SP-5 pre-committed proof gate. See the plan doc for sequencing and definitions of done. |
 
 ## 2. Non-negotiable operating rules
 
@@ -25,10 +45,31 @@
 
 ## 3. Priority execution order
 
+### Batch UI — Daily edge review surface
+
+**Goal:** make daily calculated edges accessible without reading raw CLI output
+or database rows.
+
+**Suggested file targets**
+- `scripts/operator_console.py`
+- `src/risk/candidate_generation.py`
+- `src/monitoring/reports.py`
+- A small local web/static UI module if the operator console becomes too cramped.
+
+**Definition of done**
+- Operator can review the current tournament's candidate board by book, market,
+  player, fair probability/price, book price, edge, staleness, FDR/posterior
+  metadata when available, and recommended action.
+- The UI clearly distinguishes actionable candidates, marginal candidates, and
+  rejected/no-bet rows with reasons.
+- Paper-ticket actions remain available, but the first screen is the edge board,
+  not a betting-history ledger.
+- A fixture or smoke command proves the board renders from persisted candidates.
+
 ### Batch 0 — End-to-end pipeline script
 
 **Goal:** provide a single command that chains fetch → price → edge → persist so
-the paper-trading loop can start.
+the daily edge board and paper-validation loop can start.
 
 **File targets**
 - `scripts/run_pipeline.py`
@@ -38,19 +79,28 @@ the paper-trading loop can start.
   computes two-way edges per requested book, and persists Tournament, Player,
   and BetCandidate rows to the target paper DB.
 - `--dry-run` mode prints edges without writing to DB.
-- Downstream `paper_trade.py ticket-candidates` picks up persisted candidates.
+- Downstream UI/reporting commands pick up persisted candidates for review;
+  `paper_trade.py ticket-candidates` remains the path for paper-validation bets.
 
 **Current implementation notes**
 - `scripts/run_pipeline.py` is complete. It supports `--tour`, `--books`,
   `--market`, `--database-url`, `--dry-run`, and `--verbose`.
-- Only 2-ball tournament matchups are processed in MVP; 3-balls are skipped.
+- Live `tournament_matchups`, core forecast-backed yes markets (`top_20`,
+  `top_10`, `top_5`, `make_cut`), and the `outright_win` convex proof market
+  are processed. 3-balls are still skipped, and miss-cut remains the next
+  forecast-backed market expansion.
+- `--analysis-output` writes a daily analysis JSON artifact for both play and
+  no-play days, including qualified edges, near-misses, books checked, and an
+  artifact hash.
 - Tournament and Player rows are created on first encounter (get-or-create).
-- Operator workflow: `run_pipeline.py` → `paper_trade.py ticket-candidates` →
-  `operator_console.py` for placement/settlement/CLV.
+- Operator workflow: `run_pipeline.py` → candidate review UI →
+  `paper_trade.py ticket-candidates` only for paper-validation bets →
+  `operator_console.py` for paper placement/settlement/CLV.
 
-### Batch A — Phase 3 paper-trading backbone
+### Batch A — Phase 3 paper-validation backbone
 
-**Goal:** close the loop from `BetCandidate` to settled paper-trade record.
+**Goal:** close the loop from `BetCandidate` to settled paper-trade record only
+for the validation sample needed to justify the strategy.
 
 **Suggested file targets**
 - `src/execution/tickets.py`
@@ -68,7 +118,7 @@ the paper-trading loop can start.
 
 **Current implementation notes**
 - `scripts/paper_trade.py` supports smoke data creation, candidate ticketing, ticket detail display, ticket CSV export, placement, settlement, CLV capture, stored reporting, JSON report artifact output, readiness diagnostics, evidence provenance checks, and open-action review.
-- `scripts/operator_console.py` provides a local no-dependency operator UI for tournament-week paper trading. It reads the same paper DB, shows candidates/tickets/placed bets/open actions, and posts manual placement, settlement, CLV, attribution, and ticket-candidate actions through the existing execution helpers.
+- `scripts/operator_console.py` provides a local no-dependency operator UI for tournament-week review and paper validation. It reads the same paper DB, shows candidates/tickets/placed bets/open actions, and posts manual placement, settlement, CLV, attribution, and ticket-candidate actions through the existing execution helpers.
 - `docs/paper-trading-phase3-proof-runbook.md` defines the real operator-entered paper-trading proof workflow. Fixture and smoke rows are not Phase 3 gate evidence; the gate remains blocked until the real paper DB has at least 4 tournaments and 60 settled paper bets. Use `paper_trade.py readiness` to flag undersized samples and unresolved operator work before assembling gate artifacts, then use `paper_trade.py evidence-check` to flag smoke, fixture, or backtest contamination in the review DB.
 - Operator smoke shape:
   - `PYTHONPATH=. .venv/bin/python scripts/paper_trade.py create-smoke-candidate --database-url sqlite:////private/tmp/upanddown-phase3-cli-smoke.db`
@@ -137,7 +187,9 @@ the paper-trading loop can start.
 
 ### WS-7 — Backtesting spine
 
-**Goal:** replay historical decisions without vendor-model leakage or custom golf-model overlays.
+**Goal:** replay historical decisions without vendor-model leakage or custom
+golf-model overlays, then visualize whether the strategy has enough evidence to
+continue.
 
 **Current implementation notes**
 - `src/backtest/replay.py` replays persisted DataGolf forecast rows against explicit historical book lines, runs `leakage_guard` before pricing, converts DataGolf probabilities directly into fair prices, and then uses the normal edge → candidate → ticket path.
@@ -154,6 +206,14 @@ the paper-trading loop can start.
 - `tests/integration/test_backtest_artifact_workflow.py` proves the full manual artifact chain can produce replay, three-event backtest-review, paper-report, phase-gate, and review-bundle JSON files from fresh temp databases.
 - `docs/backtest-artifact-runbook.md` gives the operator command sequence for replay manifest → multi-event review → phase-gate attachment → review bundle, including the expected failure shape for undersized smoke paper DBs.
 - Broader historical data coverage remains open. Phase-gate review artifacts can now attach a leakage-checked multi-tournament backtest summary, but no backtest metrics are gate criteria yet.
+
+**Next product-facing work**
+- Add backtest review views for cumulative P&L, drawdown, CLV, ROI by market,
+  edge buckets, and bet-count/sample diagnostics.
+- Keep the visualization tied to replay artifacts so charts are reproducible
+  and do not depend on mutable live tables.
+- Do not add parameter optimization from the backtest UI without an explicit
+  holdout workflow and ADR.
 
 ### Batch D — Measurement honesty
 
@@ -180,7 +240,7 @@ the paper-trading loop can start.
 ### Phase 4 initial — Shadow-live / minimum-stake workflow
 
 **Goal:** support real-money learning at minimum stakes alongside the Phase 3
-paper-trading record, without contaminating gate evidence or automating execution.
+paper-validation record, without contaminating gate evidence or automating execution.
 
 **Definition of done**
 - A distinct `placement_method = "shadow_live"` value marks real-stake bets.
@@ -196,6 +256,9 @@ paper-trading record, without contaminating gate evidence or automating executio
 - `docs/shadow-live-runbook.md` explains the workflow.
 - Shadow-live is not a Phase 3 gate substitute; paper evidence remains the
   formal gate path.
+- Shadow-live is not meant to become the permanent real betting ledger. If
+  richer live bet history is needed later, import it from the user's dedicated
+  tracker and analyze it alongside UpAndDown artifacts.
 
 **Files added/changed**
 - `config/settings.yaml` — `shadow_live` block (enabled, bankroll, caps)
@@ -240,3 +303,5 @@ Every meaningful handoff should include:
 - Do not add live execution or book APIs yet.
 - Do not make covariance-QP the default before the baseline paper-trading loop is stable.
 - Do not optimize thresholds on realized ROI from a small sample.
+- Do not build a full-featured bet tracker before the edge UI, backtest
+  visualization, and paper-proof flow are excellent.

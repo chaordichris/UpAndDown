@@ -12,6 +12,12 @@
 
 The v0.1 plan is solid. The structural decisions — Spitznagel survival framing, two-sleeve construction, CLV as primary diagnostic, walk-forward backtests, manual execution, DataGolf as anchor, no parlays — are the right calls and would not be touched by a buy-side risk committee.
 
+Product-objective clarification adopted after v0.2: UpAndDown should not compete
+with dedicated bet-tracking apps. The quant-risk upgrades below remain useful,
+but they should support daily edge review, reproducible backtests, bounded
+paper-trading proof, and later imported real-history analysis rather than a
+full in-house betting ledger.
+
 What a risk committee *would* push back on is in five categories: (1) Kelly is treated as if the edge estimate were known, when in practice it is the noisiest input; (2) "correlation" is handled by name match instead of as a covariance object; (3) the vendor-model versioning gap is a silent leakage source the plan does not catch; (4) execution and promo accounting are footnotes when they belong in the P&L attribution; (5) the agent decomposition is good prose but not yet *verifiable*.
 
 The ten improvements below address those five categories. Each one is sized to an additional skill (or amendment to an existing skill) and is testable on its own. None requires a redesign of an existing module.

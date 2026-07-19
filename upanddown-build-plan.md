@@ -8,7 +8,7 @@
 
 ## 1. Executive Summary
 
-UpAndDown is a systematic golf betting framework built in Python. It ingests probabilistic forecasts from the DataGolf API, translates them into fair prices across multiple market types, compares those prices to live sportsbook lines, identifies edges, sizes bets under strict bankroll discipline, and tracks performance over time.
+UpAndDown is a systematic golf edge-discovery and strategy-validation framework built in Python. It ingests probabilistic forecasts from the DataGolf API, translates them into fair prices across multiple market types, compares those prices to live sportsbook lines, identifies daily edges, makes those edges easy to review in an operator UI, backtests the strategy, and tracks a bounded paper-bet sample to justify whether the strategy deserves real capital.
 
 The system's philosophy is borrowed from Mark Spitznagel's approach to tail-risk investing: survival comes first, the default position is no action, and the portfolio is split between a core sleeve of small repeatable edges and a tightly capped convex sleeve for asymmetric long-odds opportunities.
 
@@ -17,6 +17,8 @@ In golf terms this means: matchups and 3-balls are the core edge engine because 
 The system starts with pre-tournament PGA Tour markets on regulated Indiana sportsbooks. It is designed to be modular so that additional tours, market types, books, and eventually live/in-play markets can be added without rewriting the core architecture.
 
 Capital preservation is not a feature — it is the architecture. Every module that touches bet sizing, exposure, or execution must enforce hard limits that cannot be overridden by the pricing engine or edge detector. The bankroll engine has veto power over every bet.
+
+UpAndDown is not intended to become a full personal betting-history tracker. Dedicated bet-tracking applications can own long-term real betting records. This system should be excellent at three things: daily edge calculation, backtest visualization, and paper-trading proof. Real betting history can be imported later for analysis and visualization.
 
 ---
 
@@ -60,6 +62,10 @@ Capital preservation is not a feature — it is the architecture. Every module t
 
 **Execution:** Manual. The system generates bet tickets with sizing. The human places bets through book apps/websites.
 
+**Operator UI:** A simple local UI for daily candidate review, backtest review, and paper-validation workflows.
+
+**Validation:** Bounded paper-bet tracking for proof of strategy quality, including settlement, CLV, attribution, and phase-gate evidence.
+
 ### 3.2 MVP Out-of-Scope
 
 - Live/in-play markets
@@ -71,7 +77,8 @@ Capital preservation is not a feature — it is the architecture. Every module t
 - Kalshi or any prediction/event market venue
 - Automated execution (API-based bet placement)
 - Machine learning models beyond DataGolf as baseline
-- Mobile app or web dashboard
+- Full personal bet-history tracking product
+- Mobile app
 
 ### 3.3 Later Phases
 
@@ -162,9 +169,9 @@ The bankroll engine is the final gatekeeper. It takes the ranked bet candidates 
 
 The output is a set of approved bet tickets with exact stake amounts, or a "no bet" decision with a logged reason.
 
-### 4.8 Execution Layer
+### 4.8 Execution and Paper-Validation Layer
 
-For MVP, execution is manual. The system outputs bet tickets as a structured report (CSV or terminal display):
+For MVP, execution is manual and bounded to validation. The system outputs bet tickets as a structured report or operator UI view:
 
 ```
 Tournament: The Players Championship
@@ -177,9 +184,9 @@ Stake: $45 (0.9% of active bankroll)
 Sleeve: Core
 ```
 
-The human places the bet and logs the actual line obtained and the actual stake. The execution module records: ticket ID, timestamp placed, actual odds, actual stake, and any notes (line moved, bet rejected, etc.).
+During the paper-validation period, the human records the actual line that would have been obtained and the paper stake. The execution module records enough to support CLV, attribution, settlement, and auditability: ticket ID, timestamp, actual odds, stake, result, and any notes (line moved, bet rejected, etc.).
 
-Later phases add semi-automated or fully automated execution via book APIs where available.
+Long-term real betting history is not a core product surface. If needed later, it should be imported from dedicated tracking apps and analyzed alongside UpAndDown backtest and paper-proof artifacts.
 
 ### 4.9 Backtesting
 
@@ -187,7 +194,7 @@ The backtesting module replays historical tournaments through the full pipeline 
 
 Key requirement: walk-forward only. The backtester must never use closing lines to make opening-line decisions, and must never use future tournament data to inform current-tournament features.
 
-### 4.10 Monitoring and Reporting
+### 4.10 Monitoring, Reporting, and Visualization
 
 Weekly and per-tournament reporting:
 
@@ -198,6 +205,13 @@ Weekly and per-tournament reporting:
 - Drawdown chart: bankroll over time with drawdown annotations
 - Exposure report: aggregate exposure by golfer, by tournament, by sleeve
 - Alerts: bets with negative CLV (line moved against us), rejected bets, staleness warnings
+
+Daily and backtest UI requirements:
+
+- Candidate board: current tournament, market, book, side, fair price, book price, edge, staleness, threshold/FDR status, and recommended action.
+- Backtest dashboard: cumulative P&L, drawdown, CLV, ROI by market type, edge buckets, bet count, sample-size warnings, and tournament coverage.
+- Paper-proof dashboard: bounded paper sample, CLV, attribution, unresolved actions, and phase-gate readiness.
+- Bet-history import view, if added later, must consume external tracker exports rather than replacing those trackers.
 
 ---
 
@@ -271,7 +285,7 @@ golf-trading/
 │   │   ├── exposure.py                # Concentration and correlation limits
 │   │   └── drawdown.py               # Drawdown brakes and stop conditions
 │   │
-│   ├── execution/                     # Bet placement and tracking
+│   ├── execution/                     # Tickets and bounded paper-validation records
 │   │   ├── __init__.py
 │   │   ├── tickets.py                 # Bet ticket generation and output
 │   │   ├── logger.py                  # Bet placement logging
@@ -282,7 +296,7 @@ golf-trading/
 │   │   ├── simulator.py               # Walk-forward replay engine
 │   │   └── evaluator.py              # Metrics calculation
 │   │
-│   ├── monitoring/                    # CLV, reporting, alerts
+│   ├── monitoring/                    # CLV, reports, visualizations, alerts
 │   │   ├── __init__.py
 │   │   ├── clv.py                     # Closing line value tracking
 │   │   ├── calibration.py            # Calibration analysis
@@ -575,7 +589,7 @@ Each skill below is a self-contained capability module. Skills are defined by th
 
 **Inputs:** Historical DataGolf data, historical book odds (if available), strategy configuration.
 
-**Outputs:** Full simulated bet history with P&L, CLV, calibration metrics, and drawdown curve.
+**Outputs:** Strategy replay results with P&L, CLV, calibration metrics, drawdown curve, and visualization-ready summaries.
 
 **Dependencies:** All pricing, sizing, and risk modules; historical data store.
 
@@ -615,20 +629,22 @@ Each skill below is a self-contained capability module. Skills are defined by th
 
 **Failure modes:** Missing closing line data for some bets (market taken down, or data collection gap). Mitigation: flag bets with missing CLV data; report CLV statistics both with and without these bets.
 
-### 6.13 Reporting and Dashboard
+### 6.13 Reporting, Daily Edge UI, and Backtest Visualization
 
-**Objective:** Generate periodic and on-demand reports summarizing system performance, bet activity, and risk state.
+**Objective:** Generate periodic and on-demand reports summarizing system performance, daily edge candidates, backtest results, paper-validation evidence, and risk state.
 
-**Inputs:** All stored bet records, outcomes, CLV data, bankroll history.
+**Inputs:** Bet candidates, paper-validation records, outcomes, CLV data, bankroll history, and backtest artifacts.
 
-**Outputs:** Structured reports (CSV, HTML, or terminal) covering: bet log, P&L summary, CLV analysis, calibration, drawdown, exposure.
+**Outputs:** Structured reports and UI views (CSV, HTML, terminal, or local web/static UI) covering: daily edge board, P&L summary, CLV analysis, calibration, drawdown, exposure, backtest results, and paper-proof readiness.
 
 **Dependencies:** All monitoring modules, storage.
 
 **Acceptance criteria:**
-- Weekly report generated automatically (or on demand).
+- Current tournament candidate board is easy to review without raw SQL or raw CLI output.
+- Backtest results include visualization-ready cumulative P&L, drawdown, CLV, ROI by market, and edge-bucket summaries.
+- Weekly report generated on demand.
 - Per-tournament summary.
-- Season-to-date dashboard.
+- Paper-proof dashboard for the bounded validation sample.
 - All reports are reproducible (same inputs produce same output).
 
 **Tests:**
@@ -780,13 +796,13 @@ Each skill below is a self-contained capability module. Skills are defined by th
 
 ### WS-6: Execution and Logging
 
-**Purpose:** Build the bet ticket output, placement logging, and settlement recording.
+**Purpose:** Build bet ticket output plus the minimal paper-validation records needed for settlement, CLV, attribution, and phase-gate evidence.
 
 **Prerequisites:** WS-4 (bet candidates), WS-5 (approved tickets).
 
 **Deliverables:** Ticket formatter, placement logger, settlement recorder.
 
-**Handoff artifacts:** A complete paper-trading loop: candidates → sizing → tickets → (manual placement) → settlement.
+**Handoff artifacts:** A complete paper-validation loop: candidates → sizing → tickets → (manual paper placement) → settlement.
 
 **Parallelizable:** Ticket formatting and settlement recording can be built in parallel.
 
@@ -794,7 +810,7 @@ Each skill below is a self-contained capability module. Skills are defined by th
 
 ### WS-7: Backtesting
 
-**Purpose:** Build the walk-forward backtesting engine and evaluation metrics.
+**Purpose:** Build the walk-forward backtesting engine, evaluation metrics, and visualization-ready summaries.
 
 **Prerequisites:** WS-4 (pricing), WS-5 (risk), historical data.
 
@@ -808,7 +824,7 @@ Each skill below is a self-contained capability module. Skills are defined by th
 
 ### WS-8: Monitoring and Reporting
 
-**Purpose:** Build CLV tracking, calibration analysis, and report generation.
+**Purpose:** Build CLV tracking, calibration analysis, daily edge UI/reporting, paper-proof reporting, and backtest visualization.
 
 **Prerequisites:** WS-6 (bet outcomes exist), WS-7 (backtest results exist).
 
@@ -845,7 +861,7 @@ Each skill below is a self-contained capability module. Skills are defined by th
 - More than matchup markets (top-N and outrights are Phase 2).
 - Any ML overlay on DataGolf.
 - Live/in-play markets.
-- Dashboard or web UI.
+- Full bet-tracking dashboard.
 
 ### Minimum risk rules
 
@@ -1202,9 +1218,9 @@ Build fair-odds pricing engine for matchups (top priority), then make-cut, top-N
 
 ### Phase 3: Paper Trading (Week 6-10)
 
-Build execution/ticket module. Build settlement recorder. Build CLV tracker. Build weekly report. Run the full pipeline on 4-6 live tournaments without placing real bets. Log everything as if you were betting.
+Build the daily edge review UI, execution/ticket module, settlement recorder, CLV tracker, backtest review output, and paper-proof report. Run the full pipeline on 4-6 live tournaments without placing real bets. Log only the paper-validation data needed to evaluate the strategy.
 
-**Exit criterion:** Complete paper-trading history for 4+ tournaments with all metrics tracked. CLV distribution is documented. No system crashes or data gaps.
+**Exit criterion:** Daily edge board is usable for tournament-week decisions. Backtest review artifacts are reproducible. Paper-validation sample covers 4+ tournaments with all proof metrics tracked. CLV distribution is documented. No system crashes or data gaps.
 
 ### Phase 4: Shadow Live (Week 10-14)
 
@@ -1220,7 +1236,7 @@ Deploy actual capital at the minimum risk configuration. Follow all drawdown rul
 
 ### Phase 6: Iteration and Expansion (Week 20+)
 
-Add markets (top-N, outrights as convex). Add books (BetMGM, Caesars). Add tours (DP World). Build overlays (Stage 2 modeling). Build confidence meta-model (Stage 3). Consider live markets (Stage 4). Build proper dashboard.
+Add markets (top-N, outrights as convex). Add books (BetMGM, Caesars). Add tours (DP World). Build overlays only after holdout validation (Stage 2 modeling). Build confidence meta-model (Stage 3). Consider live markets (Stage 4). Add importers for external betting-history exports if real performance analysis needs them.
 
 ---
 
@@ -1402,14 +1418,20 @@ Each of these should be a standalone file in `docs/skills/`:
 # UpAndDown: Project Charter
 
 ## What this is
-A systematic golf betting framework. DataGolf provides the model.
-The system translates forecasts into fair prices, finds edges against
-sportsbook lines, sizes bets conservatively, and tracks performance.
+A systematic golf edge-discovery and strategy-validation framework. DataGolf
+provides the model. The system translates forecasts into fair prices, finds
+daily edges against sportsbook lines, sizes bets conservatively, visualizes
+backtest results, and tracks a bounded paper-bet sample to validate the
+strategy.
 
 ## Philosophy
 Survival first. No-bet is the default. Small repeatable edges in
 matchup markets. Tiny convex sleeve for outrights. Never compromise
 the bankroll.
+
+Do not try to replace dedicated bet-tracking apps. Long-term real betting
+history can be imported later; the MVP should focus on daily edges, backtests,
+and paper proof.
 
 ## Current phase
 Phase 0 — Foundation.
@@ -1434,6 +1456,7 @@ Modules communicate via typed dataclasses:
 - Do not build a custom golf model. Use DataGolf.
 - Do not automate bet placement (Phase 1-4).
 - Do not add markets, books, or tours before the matchup MVP works.
+- Do not build a full betting-history tracker in MVP.
 - Do not tune parameters on backtest results without a holdout set.
 - Do not trust ROI over fewer than 100 bets. Use CLV.
 - Do not override the risk engine. It has veto power.
